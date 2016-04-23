@@ -14,6 +14,13 @@ import com.mytest.models.Cashback0;
 import com.mytest.models.SmsTemplates;
 import com.mytest.models.Transaction0;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -79,11 +86,55 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
                   } else {
                       // Send SMS through HTTP
                       System.out.println("SMS to send: "+smsText+" : "+smsText.length());
+                      try {
+                          sendSMS(smsText);
+                      } catch (IOException e) {
+                          System.out.println("Failed to send SMS: "+e.toString());
+                      }
                   }
               }
           }
       }
   }
+
+    private void sendSMS(String message) throws IOException {
+        String recipient = "918800191535";
+        String username = "aditya_gang";
+        String password = "50375135";
+        String originator = "UPDATE";
+
+        //http://txtguru.in/imobile/api.php?username=aditya_gang&password=50375135&source=UPDATE&dmobile=918800191535&message=TEST+SMS+GATEWAY
+        String requestUrl  = "https://www.txtguru.in/imobile/api.php?" +
+                "username=" + URLEncoder.encode(username, "UTF-8") +
+                "&password=" + URLEncoder.encode(password, "UTF-8") +
+                "&source=" + URLEncoder.encode(originator, "UTF-8") +
+                "&dmobile=" + URLEncoder.encode(recipient, "UTF-8") +
+                "&message=" + URLEncoder.encode(message, "UTF-8");
+
+        System.out.println("SMS URL: "+requestUrl);
+
+        URL url = new URL(requestUrl);
+
+        HttpURLConnection uc = (HttpURLConnection)url.openConnection();
+
+        try {
+            if (uc.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException(uc.getResponseMessage() + ": with " + requestUrl);
+            }
+            System.out.println(uc.getResponseMessage());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    (uc.getInputStream())));
+
+            String output;
+            System.out.println("SMS server response ...");
+            while ((output = br.readLine()) != null) {
+                System.out.println(output);
+            }
+        } finally {
+            uc.disconnect();
+        }
+    }
 
     private String buildSMS() {
         String sms=null;

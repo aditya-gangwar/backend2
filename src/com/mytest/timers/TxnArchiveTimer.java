@@ -36,7 +36,6 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
 
     private List<Transaction> mLastFetchTransactions;
     private BackendlessUser mLastFetchMerchant;
-    private Date mToday;
     // map of 'txn date' -> 'csv file url'
     HashMap<String,String> mCsvFiles = new HashMap<>();
     // map of 'txn date' -> 'csv string of all txns in dat date'
@@ -45,6 +44,7 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
     private SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(AppConstants.DATE_FORMAT_WITH_TIME, AppConstants.DATE_LOCALE);
     private SimpleDateFormat mSdfOnlyDateBackend = new SimpleDateFormat(AppConstants.DATE_FORMAT_ONLY_DATE_BACKEND, AppConstants.DATE_LOCALE);
     private SimpleDateFormat mSdfOnlyDateFilename = new SimpleDateFormat(AppConstants.DATE_FORMAT_ONLY_DATE_FILENAME, AppConstants.DATE_LOCALE);
+    private Date mToday = new Date();
 
     @Override
     public void execute( String appVersionId ) throws Exception
@@ -55,7 +55,6 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
         mSdfDateWithTime.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
         mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
         mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-        mToday = new Date();
 
         // Fetch next not processed merchant
         mLastFetchMerchant = null;
@@ -172,7 +171,6 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
         } catch (MalformedURLException e) {
             e.printStackTrace();
             return -1;
-
         } catch (IOException e) {
             e.printStackTrace();
             return -1;
@@ -283,7 +281,7 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
             sb.append(String.valueOf(txn.getCb_debit())).append(AppConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCb_credit())).append(AppConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCb_percent())).append(AppConstants.CSV_DELIMETER);
-            sb.append("\n");
+            sb.append(AppConstants.CSV_NEWLINE);
         }
     }
 

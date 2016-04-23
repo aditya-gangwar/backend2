@@ -27,6 +27,16 @@ public class Transaction implements Serializable
   private String trans_id;
   private String customer_id;
   private String cust_private_id;
+  private Date create_time;
+  private Boolean archived;
+
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
+  }
 
   public Date getCreate_time() {
     return create_time;
@@ -35,8 +45,6 @@ public class Transaction implements Serializable
   public void setCreate_time(Date create_time) {
     this.create_time = create_time;
   }
-
-  private Date create_time;
 
   public String getCust_private_id() {
     return cust_private_id;

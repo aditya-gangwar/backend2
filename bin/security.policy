@@ -1,6 +1,6 @@
 grant {
 	// only for test!
-	//permission java.security.AllPermission;
+	permission java.security.AllPermission;
 
 
     permission java.util.logging.LoggingPermission "control";

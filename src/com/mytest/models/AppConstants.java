@@ -11,7 +11,7 @@ public class AppConstants {
     // used where only date (without time) is to be shown
     public static final String DATE_FORMAT_ONLY_DATE = "dd MMM, yy";
     // used to specify 'date with no time' to the backend, like in where clause
-    public static final String DATE_FORMAT_ONLY_DATE_BACKEND = "dd/MMM/yyyy";
+    public static final String DATE_FORMAT_ONLY_DATE_BACKEND = "dd-MMM-yyyy";
     // used in reports etc where both date and time is to be shown
     public static final String DATE_FORMAT_WITH_TIME = "dd/MM/yyyy HH:mm:ss";
     // date format to be used in filename
@@ -31,10 +31,12 @@ public class AppConstants {
     public static String TRANSACTION_TABLE_NAME = "Transaction";
     public static String TRANSACTION_ID_PREFIX = "TX";
 
+    public static final int PASSWORD_LEN = 5;
     public static int merchant_id_length = 6;
     public static int dbQueryMaxPageSize = 100;
     public static final String CSV_DELIMETER = ",";
     public static final String CSV_FILE_EXT = ".csv";
+    public static final String CSV_NEWLINE = "\n";
 
 
     // ERROR CODES
@@ -68,5 +70,8 @@ public class AppConstants {
     public static final int INVALID_LENGTH = 12;
     public static final int INVALID_VALUE = 13;
     public static final int NO_DATA_FOUND = 14;
+
+    // used in generating random transaction ids and temporary passwords
+    public final static char[] idchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
 }
