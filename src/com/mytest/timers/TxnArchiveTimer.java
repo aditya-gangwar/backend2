@@ -262,6 +262,9 @@ public class TxnArchiveTimer extends com.backendless.servercode.extension.TimerE
             if(sb==null) {
                 System.out.println("buildCsvString, new day : "+txnDateStr);
                 sb = new StringBuilder(CSV_RECORD_MAX_CHARS*size);
+                // new file - write first line as header
+                sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
+                sb.append(AppConstants.CSV_NEWLINE);
                 mCsvDataMap.put(txnDateStr,sb);
             }
 
