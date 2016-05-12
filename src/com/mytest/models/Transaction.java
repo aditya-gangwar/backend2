@@ -8,50 +8,40 @@ import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class Transaction implements Serializable
 {
+  private java.util.Date create_time;
   private String ownerId;
+  private String cust_private_id;
   private Integer cl_credit;
   private String cb_percent;
   private Integer cb_credit;
+  private String customer_id;
   private Integer cb_debit;
-  private Date created;
+  private java.util.Date created;
+  private String trans_id;
+  private Boolean archived;
   private Integer cl_debit;
   private Integer cb_billed;
   private String objectId;
   private Integer total_billed;
-  private Date updated;
+  private java.util.Date updated;
   private Cashback cashback;
-  private String trans_id;
-  private String customer_id;
-  private String cust_private_id;
-  private Date create_time;
-  private Boolean archived;
+  private String merchant_id;
 
-  public Boolean getArchived() {
-    return archived;
+  public void setMerchant_id(String merchant_id) {
+    this.merchant_id = merchant_id;
   }
 
-  public void setArchived(Boolean archived) {
-    this.archived = archived;
-  }
-
-  public Date getCreate_time() {
+  public java.util.Date getCreate_time()
+  {
     return create_time;
   }
 
-  public void setCreate_time(Date create_time) {
+  public void setCreate_time( java.util.Date create_time )
+  {
     this.create_time = create_time;
-  }
-
-  public String getCust_private_id() {
-    return cust_private_id;
-  }
-
-  public void setCust_private_id(String cust_private_id) {
-    this.cust_private_id = cust_private_id;
   }
 
   public String getOwnerId()
@@ -59,22 +49,14 @@ public class Transaction implements Serializable
     return ownerId;
   }
 
-  public String getCustomer_id() {
-    return customer_id;
-  }
-
-  public void setCustomer_id(String customer_id) {
-    this.customer_id = customer_id;
-  }
-
-  public String getTrans_id()
+  public String getCust_private_id()
   {
-    return trans_id;
+    return cust_private_id;
   }
 
-  public void setTrans_id( String trans_id )
+  public void setCust_private_id( String cust_private_id )
   {
-    this.trans_id = trans_id;
+    this.cust_private_id = cust_private_id;
   }
 
   public Integer getCl_credit()
@@ -107,6 +89,16 @@ public class Transaction implements Serializable
     this.cb_credit = cb_credit;
   }
 
+  public String getCustomer_id()
+  {
+    return customer_id;
+  }
+
+  public void setCustomer_id( String customer_id )
+  {
+    this.customer_id = customer_id;
+  }
+
   public Integer getCb_debit()
   {
     return cb_debit;
@@ -117,9 +109,29 @@ public class Transaction implements Serializable
     this.cb_debit = cb_debit;
   }
 
-  public Date getCreated()
+  public java.util.Date getCreated()
   {
     return created;
+  }
+
+  public String getTrans_id()
+  {
+    return trans_id;
+  }
+
+  public void setTrans_id( String trans_id )
+  {
+    this.trans_id = trans_id;
+  }
+
+  public Boolean getArchived()
+  {
+    return archived;
+  }
+
+  public void setArchived( Boolean archived )
+  {
+    this.archived = archived;
   }
 
   public Integer getCl_debit()
@@ -157,7 +169,7 @@ public class Transaction implements Serializable
     this.total_billed = total_billed;
   }
 
-  public Date getUpdated()
+  public java.util.Date getUpdated()
   {
     return updated;
   }
@@ -172,7 +184,7 @@ public class Transaction implements Serializable
     this.cashback = cashback;
   }
 
-
+                                                    
   public Transaction save()
   {
     return Backendless.Data.of( Transaction.class ).save( this );

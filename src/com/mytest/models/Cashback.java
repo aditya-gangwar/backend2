@@ -9,93 +9,20 @@ import com.backendless.persistence.BackendlessDataQuery;
 
 public class Cashback
 {
-  private Integer total_billed;
-  private java.util.Date created;
-  private Integer cl_debit;
-  private String ownerId;
   private Integer cb_debit;
-  private java.util.Date updated;
-  private Integer cl_credit;
+  private String ownerId;
   private String objectId;
+  private Integer cl_credit;
+  private java.util.Date updated;
   private Integer cb_credit;
-  private BackendlessUser merchant;
-  private BackendlessUser customer;
-  private String rowid;
+  private Integer cl_debit;
+  private java.util.Date created;
   private String rowid_qr;
-  private String cust_private_id;
-  private String customer_name;
+  private Integer total_billed;
   private String merchant_name;
-
-  public String getMerchant_name() {
-    return merchant_name;
-  }
-
-  public void setMerchant_name(String merchant_name) {
-    this.merchant_name = merchant_name;
-  }
-
-  public String getRowid_qr() {
-    return rowid_qr;
-  }
-
-  public void setRowid_qr(String rowid_qr) {
-    this.rowid_qr = rowid_qr;
-  }
-
-  public String getCustomer_name() {
-    return customer_name;
-  }
-
-  public void setCustomer_name(String customer_name) {
-    this.customer_name = customer_name;
-  }
-
-  public String getCust_private_id() {
-    return cust_private_id;
-  }
-
-  public void setCust_private_id(String cust_private_id) {
-    this.cust_private_id = cust_private_id;
-  }
-
-  public String getRowid() {
-    return rowid;
-  }
-
-  public void setRowid(String rowid) {
-    this.rowid = rowid;
-  }
-
-  public Integer getTotal_billed()
-  {
-    return total_billed;
-  }
-
-  public void setTotal_billed( Integer total_billed )
-  {
-    this.total_billed = total_billed;
-  }
-
-  public java.util.Date getCreated()
-  {
-    return created;
-  }
-
-  public Integer getCl_debit()
-  {
-    return cl_debit;
-  }
-
-  public void setCl_debit( Integer cl_debit )
-  {
-    this.cl_debit = cl_debit;
-  }
-
-  public String getOwnerId()
-  {
-    return ownerId;
-  }
-
+  private String rowid;
+  private Customers customer;
+  private Merchants merchant;
   public Integer getCb_debit()
   {
     return cb_debit;
@@ -106,9 +33,14 @@ public class Cashback
     this.cb_debit = cb_debit;
   }
 
-  public java.util.Date getUpdated()
+  public String getOwnerId()
   {
-    return updated;
+    return ownerId;
+  }
+
+  public String getObjectId()
+  {
+    return objectId;
   }
 
   public Integer getCl_credit()
@@ -121,9 +53,9 @@ public class Cashback
     this.cl_credit = cl_credit;
   }
 
-  public String getObjectId()
+  public java.util.Date getUpdated()
   {
-    return objectId;
+    return updated;
   }
 
   public Integer getCb_credit()
@@ -136,27 +68,82 @@ public class Cashback
     this.cb_credit = cb_credit;
   }
 
-  public BackendlessUser getMerchant()
+  public Integer getCl_debit()
   {
-    return merchant;
+    return cl_debit;
   }
 
-  public void setMerchant( BackendlessUser merchant )
+  public void setCl_debit( Integer cl_debit )
   {
-    this.merchant = merchant;
+    this.cl_debit = cl_debit;
   }
 
-  public BackendlessUser getCustomer()
+  public java.util.Date getCreated()
+  {
+    return created;
+  }
+
+  public String getRowid_qr()
+  {
+    return rowid_qr;
+  }
+
+  public void setRowid_qr( String rowid_qr )
+  {
+    this.rowid_qr = rowid_qr;
+  }
+
+  public Integer getTotal_billed()
+  {
+    return total_billed;
+  }
+
+  public void setTotal_billed( Integer total_billed )
+  {
+    this.total_billed = total_billed;
+  }
+
+  public String getMerchant_name()
+  {
+    return merchant_name;
+  }
+
+  public void setMerchant_name( String merchant_name )
+  {
+    this.merchant_name = merchant_name;
+  }
+
+  public String getRowid()
+  {
+    return rowid;
+  }
+
+  public void setRowid( String rowid )
+  {
+    this.rowid = rowid;
+  }
+
+  public Customers getCustomer()
   {
     return customer;
   }
 
-  public void setCustomer( BackendlessUser customer )
+  public void setCustomer( Customers customer )
   {
     this.customer = customer;
   }
 
-                                                    
+  public Merchants getMerchant()
+  {
+    return merchant;
+  }
+
+  public void setMerchant( Merchants merchant )
+  {
+    this.merchant = merchant;
+  }
+
+
   public Cashback save()
   {
     return Backendless.Data.of( Cashback.class ).save( this );
