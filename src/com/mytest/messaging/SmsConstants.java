@@ -24,8 +24,8 @@ public class SmsConstants {
     public static String SMS_TXN_DEBIT_CL = "Mycash: %s debited Rs %d from your Account on %s. Balance:- Account:Rs %d, Cashback:Rs %d.";
     public static String SMS_TXN_DEBIT_CB = "Mycash: %s debited Rs %d from your Cashback on %s. Balance:- Account:Rs %d, Cashback:Rs %d";
 
-    private static String SMS_TEMPLATE_PASSWD = "MyCash temporary password for user %s is '%s'. Valid for next 30 minutes only.";
-    private static String SMS_TEMPLATE_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
-    private static String SMS_TEMPLATE_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
+    public static String SMS_TEMPLATE_PASSWD = "MyCash password for user %s is '%s'. Valid for next 30 minutes only.";
+    public static String SMS_TEMPLATE_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
+    public static String SMS_TEMPLATE_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
 }
