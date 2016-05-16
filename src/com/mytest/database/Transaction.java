@@ -1,62 +1,40 @@
-package com.mytest.models;
+package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
-import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
-import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
 import java.io.Serializable;
 
 public class Transaction implements Serializable
 {
-  private java.util.Date create_time;
-  private String ownerId;
-  private String cust_private_id;
-  private Integer cl_credit;
-  private String cb_percent;
   private Integer cb_credit;
-  private String customer_id;
-  private Integer cb_debit;
-  private java.util.Date created;
-  private String trans_id;
-  private Boolean archived;
-  private Integer cl_debit;
+  private Integer cl_credit;
+  private java.util.Date create_time;
   private Integer cb_billed;
+  private Integer cl_debit;
+  private String cust_private_id;
+  private Boolean archived;
+  private String ownerId;
+  private String customer_id;
   private String objectId;
-  private Integer total_billed;
   private java.util.Date updated;
-  private Cashback cashback;
+  private String cb_percent;
+  private String trans_id;
   private String merchant_id;
-
-  public void setMerchant_id(String merchant_id) {
-    this.merchant_id = merchant_id;
+  private java.util.Date created;
+  private Integer total_billed;
+  private Integer cb_debit;
+  private Cashback cashback;
+  public Integer getCb_credit()
+  {
+    return cb_credit;
   }
 
-  public java.util.Date getCreate_time()
+  public void setCb_credit( Integer cb_credit )
   {
-    return create_time;
-  }
-
-  public void setCreate_time( java.util.Date create_time )
-  {
-    this.create_time = create_time;
-  }
-
-  public String getOwnerId()
-  {
-    return ownerId;
-  }
-
-  public String getCust_private_id()
-  {
-    return cust_private_id;
-  }
-
-  public void setCust_private_id( String cust_private_id )
-  {
-    this.cust_private_id = cust_private_id;
+    this.cb_credit = cb_credit;
   }
 
   public Integer getCl_credit()
@@ -69,79 +47,14 @@ public class Transaction implements Serializable
     this.cl_credit = cl_credit;
   }
 
-  public String getCb_percent()
+  public java.util.Date getCreate_time()
   {
-    return cb_percent;
+    return create_time;
   }
 
-  public void setCb_percent( String cb_percent )
+  public void setCreate_time( java.util.Date create_time )
   {
-    this.cb_percent = cb_percent;
-  }
-
-  public Integer getCb_credit()
-  {
-    return cb_credit;
-  }
-
-  public void setCb_credit( Integer cb_credit )
-  {
-    this.cb_credit = cb_credit;
-  }
-
-  public String getCustomer_id()
-  {
-    return customer_id;
-  }
-
-  public void setCustomer_id( String customer_id )
-  {
-    this.customer_id = customer_id;
-  }
-
-  public Integer getCb_debit()
-  {
-    return cb_debit;
-  }
-
-  public void setCb_debit( Integer cb_debit )
-  {
-    this.cb_debit = cb_debit;
-  }
-
-  public java.util.Date getCreated()
-  {
-    return created;
-  }
-
-  public String getTrans_id()
-  {
-    return trans_id;
-  }
-
-  public void setTrans_id( String trans_id )
-  {
-    this.trans_id = trans_id;
-  }
-
-  public Boolean getArchived()
-  {
-    return archived;
-  }
-
-  public void setArchived( Boolean archived )
-  {
-    this.archived = archived;
-  }
-
-  public Integer getCl_debit()
-  {
-    return cl_debit;
-  }
-
-  public void setCl_debit( Integer cl_debit )
-  {
-    this.cl_debit = cl_debit;
+    this.create_time = create_time;
   }
 
   public Integer getCb_billed()
@@ -154,9 +67,94 @@ public class Transaction implements Serializable
     this.cb_billed = cb_billed;
   }
 
+  public Integer getCl_debit()
+  {
+    return cl_debit;
+  }
+
+  public void setCl_debit( Integer cl_debit )
+  {
+    this.cl_debit = cl_debit;
+  }
+
+  public String getCust_private_id()
+  {
+    return cust_private_id;
+  }
+
+  public void setCust_private_id( String cust_private_id )
+  {
+    this.cust_private_id = cust_private_id;
+  }
+
+  public Boolean getArchived()
+  {
+    return archived;
+  }
+
+  public void setArchived( Boolean archived )
+  {
+    this.archived = archived;
+  }
+
+  public String getOwnerId()
+  {
+    return ownerId;
+  }
+
+  public String getCustomer_id()
+  {
+    return customer_id;
+  }
+
+  public void setCustomer_id( String customer_id )
+  {
+    this.customer_id = customer_id;
+  }
+
   public String getObjectId()
   {
     return objectId;
+  }
+
+  public java.util.Date getUpdated()
+  {
+    return updated;
+  }
+
+  public String getCb_percent()
+  {
+    return cb_percent;
+  }
+
+  public void setCb_percent( String cb_percent )
+  {
+    this.cb_percent = cb_percent;
+  }
+
+  public String getTrans_id()
+  {
+    return trans_id;
+  }
+
+  public void setTrans_id( String trans_id )
+  {
+    this.trans_id = trans_id;
+  }
+
+  public String getMerchant_id()
+  {
+    return merchant_id;
+  }
+
+  public void setMerchant_id( String merchant_id )
+  {
+    this.merchant_id = merchant_id;
+  }
+
+  public java.util.Date getCreated()
+  {
+    return created;
   }
 
   public Integer getTotal_billed()
@@ -169,9 +167,14 @@ public class Transaction implements Serializable
     this.total_billed = total_billed;
   }
 
-  public java.util.Date getUpdated()
+  public Integer getCb_debit()
   {
-    return updated;
+    return cb_debit;
+  }
+
+  public void setCb_debit( Integer cb_debit )
+  {
+    this.cb_debit = cb_debit;
   }
 
   public Cashback getCashback()
@@ -199,7 +202,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).save( this, future );
+      Backendless.Data.of( Transaction.class ).save(this, future);
 
       return future;
     }
@@ -207,7 +210,7 @@ public class Transaction implements Serializable
 
   public void saveAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).save( this, callback );
+    Backendless.Data.of( Transaction.class ).save(this, callback);
   }
 
   public Long remove()
@@ -224,7 +227,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Long> future = new Future<Long>();
-      Backendless.Data.of( Transaction.class ).remove( this, future );
+      Backendless.Data.of( Transaction.class ).remove(this, future);
 
       return future;
     }
@@ -232,7 +235,7 @@ public class Transaction implements Serializable
 
   public void removeAsync( AsyncCallback<Long> callback )
   {
-    Backendless.Data.of( Transaction.class ).remove( this, callback );
+    Backendless.Data.of( Transaction.class ).remove(this, callback);
   }
 
   public static Transaction findById( String id )
@@ -249,7 +252,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findById( id, future );
+      Backendless.Data.of( Transaction.class ).findById(id, future);
 
       return future;
     }
@@ -257,7 +260,7 @@ public class Transaction implements Serializable
 
   public static void findByIdAsync( String id, AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findById( id, callback );
+    Backendless.Data.of( Transaction.class ).findById(id, callback);
   }
 
   public static Transaction findFirst()
@@ -274,7 +277,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findFirst( future );
+      Backendless.Data.of( Transaction.class ).findFirst(future);
 
       return future;
     }
@@ -282,7 +285,7 @@ public class Transaction implements Serializable
 
   public static void findFirstAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findFirst( callback );
+    Backendless.Data.of( Transaction.class ).findFirst(callback);
   }
 
   public static Transaction findLast()
@@ -299,7 +302,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findLast( future );
+      Backendless.Data.of( Transaction.class ).findLast(future);
 
       return future;
     }
@@ -307,7 +310,7 @@ public class Transaction implements Serializable
 
   public static void findLastAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findLast( callback );
+    Backendless.Data.of( Transaction.class ).findLast(callback);
   }
 
   public static BackendlessCollection<Transaction> find( BackendlessDataQuery query )
@@ -324,7 +327,7 @@ public class Transaction implements Serializable
     else
     {
       Future<BackendlessCollection<Transaction>> future = new Future<BackendlessCollection<Transaction>>();
-      Backendless.Data.of( Transaction.class ).find( query, future );
+      Backendless.Data.of( Transaction.class ).find(query, future);
 
       return future;
     }
@@ -332,6 +335,6 @@ public class Transaction implements Serializable
 
   public static void findAsync( BackendlessDataQuery query, AsyncCallback<BackendlessCollection<Transaction>> callback )
   {
-    Backendless.Data.of( Transaction.class ).find( query, callback );
+    Backendless.Data.of( Transaction.class ).find(query, callback);
   }
 }

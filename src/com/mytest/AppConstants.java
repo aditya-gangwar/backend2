@@ -1,4 +1,4 @@
-package com.mytest.models;
+package com.mytest;
 
 import java.util.Locale;
 
@@ -41,8 +41,4 @@ public class AppConstants {
 
     public static int LOG_POLICY_NUM_MSGS = 1;
     public static int LOG_POLICY_FREQ_SECS = 0;
-
-
-
-
 }

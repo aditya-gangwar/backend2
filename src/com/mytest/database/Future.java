@@ -1,4 +1,4 @@
-package com.mytest.models;
+package com.mytest.database;
 
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessException;

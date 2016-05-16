@@ -1,4 +1,4 @@
-package com.mytest.models;
+package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;

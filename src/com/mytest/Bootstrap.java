@@ -3,7 +3,7 @@ package com.mytest;
 
 import com.backendless.Backendless;
 import com.backendless.servercode.IBackendlessBootstrap;
-import com.mytest.models.*;
+import com.mytest.database.*;
 
 
 public class Bootstrap implements IBackendlessBootstrap

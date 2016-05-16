@@ -4,7 +4,7 @@ import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
 import com.backendless.servercode.annotation.Async;
-import com.mytest.models.Transaction;
+import com.mytest.database.Transaction;
 
 /**
 * Transaction0TableEventHandler handles events for all entities. This is accomplished

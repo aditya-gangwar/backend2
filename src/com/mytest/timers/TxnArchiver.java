@@ -6,10 +6,9 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.models.AppConstants;
-import com.mytest.models.DbConstants;
-import com.mytest.models.Merchants;
-import com.mytest.models.Transaction;
+import com.mytest.AppConstants;
+import com.mytest.database.Merchants;
+import com.mytest.database.Transaction;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;

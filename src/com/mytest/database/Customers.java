@@ -1,4 +1,4 @@
-package com.mytest.models;
+package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
@@ -7,20 +7,31 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
+import java.util.Date;
+
 public class Customers
 {
   private String admin_remarks;
   private String txn_pin;
   private String mobile_num;
   private String ownerId;
-  private java.util.Date updated;
-  private java.util.Date created;
+  private Date updated;
+  private Date created;
   private String objectId;
   private Integer admin_status;
   private String name;
   private String private_id;
   private CustomerCards qr_card;
   private String cashback_table;
+  private Date temp_blocked_time;
+
+  public Date getTemp_blocked_time() {
+    return temp_blocked_time;
+  }
+
+  public void setTemp_blocked_time(Date temp_blocked_time) {
+    this.temp_blocked_time = temp_blocked_time;
+  }
 
   public String getCashback_table() {
     return cashback_table;
@@ -65,12 +76,12 @@ public class Customers
     return ownerId;
   }
 
-  public java.util.Date getUpdated()
+  public Date getUpdated()
   {
     return updated;
   }
 
-  public java.util.Date getCreated()
+  public Date getCreated()
   {
     return created;
   }

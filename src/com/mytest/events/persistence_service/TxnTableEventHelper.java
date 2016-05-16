@@ -3,13 +3,11 @@ package com.mytest.events.persistence_service;
 import com.backendless.Backendless;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
-import com.backendless.servercode.RunnerContext;
-import com.backendless.servercode.annotation.Async;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.models.AppConstants;
-import com.mytest.models.Cashback;
-import com.mytest.models.Transaction;
+import com.mytest.AppConstants;
+import com.mytest.database.Cashback;
+import com.mytest.database.Transaction;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -73,10 +71,8 @@ public class TxnTableEventHelper {
                     } else {
                         // Send SMS through HTTP
                         mLogger.debug("SMS to send: "+smsText+" : "+smsText.length());
-                        try {
-                            SmsHelper.sendSMS(smsText,custMobile);
-                        } catch (IOException e) {
-                            mLogger.error("Failed to send SMS: "+e.toString());
+                        if( !SmsHelper.sendSMS(smsText,custMobile) ) {
+                            // TODO: write to alarm table for retry later
                         }
                     }
                 }

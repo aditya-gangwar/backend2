@@ -1,4 +1,4 @@
-package com.mytest.models;
+package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
@@ -9,88 +9,27 @@ import com.backendless.persistence.BackendlessDataQuery;
 
 public class Cashback
 {
-  private Integer cb_debit;
-  private String ownerId;
-  private String objectId;
-  private Integer cl_credit;
-  private java.util.Date updated;
-  private Integer cb_credit;
-  private Integer cl_debit;
-  private java.util.Date created;
-  private String rowid_qr;
   private Integer total_billed;
-  private String merchant_name;
+  private String rowid_qr;
+  private java.util.Date created;
+  private Integer cl_debit;
+  private String ownerId;
+  private Integer cb_debit;
   private String rowid;
+  private java.util.Date updated;
+  private Integer cl_credit;
+  private String objectId;
+  private Integer cb_credit;
   private Customers customer;
   private Merchants merchant;
-  public Integer getCb_debit()
-  {
-    return cb_debit;
+  private String merchant_name;
+
+  public String getMerchant_name() {
+    return merchant_name;
   }
 
-  public void setCb_debit( Integer cb_debit )
-  {
-    this.cb_debit = cb_debit;
-  }
-
-  public String getOwnerId()
-  {
-    return ownerId;
-  }
-
-  public String getObjectId()
-  {
-    return objectId;
-  }
-
-  public Integer getCl_credit()
-  {
-    return cl_credit;
-  }
-
-  public void setCl_credit( Integer cl_credit )
-  {
-    this.cl_credit = cl_credit;
-  }
-
-  public java.util.Date getUpdated()
-  {
-    return updated;
-  }
-
-  public Integer getCb_credit()
-  {
-    return cb_credit;
-  }
-
-  public void setCb_credit( Integer cb_credit )
-  {
-    this.cb_credit = cb_credit;
-  }
-
-  public Integer getCl_debit()
-  {
-    return cl_debit;
-  }
-
-  public void setCl_debit( Integer cl_debit )
-  {
-    this.cl_debit = cl_debit;
-  }
-
-  public java.util.Date getCreated()
-  {
-    return created;
-  }
-
-  public String getRowid_qr()
-  {
-    return rowid_qr;
-  }
-
-  public void setRowid_qr( String rowid_qr )
-  {
-    this.rowid_qr = rowid_qr;
+  public void setMerchant_name(String merchant_name) {
+    this.merchant_name = merchant_name;
   }
 
   public Integer getTotal_billed()
@@ -103,14 +42,44 @@ public class Cashback
     this.total_billed = total_billed;
   }
 
-  public String getMerchant_name()
+  public String getRowid_qr()
   {
-    return merchant_name;
+    return rowid_qr;
   }
 
-  public void setMerchant_name( String merchant_name )
+  public void setRowid_qr( String rowid_qr )
   {
-    this.merchant_name = merchant_name;
+    this.rowid_qr = rowid_qr;
+  }
+
+  public java.util.Date getCreated()
+  {
+    return created;
+  }
+
+  public Integer getCl_debit()
+  {
+    return cl_debit;
+  }
+
+  public void setCl_debit( Integer cl_debit )
+  {
+    this.cl_debit = cl_debit;
+  }
+
+  public String getOwnerId()
+  {
+    return ownerId;
+  }
+
+  public Integer getCb_debit()
+  {
+    return cb_debit;
+  }
+
+  public void setCb_debit( Integer cb_debit )
+  {
+    this.cb_debit = cb_debit;
   }
 
   public String getRowid()
@@ -121,6 +90,41 @@ public class Cashback
   public void setRowid( String rowid )
   {
     this.rowid = rowid;
+  }
+
+  public java.util.Date getUpdated()
+  {
+    return updated;
+  }
+
+  public Integer getCl_credit()
+  {
+    return cl_credit;
+  }
+
+  public void setCl_credit( Integer cl_credit )
+  {
+    this.cl_credit = cl_credit;
+  }
+
+  public String getObjectId()
+  {
+    return objectId;
+  }
+
+  public void setObjectId(String objectId)
+  {
+    this.objectId = objectId;
+  }
+
+  public Integer getCb_credit()
+  {
+    return cb_credit;
+  }
+
+  public void setCb_credit( Integer cb_credit )
+  {
+    this.cb_credit = cb_credit;
   }
 
   public Customers getCustomer()
@@ -143,7 +147,7 @@ public class Cashback
     this.merchant = merchant;
   }
 
-
+                                                    
   public Cashback save()
   {
     return Backendless.Data.of( Cashback.class ).save( this );
