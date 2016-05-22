@@ -17,6 +17,11 @@ public class DbConstants {
     public static final int CUSTOMER_CARD_STATUS_ALLOTTED = 2;
     public static final int CUSTOMER_CARD_STATUS_REMOVED = 3;
 
+    // Customer operation codes
+    public static final String CUSTOMER_OP_NEW_CARD = "New Card";
+    public static final String CUSTOMER_OP_RESET_PIN = "Reset PIN";
+    public static final String CUSTOMER_OP_CHANGE_MOBILE = "Change Mobile";
+
     public static String CASHBACK_TABLE_NAME = "Cashback";
     public static String TRANSACTION_TABLE_NAME = "Transaction";
 

@@ -29,7 +29,42 @@ public class AppConstants {
     public static final String CSV_FILE_EXT = ".csv";
     public static final String CSV_NEWLINE = "\n";
 
+    public static final int PASSWORD_LEN = 5;
+    public static final int PIN_LEN = 5;
+    public static final int OTP_LEN = 4;
     public static int dbQueryMaxPageSize = 100;
+    public static final int OTP_VALID_MINS = 15;
+
+    // used in generating temporary passwords
+    public final static char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+    public final static char[] pinAndOtpChars = "0123456789".toCharArray();
+
+    // Backend error codes
+
+    // these are my own defined
+    public static final String BL_MYERROR_GENERAL = "500";
+    public static final String BL_MYERROR_WRONG_QR_CARD = "501";
+    public static final String BL_MYERROR_NO_SUCH_CUSTOMER = "503";
+    public static final String BL_MYERROR_OTP_GENERATE_FAILED = "505";
+    public static final String BL_MYERROR_OTP_GENERATED = "507";
+    public static final String BL_MYERROR_SEND_SMS_FAILED = "509";
+    public static final String BL_MYERROR_WRONG_PIN = "511";
+    public static final String BL_MYERROR_WRONG_OTP = "513";
+    public static final String BL_MYERROR_QR_CARD_INUSE = "515";
+    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "517";
+    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "519";
+    public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "521";
+
+    // these are defined by backendless
+    public static final String BL_ERROR_NO_DATA_FOUND = "1009";
+
+    public static final String BL_ERROR_REGISTER_DUPLICATE = "3033";
+    public static final String BL_ERROR_LOGIN_DISABLED = "3000";
+    public static final String BL_ERROR_ALREADY_LOGGOED_IN = "3002";
+    public static final String BL_ERROR_INVALID_ID_PASSWD = "3003";
+    public static final String BL_ERROR_EMPTY_ID_PASSWD = "3006";
+    public static final String BL_ERROR_ACCOUNT_LOCKED = "3036";
+    public static final String BL_ERROR_MULTIPLE_LOGIN_LIMIT = "3044";
 
 
     /*

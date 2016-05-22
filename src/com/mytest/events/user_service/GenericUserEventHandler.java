@@ -31,14 +31,12 @@ import java.util.HashMap;
 */
 public class GenericUserEventHandler extends com.backendless.servercode.extension.UserExtender
 {
-  private Logger mLogger;
-
   @Async
   @Override
   public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
   {
       Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
-      mLogger = Backendless.Logging.getLogger("com.mytest.events.afterRegister");
+      Logger logger = Backendless.Logging.getLogger("com.mytest.events.afterRegister");
 
       // send password in SMS, if registration is successful
       if(result.getException()==null) {
@@ -52,12 +50,11 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                   String pin = customer.getTxn_pin();
                   String smsText = String.format(SmsConstants.SMS_TEMPLATE_PIN,userId,pin);
                   // Send SMS through HTTP
-                  mLogger.debug("SMS to send: "+smsText+" : "+smsText.length());
                   if( !SmsHelper.sendSMS(smsText,customer.getMobile_num()) ) {
                       // TODO: write to alarm table for retry later
                   }
               } else {
-                  mLogger.error("Customer object is null: "+userId);
+                  logger.error("Customer object is null: "+userId);
               }
           }
       } else {

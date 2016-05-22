@@ -23,6 +23,7 @@ public class SmsHelper {
         Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
 
+        mLogger.debug("SMS to send: " + message);
         HttpURLConnection uc = null;
         try {
             //http://txtguru.in/imobile/api.php?username=aditya_gang&password=50375135&source=UPDATE&dmobile=918800191535&message=TEST+SMS+GATEWAY
@@ -36,6 +37,7 @@ public class SmsHelper {
             URL url = new URL(requestUrl);
             mLogger.debug("SMS URL: " + url.toString());
 
+            /*
             uc = (HttpURLConnection) url.openConnection();
 
             if (uc.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -50,7 +52,7 @@ public class SmsHelper {
             String output;
             while ((output = br.readLine()) != null) {
                 mLogger.debug("SMS server response: " + output);
-            }
+            }*/
         } catch (Exception e) {
             mLogger.error("Failed to send SMS ("+message+") to "+recipient);
             mLogger.error("Failed to send SMS:"+e.toString());

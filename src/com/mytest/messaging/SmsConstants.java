@@ -28,4 +28,5 @@ public class SmsConstants {
     public static String SMS_TEMPLATE_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_TEMPLATE_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
+    public static String SMS_TEMPLATE_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
 }
