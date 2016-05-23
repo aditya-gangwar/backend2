@@ -25,4 +25,7 @@ public class DbConstants {
     public static String CASHBACK_TABLE_NAME = "Cashback";
     public static String TRANSACTION_TABLE_NAME = "Transaction";
 
+    public static String CUSTOMER_ID_COUNTER = "customer_id";
+    public static String MERCHANT_ID_COUNTER = "merchant_id";
+
 }

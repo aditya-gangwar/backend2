@@ -32,8 +32,13 @@ public class AppConstants {
     public static final int PASSWORD_LEN = 5;
     public static final int PIN_LEN = 5;
     public static final int OTP_LEN = 4;
+    public static final int CUSTOMER_PRIVATE_ID_LEN = 4;
+    public static final int TRANSACTION_ID_LEN = 10;
     public static int dbQueryMaxPageSize = 100;
     public static final int OTP_VALID_MINS = 15;
+
+    // number to character mapping
+    public static final String numToChar[] = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
 
     // used in generating temporary passwords
     public final static char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
@@ -43,17 +48,19 @@ public class AppConstants {
 
     // these are my own defined
     public static final String BL_MYERROR_GENERAL = "500";
-    public static final String BL_MYERROR_WRONG_QR_CARD = "501";
-    public static final String BL_MYERROR_NO_SUCH_CUSTOMER = "503";
-    public static final String BL_MYERROR_OTP_GENERATE_FAILED = "505";
-    public static final String BL_MYERROR_OTP_GENERATED = "507";
-    public static final String BL_MYERROR_SEND_SMS_FAILED = "509";
-    public static final String BL_MYERROR_WRONG_PIN = "511";
-    public static final String BL_MYERROR_WRONG_OTP = "513";
-    public static final String BL_MYERROR_QR_CARD_INUSE = "515";
-    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "517";
-    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "519";
-    public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "521";
+    public static final String BL_MYERROR_NO_SUCH_USER = "502";
+    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "504";
+    public static final String BL_MYERROR_SEND_SMS_FAILED = "508";
+    public static final String BL_MYERROR_OTP_GENERATE_FAILED = "510";
+    public static final String BL_MYERROR_OTP_GENERATED = "512";
+    public static final String BL_MYERROR_WRONG_OTP = "514";
+    public static final String BL_MYERROR_WRONG_PIN = "516";
+    public static final String BL_MYERROR_NO_SUCH_QR_CARD = "520";
+    public static final String BL_MYERROR_WRONG_QR_CARD = "522";
+    public static final String BL_MYERROR_QR_CARD_INUSE = "524";
+    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "526";
+    public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "599";
+
 
     // these are defined by backendless
     public static final String BL_ERROR_NO_DATA_FOUND = "1009";

@@ -1,6 +1,6 @@
-package com.mytest.timers;
+//package com.mytest.timers;
 
-import com.backendless.servercode.annotation.BackendlessTimer;
+//import com.backendless.servercode.annotation.BackendlessTimer;
 
 /**
  * TxnArchive0Timer is a timer.
@@ -10,6 +10,7 @@ import com.backendless.servercode.annotation.BackendlessTimer;
  * the special annotation - BackendlessTimer. The annotation contains a JSON
  * object which describes all properties of the timer.
  */
+/*
 @BackendlessTimer("{'startDate':1463167800000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'TxnArchive0'}")
 public class TxnArchive0Timer extends com.backendless.servercode.extension.TimerExtender
 {
@@ -21,4 +22,4 @@ public class TxnArchive0Timer extends com.backendless.servercode.extension.Timer
         TxnArchiver archiver = new TxnArchiver(MERCHANT_ID_SUFFIX);
         archiver.execute();
     }
-}
+}*/

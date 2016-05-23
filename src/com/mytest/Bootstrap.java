@@ -24,6 +24,7 @@ public class Bootstrap implements IBackendlessBootstrap
     Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
     Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
 
+    /*
     Backendless.Data.mapTableToClass( "Transaction2", Transaction.class );
     Backendless.Data.mapTableToClass( "Cashback2", Cashback.class );
 
@@ -32,6 +33,7 @@ public class Bootstrap implements IBackendlessBootstrap
 
     Backendless.Data.mapTableToClass( "Transaction4", Transaction.class );
     Backendless.Data.mapTableToClass( "Cashback4", Cashback.class );
+    */
   }
     
   @Override
