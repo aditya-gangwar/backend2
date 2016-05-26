@@ -1,15 +1,13 @@
 package com.mytest.utilities;
 
-import com.mytest.AppConstants;
-
 /**
  * Created by adgangwa on 08-04-2016.
  */
 public class Base61 {
     // 0 to be used as filler
-    public static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
 
-    public static final int BASE = ALPHABET.length();
+    private static final int BASE = ALPHABET.length();
 
     private Base61() {}
 

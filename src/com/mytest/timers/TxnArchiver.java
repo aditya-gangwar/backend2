@@ -6,7 +6,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.AppConstants;
+import com.mytest.utilities.AppConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
 

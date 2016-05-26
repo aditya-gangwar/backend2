@@ -5,11 +5,10 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.AppConstants;
+import com.mytest.utilities.AppConstants;
 import com.mytest.database.Cashback;
 import com.mytest.database.Transaction;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;

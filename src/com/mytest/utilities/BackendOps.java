@@ -7,7 +7,6 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.AppConstants;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -67,8 +66,10 @@ public class BackendOps {
             if(userType == DbConstants.USER_TYPE_CUSTOMER) {
                 queryOptions.addRelated( "customer");
                 queryOptions.addRelated( "customer.qr_card");
+
             } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
                 queryOptions.addRelated( "merchant");
+                queryOptions.addRelated("merchant.trusted_devices");
             }
             query.setQueryOptions( queryOptions );
             BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
@@ -341,12 +342,109 @@ public class BackendOps {
 
             BackendlessCollection<Counters> collection = Backendless.Data.of(Counters.class).find(dataQuery);
             if( collection.getTotalObjects() > 0) {
-                return collection.getData().get(0).getValue();
+                Counters counter = collection.getData().get(0);
+
+                // increment counter - very important to do
+                counter.setValue(counter.getValue()+1);
+                counter = Backendless.Persistence.save( counter );
+                return counter.getValue();
             }
         }
         catch( BackendlessException e )
         {
             mLogger.error("Exception in fetchCounter: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    public MerchantDevice fetchDevice(String deviceId) {
+        mLastOpStatus = "";
+        try
+        {
+            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+            dataQuery.setWhereClause("device_id = '" + deviceId + "'");
+
+            BackendlessCollection<MerchantDevice> collection = Backendless.Data.of(MerchantDevice.class).find(dataQuery);
+            if( collection.getTotalObjects() > 0) {
+                return collection.getData().get(0);
+            }
+        }
+        catch( BackendlessException e )
+        {
+            mLogger.error("Exception in fetchDevice: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    public MerchantOps addMerchantOp(String opCode, Merchants merchant) {
+        try
+        {
+            MerchantOps op = new MerchantOps();
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_code(opCode);
+            op.setOp_status(DbConstants.MERCHANT_OP_STATUS_PENDING);
+
+            op = Backendless.Persistence.save( op );
+        }
+        catch( BackendlessException e )
+        {
+            mLogger.error("Exception in addMerchantOp: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    public ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
+        mLastOpStatus = "";
+        // fetch cashback objects from DB
+        try {
+            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+            dataQuery.setPageSize( AppConstants.dbQueryMaxPageSize );
+
+            // TODO: check if putting index on cust_private_id improves performance
+            // or using rowid_qr in where clause improves performance
+            dataQuery.setWhereClause(whereClause);
+
+            BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
+
+            int cnt = collection.getTotalObjects();
+            if(cnt > 0) {
+                ArrayList<MerchantOps> objects = new ArrayList<>();
+                while (collection.getCurrentPage().size() > 0)
+                {
+                    int size  = collection.getCurrentPage().size();
+
+                    Iterator<MerchantOps> iterator = collection.getCurrentPage().iterator();
+                    while( iterator.hasNext() )
+                    {
+                        objects.add(iterator.next());
+                    }
+                    collection = collection.nextPage();
+                }
+                return objects;
+            } else {
+                mLogger.debug("No merchantop object found: "+whereClause);
+                mLastOpStatus = AppConstants.BL_MYERROR_GENERAL;
+            }
+        } catch (BackendlessException e) {
+            mLogger.error("Exception in fetchMerchantOps: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+
+        return null;
+    }
+
+    public MerchantOps saveMerchantOp(MerchantOps op) {
+        mLastOpStatus = "";
+        try
+        {
+            return Backendless.Persistence.save( op );
+        }
+        catch( BackendlessException e ) {
+            mLogger.error("Exception in saveMerchantOp: " + e.toString());
             mLastOpStatus = e.getCode();
         }
         return null;

@@ -17,23 +17,15 @@ public class Bootstrap implements IBackendlessBootstrap
     Backendless.Data.mapTableToClass("Merchants", Merchants.class);
     Backendless.Data.mapTableToClass("CustomerOps", CustomerOps.class);
     Backendless.Data.mapTableToClass("AllOtp", AllOtp.class);
+    Backendless.Data.mapTableToClass("Counters", Counters.class);
+    Backendless.Data.mapTableToClass("GlobalSettings", GlobalSettings.class);
+    Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
 
     Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
     Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
 
     Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
     Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
-
-    /*
-    Backendless.Data.mapTableToClass( "Transaction2", Transaction.class );
-    Backendless.Data.mapTableToClass( "Cashback2", Cashback.class );
-
-    Backendless.Data.mapTableToClass( "Transaction3", Transaction.class );
-    Backendless.Data.mapTableToClass( "Cashback3", Cashback.class );
-
-    Backendless.Data.mapTableToClass( "Transaction4", Transaction.class );
-    Backendless.Data.mapTableToClass( "Cashback4", Cashback.class );
-    */
   }
     
   @Override

@@ -1,7 +1,5 @@
 package com.mytest.utilities;
 
-import com.mytest.AppConstants;
-
 import java.util.Random;
 
 /**

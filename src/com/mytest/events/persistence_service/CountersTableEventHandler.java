@@ -4,19 +4,13 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
-import com.backendless.geo.GeoPoint;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
-import com.backendless.property.ObjectProperty;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
-import com.backendless.servercode.annotation.Async;
-import com.mytest.AppConstants;
+import com.mytest.utilities.AppConstants;
 import com.mytest.database.Counters;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * CountersTableEventHandler handles events for all entities. This is accomplished
@@ -24,7 +18,7 @@ import java.util.Map;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-
+/*
 @Asset( "Counters" )
 public class CountersTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Counters>
 {
@@ -34,6 +28,8 @@ public class CountersTableEventHandler extends com.backendless.servercode.extens
     {
         Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
         Logger logger = Backendless.Logging.getLogger("com.mytest.events.CountersTableEventHandler");
+
+        logger.debug("In CountersTableEventHandler: afterFind");
 
         if (result.getException() == null) {
             BackendlessCollection<Counters> collection = result.getResult();
@@ -60,3 +56,4 @@ public class CountersTableEventHandler extends com.backendless.servercode.extens
     }
 
 }
+*/

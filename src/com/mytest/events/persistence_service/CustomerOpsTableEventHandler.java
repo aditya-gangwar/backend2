@@ -8,7 +8,7 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
-import com.mytest.AppConstants;
+import com.mytest.utilities.AppConstants;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
 import com.mytest.database.*;
@@ -137,14 +137,14 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
     //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
-        /*
-         * fetch new card record
-         * if ok, fetch customer record
-         * if ok, disable customer record temporarily, till all records are updated
-         * if ok, update rowid_qr for all cashback records for this customer
-         * if ok, save new card in the customer record & enable the customer again
-         * if ok, update old card record status
-         */
+    /*
+     * fetch new card record
+     * if ok, fetch customer record
+     * if ok, disable customer record temporarily, till all records are updated
+     * if ok, update rowid_qr for all cashback records for this customer
+     * if ok, save new card in the customer record & enable the customer again
+     * if ok, update old card record status
+     */
 
     String newQrCode = custOp.getQr_card();
     String newMobile = custOp.getExtra_op_params();

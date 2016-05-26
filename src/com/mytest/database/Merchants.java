@@ -10,8 +10,10 @@ import com.backendless.persistence.BackendlessDataQuery;
 public class Merchants
 {
   private String name;
+  private Double longitude_reg;
   private String objectId;
   private java.util.Date temp_pswd_time;
+  private Boolean cl_add_enable;
   private String ownerId;
   private java.util.Date last_archive;
   private String address_pincode;
@@ -26,43 +28,19 @@ public class Merchants
   private String txn_table;
   private String auto_id;
   private Integer admin_status;
+  private Double latitude_reg;
+  private String cb_rate;
+  private java.util.List<MerchantDevice> trusted_devices;
   private Cities city;
   private BusinessCategories buss_category;
-  private Boolean cl_add_enable;
-  private String cb_rate;
-  private Double longitude_reg;
-  private Double latitude_reg;
+  private Integer passwd_wrong_attempts;
 
-  public Double getLongitude_reg() {
-    return longitude_reg;
+  public Integer getPasswd_wrong_attempts() {
+    return passwd_wrong_attempts;
   }
 
-  public void setLongitude_reg(Double longitude_reg) {
-    this.longitude_reg = longitude_reg;
-  }
-
-  public Double getLatitude_reg() {
-    return latitude_reg;
-  }
-
-  public void setLatitude_reg(Double latitude_reg) {
-    this.latitude_reg = latitude_reg;
-  }
-
-  public Boolean getCl_add_enable() {
-    return cl_add_enable;
-  }
-
-  public void setCl_add_enable(Boolean cl_add_enable) {
-    this.cl_add_enable = cl_add_enable;
-  }
-
-  public String getCb_rate() {
-    return cb_rate;
-  }
-
-  public void setCb_rate(String cb_rate) {
-    this.cb_rate = cb_rate;
+  public void setPasswd_wrong_attempts(Integer passwd_wrong_attempts) {
+    this.passwd_wrong_attempts = passwd_wrong_attempts;
   }
 
   public String getName()
@@ -73,6 +51,16 @@ public class Merchants
   public void setName( String name )
   {
     this.name = name;
+  }
+
+  public Double getLongitude_reg()
+  {
+    return longitude_reg;
+  }
+
+  public void setLongitude_reg( Double longitude_reg )
+  {
+    this.longitude_reg = longitude_reg;
   }
 
   public String getObjectId()
@@ -88,6 +76,16 @@ public class Merchants
   public void setTemp_pswd_time( java.util.Date temp_pswd_time )
   {
     this.temp_pswd_time = temp_pswd_time;
+  }
+
+  public Boolean getCl_add_enable()
+  {
+    return cl_add_enable;
+  }
+
+  public void setCl_add_enable( Boolean cl_add_enable )
+  {
+    this.cl_add_enable = cl_add_enable;
   }
 
   public String getOwnerId()
@@ -213,6 +211,36 @@ public class Merchants
   public void setAdmin_status( Integer admin_status )
   {
     this.admin_status = admin_status;
+  }
+
+  public Double getLatitude_reg()
+  {
+    return latitude_reg;
+  }
+
+  public void setLatitude_reg( Double latitude_reg )
+  {
+    this.latitude_reg = latitude_reg;
+  }
+
+  public String getCb_rate()
+  {
+    return cb_rate;
+  }
+
+  public void setCb_rate( String cb_rate )
+  {
+    this.cb_rate = cb_rate;
+  }
+
+  public java.util.List<MerchantDevice> getTrusted_devices()
+  {
+    return trusted_devices;
+  }
+
+  public void setTrusted_devices( java.util.List<MerchantDevice> trusted_devices )
+  {
+    this.trusted_devices = trusted_devices;
   }
 
   public Cities getCity()

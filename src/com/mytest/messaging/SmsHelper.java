@@ -1,11 +1,8 @@
 package com.mytest.messaging;
 
 import com.backendless.Backendless;
-import com.mytest.AppConstants;
+import com.mytest.utilities.AppConstants;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;

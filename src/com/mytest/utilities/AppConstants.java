@@ -1,4 +1,4 @@
-package com.mytest;
+package com.mytest.utilities;
 
 import java.util.Locale;
 
@@ -47,18 +47,24 @@ public class AppConstants {
     // Backend error codes
 
     // these are my own defined
+    public static final String BL_MYRESPONSE_NO_ERROR = "100";
+
     public static final String BL_MYERROR_GENERAL = "500";
-    public static final String BL_MYERROR_NO_SUCH_USER = "502";
-    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "504";
-    public static final String BL_MYERROR_SEND_SMS_FAILED = "508";
+    public static final String BL_MYERROR_NO_SUCH_USER = "501";
+    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "502";
+    public static final String BL_MYERROR_SEND_SMS_FAILED = "503";
+    public static final String BL_MYERROR_VERIFICATION_FAILED = "504";
+
     public static final String BL_MYERROR_OTP_GENERATE_FAILED = "510";
-    public static final String BL_MYERROR_OTP_GENERATED = "512";
-    public static final String BL_MYERROR_WRONG_OTP = "514";
-    public static final String BL_MYERROR_WRONG_PIN = "516";
+    public static final String BL_MYERROR_OTP_GENERATED = "511";
+    public static final String BL_MYERROR_WRONG_OTP = "512";
+    public static final String BL_MYERROR_WRONG_PIN = "513";
+
     public static final String BL_MYERROR_NO_SUCH_QR_CARD = "520";
-    public static final String BL_MYERROR_WRONG_QR_CARD = "522";
-    public static final String BL_MYERROR_QR_CARD_INUSE = "524";
-    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "526";
+    public static final String BL_MYERROR_WRONG_QR_CARD = "521";
+    public static final String BL_MYERROR_QR_CARD_INUSE = "522";
+    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "523";
+
     public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "599";
 
 

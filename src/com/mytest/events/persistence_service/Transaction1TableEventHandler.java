@@ -12,7 +12,7 @@ import com.mytest.database.Transaction;
 * The methods in the class correspond to the events selected in Backendless
 * Console.
 */
-    
+/*
 @Asset( "Transaction1" )
 public class Transaction1TableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Transaction>
 {
@@ -24,4 +24,4 @@ public class Transaction1TableEventHandler extends com.backendless.servercode.ex
       txnEventHelper.buildAndSendTxnSMS(transaction, result);
   }
 }
-        
+*/
