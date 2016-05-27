@@ -42,6 +42,19 @@ public class BackendOps {
         return null;
     }
 
+    public boolean logoutUser() {
+        mLastOpStatus = "";
+
+        try {
+            Backendless.UserService.logout();
+        } catch (BackendlessException e) {
+            mLogger.error("Exception in logoutUser: " + e.toString());
+            mLastOpStatus = e.getCode();
+            return false;
+        }
+        return true;
+    }
+
     public BackendlessUser updateUser(BackendlessUser user) {
         mLastOpStatus = "";
 
@@ -82,6 +95,46 @@ public class BackendOps {
             }
         } catch (BackendlessException e) {
             mLogger.error("Exception in fetchUser: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    /*
+     * Customer operations
+     */
+    public Merchants getMerchant(String userId) {
+        mLogger.debug("In getMerchant: "+userId);
+        mLastOpStatus = "";
+        try {
+            BackendlessDataQuery query = new BackendlessDataQuery();
+            query.setWhereClause("auto_id = '"+userId+"'");
+
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.addRelated("trusted_devices");
+            query.setQueryOptions(queryOptions);
+
+            BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
+            if( user.getTotalObjects() == 0) {
+                // no data found
+                mLogger.warn("No merchant found: "+userId);
+                mLastOpStatus = AppConstants.BL_MYERROR_NO_SUCH_USER;
+            } else {
+                return user.getData().get(0);
+            }
+        } catch (BackendlessException e) {
+            mLogger.error("Exception in getMerchant: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+
+        return null;
+    }
+
+    public Merchants updateMerchant(Merchants merchant) {
+        try {
+            return Backendless.Persistence.save(merchant);
+        } catch(BackendlessException e) {
+            mLogger.error("Exception in updateMerchant: " + e.toString());
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -292,8 +345,14 @@ public class BackendOps {
         Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
-        return ( ((currTime.getTime() - otpTime.getTime()) < (AppConstants.OTP_VALID_MINS*60*1000)) &&
-                rcvdOtp.equals(otp.getOtp_value()) );
+        if ( ((currTime.getTime() - otpTime.getTime()) < (AppConstants.OTP_VALID_MINS*60*1000)) &&
+                rcvdOtp.equals(otp.getOtp_value()) ) {
+            // active otp available and matched
+            deleteOtp(otp);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public AllOtp fetchOtp(String userId) {

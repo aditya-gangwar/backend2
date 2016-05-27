@@ -34,6 +34,15 @@ public class Merchants
   private Cities city;
   private BusinessCategories buss_category;
   private Integer passwd_wrong_attempts;
+  private String tempDevId;
+
+  public String getTempDevId() {
+    return tempDevId;
+  }
+
+  public void setTempDevId(String tempDevId) {
+    this.tempDevId = tempDevId;
+  }
 
   public Integer getPasswd_wrong_attempts() {
     return passwd_wrong_attempts;

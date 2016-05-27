@@ -2,30 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2787f8a4-2254-4a73-9b45-f8008f85f2a3" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/database/MerchantOps.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/classes/com/mytest/events/persistence_service/Transaction0TableEventHandler.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/classes/readme.txt" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/classes/com/mytest/Bootstrap.class" afterPath="$PROJECT_DIR$/classes/com/mytest/Bootstrap.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/backend.iml" afterPath="$PROJECT_DIR$/backend.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" afterPath="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" afterPath="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/database/Merchants.java" afterPath="$PROJECT_DIR$/src/com/mytest/database/Merchants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/messaging/SmsConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/messaging/SmsConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" afterPath="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" afterPath="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" afterPath="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/com/mytest/AppConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
     </list>
     <ignored path="backend2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -47,14 +32,34 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="MerchantPasswdResetTimer.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="MerchantPasswdResetTimer.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="433">
-              <caret line="60" column="13" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
+            <state relative-caret-position="161">
+              <caret line="85" column="0" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GenericUserEventHandler.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-961">
+              <caret line="79" column="34" selection-start-line="79" selection-start-column="34" selection-end-line="79" selection-end-column="34" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AppConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="535">
+              <caret line="70" column="60" selection-start-line="70" selection-start-column="31" selection-end-line="70" selection-end-column="60" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -69,21 +74,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MerchantDevice.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="11" column="26" selection-start-line="11" selection-start-column="17" selection-end-line="11" selection-end-column="26" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BackendOps.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="BackendOps.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="569">
-              <caret line="442" column="9" selection-start-line="442" selection-start-column="9" selection-end-line="442" selection-end-column="9" />
+            <state relative-caret-position="603">
+              <caret line="315" column="13" selection-start-line="315" selection-start-column="13" selection-end-line="315" selection-end-column="13" />
               <folding />
             </state>
           </provider>
@@ -92,49 +87,31 @@
       <file leaf-file-name="DbConstants.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/database/DbConstants.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="544">
-              <caret line="32" column="58" selection-start-line="32" selection-start-column="31" selection-end-line="32" selection-end-column="58" />
+            <state relative-caret-position="204">
+              <caret line="12" column="48" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="48" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MerchantOps.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantOps.java">
+      <file leaf-file-name="CustomerOpsTableEventHandler.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="13" column="32" selection-start-line="13" selection-start-column="25" selection-end-line="13" selection-end-column="32" />
+            <state relative-caret-position="297">
+              <caret line="94" column="7" selection-start-line="88" selection-start-column="6" selection-end-line="94" selection-end-column="7" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Merchants.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Merchants.java">
+      <file leaf-file-name="CommonUtils.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="561">
-              <caret line="41" column="46" selection-start-line="41" selection-start-column="46" selection-end-line="41" selection-end-column="46" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Transaction.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Transaction.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Cashback.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Cashback.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-              <folding />
+            <state relative-caret-position="671">
+              <caret line="62" column="5" selection-start-line="53" selection-start-column="4" selection-end-line="62" selection-end-column="5" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -144,7 +121,39 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="323">
               <caret line="36" column="0" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
-              <folding />
+              <folding>
+                <element signature="imports" expanded="false" />
+                <element signature="e#552#553#0" expanded="false" />
+                <element signature="e#580#581#0" expanded="false" />
+                <element signature="e#636#637#0" expanded="false" />
+                <element signature="e#676#677#0" expanded="false" />
+                <element signature="e#716#717#0" expanded="false" />
+                <element signature="e#746#747#0" expanded="false" />
+                <element signature="e#806#807#0" expanded="false" />
+                <element signature="e#850#851#0" expanded="false" />
+                <element signature="e#885#886#0" expanded="false" />
+                <element signature="e#910#911#0" expanded="false" />
+                <element signature="e#952#953#0" expanded="false" />
+                <element signature="e#976#977#0" expanded="false" />
+                <element signature="e#1010#1011#0" expanded="false" />
+                <element signature="e#1034#1035#0" expanded="false" />
+                <element signature="e#1076#1077#0" expanded="false" />
+                <element signature="e#1100#1101#0" expanded="false" />
+                <element signature="e#1193#1194#0" expanded="false" />
+                <element signature="e#1270#1271#0" expanded="false" />
+                <element signature="e#1533#1553#0" expanded="false" />
+                <element signature="e#1846#1847#0" expanded="false" />
+                <element signature="e#1925#1926#0" expanded="false" />
+                <element signature="e#2162#2168#0" expanded="false" />
+                <element signature="e#2851#2871#0" expanded="false" />
+                <element signature="e#3214#3215#0" expanded="false" />
+                <element signature="e#3290#3291#0" expanded="false" />
+                <element signature="e#3565#3585#0" expanded="false" />
+                <element signature="e#3911#3912#0" expanded="false" />
+                <element signature="e#3986#3987#0" expanded="false" />
+                <element signature="e#4260#4280#0" expanded="false" />
+                <element signature="e#5072#5115#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -204,23 +213,23 @@
         <option value="$PROJECT_DIR$/src/com/mytest/database/Counters.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/BackendOps.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/Base61.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/AppConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/MerchantOps.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/database/Merchants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/messaging/SmsConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/database/Merchants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" />
       </list>
     </option>
   </component>
@@ -262,6 +271,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -441,8 +452,6 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
-      <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -778,7 +787,14 @@
       <option name="project" value="LOCAL" />
       <updated>1464031703850</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="22 May">
+      <created>1464298859780</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1464298859780</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -793,7 +809,6 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -802,13 +817,14 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39895698" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985657" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39895698" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -1008,7 +1024,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
           <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1016,7 +1031,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
           <caret line="12" column="43" selection-start-line="12" selection-start-column="43" selection-end-line="12" selection-end-column="43" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1024,15 +1038,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
           <caret line="78" column="0" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="501">
-          <caret line="68" column="0" selection-start-line="68" selection-start-column="0" selection-end-line="68" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1040,15 +1045,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="21" column="71" selection-start-line="21" selection-start-column="71" selection-end-line="21" selection-end-column="71" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1649">
-          <caret line="22" column="25" selection-start-line="22" selection-start-column="25" selection-end-line="22" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1056,14 +1052,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
           <caret line="23" column="31" selection-start-line="23" selection-start-column="24" selection-end-line="23" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="32" column="34" selection-start-line="32" selection-start-column="28" selection-end-line="32" selection-end-column="34" />
           <folding />
         </state>
       </provider>
@@ -1076,26 +1064,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="476">
-          <caret line="224" column="9" selection-start-line="224" selection-start-column="9" selection-end-line="224" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="620">
           <caret line="335" column="0" selection-start-line="332" selection-start-column="0" selection-end-line="335" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="569">
-          <caret line="442" column="9" selection-start-line="442" selection-start-column="9" selection-end-line="442" selection-end-column="9" />
           <folding />
         </state>
       </provider>
@@ -1108,19 +1080,57 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="11" column="26" selection-start-line="11" selection-start-column="17" selection-end-line="11" selection-end-column="26" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantOps.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="13" column="32" selection-start-line="13" selection-start-column="25" selection-end-line="13" selection-end-column="32" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#537#538#0" expanded="false" />
+            <element signature="e#561#562#0" expanded="false" />
+            <element signature="e#598#599#0" expanded="false" />
+            <element signature="e#625#626#0" expanded="false" />
+            <element signature="e#679#680#0" expanded="false" />
+            <element signature="e#717#718#0" expanded="false" />
+            <element signature="e#751#752#0" expanded="false" />
+            <element signature="e#775#776#0" expanded="false" />
+            <element signature="e#823#824#0" expanded="false" />
+            <element signature="e#855#856#0" expanded="false" />
+            <element signature="e#890#891#0" expanded="false" />
+            <element signature="e#915#916#0" expanded="false" />
+            <element signature="e#957#958#0" expanded="false" />
+            <element signature="e#981#982#0" expanded="false" />
+            <element signature="e#1019#1020#0" expanded="false" />
+            <element signature="e#1047#1048#0" expanded="false" />
+            <element signature="e#1103#1104#0" expanded="false" />
+            <element signature="e#1143#1144#0" expanded="false" />
+            <element signature="e#1185#1186#0" expanded="false" />
+            <element signature="e#1209#1210#0" expanded="false" />
+            <element signature="e#1239#1240#0" expanded="false" />
+            <element signature="e#1259#1260#0" expanded="false" />
+            <element signature="e#1299#1300#0" expanded="false" />
+            <element signature="e#1323#1324#0" expanded="false" />
+            <element signature="e#1359#1360#0" expanded="false" />
+            <element signature="e#1385#1386#0" expanded="false" />
+            <element signature="e#1437#1438#0" expanded="false" />
+            <element signature="e#1473#1474#0" expanded="false" />
+            <element signature="e#1559#1560#0" expanded="false" />
+            <element signature="e#1629#1630#0" expanded="false" />
+            <element signature="e#1878#1891#0" expanded="false" />
+            <element signature="e#2163#2164#0" expanded="false" />
+            <element signature="e#2235#2236#0" expanded="false" />
+            <element signature="e#2472#2478#0" expanded="false" />
+            <element signature="e#2775#2776#0" expanded="false" />
+            <element signature="e#2847#2848#0" expanded="false" />
+            <element signature="e#3117#3130#0" expanded="false" />
+            <element signature="e#3445#3446#0" expanded="false" />
+            <element signature="e#3514#3515#0" expanded="false" />
+            <element signature="e#3775#3788#0" expanded="false" />
+            <element signature="e#4086#4087#0" expanded="false" />
+            <element signature="e#4154#4155#0" expanded="false" />
+            <element signature="e#4414#4427#0" expanded="false" />
+            <element signature="e#5168#5204#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1128,7 +1138,89 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
           <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#879#880#0" expanded="false" />
+            <element signature="e#905#906#0" expanded="false" />
+            <element signature="e#958#959#0" expanded="false" />
+            <element signature="e#994#995#0" expanded="false" />
+            <element signature="e#1031#1032#0" expanded="false" />
+            <element signature="e#1057#1058#0" expanded="false" />
+            <element signature="e#1110#1111#0" expanded="false" />
+            <element signature="e#1146#1147#0" expanded="false" />
+            <element signature="e#1192#1193#0" expanded="false" />
+            <element signature="e#1220#1221#0" expanded="false" />
+            <element signature="e#1284#1285#0" expanded="false" />
+            <element signature="e#1324#1325#0" expanded="false" />
+            <element signature="e#1361#1362#0" expanded="false" />
+            <element signature="e#1387#1388#0" expanded="false" />
+            <element signature="e#1440#1441#0" expanded="false" />
+            <element signature="e#1476#1477#0" expanded="false" />
+            <element signature="e#1512#1513#0" expanded="false" />
+            <element signature="e#1537#1538#0" expanded="false" />
+            <element signature="e#1588#1589#0" expanded="false" />
+            <element signature="e#1622#1623#0" expanded="false" />
+            <element signature="e#1664#1665#0" expanded="false" />
+            <element signature="e#1696#1697#0" expanded="false" />
+            <element signature="e#1760#1761#0" expanded="false" />
+            <element signature="e#1808#1809#0" expanded="false" />
+            <element signature="e#1844#1845#0" expanded="false" />
+            <element signature="e#1869#1870#0" expanded="false" />
+            <element signature="e#1920#1921#0" expanded="false" />
+            <element signature="e#1954#1955#0" expanded="false" />
+            <element signature="e#1988#1989#0" expanded="false" />
+            <element signature="e#2012#2013#0" expanded="false" />
+            <element signature="e#2050#2051#0" expanded="false" />
+            <element signature="e#2078#2079#0" expanded="false" />
+            <element signature="e#2134#2135#0" expanded="false" />
+            <element signature="e#2174#2175#0" expanded="false" />
+            <element signature="e#2209#2210#0" expanded="false" />
+            <element signature="e#2234#2235#0" expanded="false" />
+            <element signature="e#2276#2277#0" expanded="false" />
+            <element signature="e#2300#2301#0" expanded="false" />
+            <element signature="e#2337#2338#0" expanded="false" />
+            <element signature="e#2364#2365#0" expanded="false" />
+            <element signature="e#2418#2419#0" expanded="false" />
+            <element signature="e#2456#2457#0" expanded="false" />
+            <element signature="e#2491#2492#0" expanded="false" />
+            <element signature="e#2516#2517#0" expanded="false" />
+            <element signature="e#2566#2567#0" expanded="false" />
+            <element signature="e#2600#2601#0" expanded="false" />
+            <element signature="e#2638#2639#0" expanded="false" />
+            <element signature="e#2666#2667#0" expanded="false" />
+            <element signature="e#2722#2723#0" expanded="false" />
+            <element signature="e#2762#2763#0" expanded="false" />
+            <element signature="e#2804#2805#0" expanded="false" />
+            <element signature="e#2828#2829#0" expanded="false" />
+            <element signature="e#2868#2869#0" expanded="false" />
+            <element signature="e#2897#2898#0" expanded="false" />
+            <element signature="e#2956#2957#0" expanded="false" />
+            <element signature="e#2998#2999#0" expanded="false" />
+            <element signature="e#3034#3035#0" expanded="false" />
+            <element signature="e#3059#3060#0" expanded="false" />
+            <element signature="e#3110#3111#0" expanded="false" />
+            <element signature="e#3144#3145#0" expanded="false" />
+            <element signature="e#3181#3182#0" expanded="false" />
+            <element signature="e#3206#3207#0" expanded="false" />
+            <element signature="e#3258#3259#0" expanded="false" />
+            <element signature="e#3292#3293#0" expanded="false" />
+            <element signature="e#3378#3379#0" expanded="false" />
+            <element signature="e#3448#3449#0" expanded="false" />
+            <element signature="e#3697#3710#0" expanded="false" />
+            <element signature="e#3978#3979#0" expanded="false" />
+            <element signature="e#4050#4051#0" expanded="false" />
+            <element signature="e#4287#4293#0" expanded="false" />
+            <element signature="e#4587#4588#0" expanded="false" />
+            <element signature="e#4659#4660#0" expanded="false" />
+            <element signature="e#4930#4943#0" expanded="false" />
+            <element signature="e#5254#5255#0" expanded="false" />
+            <element signature="e#5323#5324#0" expanded="false" />
+            <element signature="e#5584#5597#0" expanded="false" />
+            <element signature="e#5891#5892#0" expanded="false" />
+            <element signature="e#5959#5960#0" expanded="false" />
+            <element signature="e#6219#6232#0" expanded="false" />
+            <element signature="e#6971#7007#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1136,7 +1228,75 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
           <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#770#771#0" expanded="false" />
+            <element signature="e#800#801#0" expanded="false" />
+            <element signature="e#856#857#0" expanded="false" />
+            <element signature="e#900#901#0" expanded="false" />
+            <element signature="e#940#941#0" expanded="false" />
+            <element signature="e#969#970#0" expanded="false" />
+            <element signature="e#1028#1029#0" expanded="false" />
+            <element signature="e#1070#1071#0" expanded="false" />
+            <element signature="e#1105#1106#0" expanded="false" />
+            <element signature="e#1130#1131#0" expanded="false" />
+            <element signature="e#1180#1181#0" expanded="false" />
+            <element signature="e#1214#1215#0" expanded="false" />
+            <element signature="e#1256#1257#0" expanded="false" />
+            <element signature="e#1280#1281#0" expanded="false" />
+            <element signature="e#1316#1317#0" expanded="false" />
+            <element signature="e#1341#1342#0" expanded="false" />
+            <element signature="e#1392#1393#0" expanded="false" />
+            <element signature="e#1426#1427#0" expanded="false" />
+            <element signature="e#1460#1461#0" expanded="false" />
+            <element signature="e#1484#1485#0" expanded="false" />
+            <element signature="e#1520#1521#0" expanded="false" />
+            <element signature="e#1545#1546#0" expanded="false" />
+            <element signature="e#1596#1597#0" expanded="false" />
+            <element signature="e#1630#1631#0" expanded="false" />
+            <element signature="e#1662#1663#0" expanded="false" />
+            <element signature="e#1684#1685#0" expanded="false" />
+            <element signature="e#1728#1729#0" expanded="false" />
+            <element signature="e#1756#1757#0" expanded="false" />
+            <element signature="e#1798#1799#0" expanded="false" />
+            <element signature="e#1822#1823#0" expanded="false" />
+            <element signature="e#1859#1860#0" expanded="false" />
+            <element signature="e#1885#1886#0" expanded="false" />
+            <element signature="e#1938#1939#0" expanded="false" />
+            <element signature="e#1974#1975#0" expanded="false" />
+            <element signature="e#2009#2010#0" expanded="false" />
+            <element signature="e#2034#2035#0" expanded="false" />
+            <element signature="e#2082#2083#0" expanded="false" />
+            <element signature="e#2116#2117#0" expanded="false" />
+            <element signature="e#2153#2154#0" expanded="false" />
+            <element signature="e#2179#2180#0" expanded="false" />
+            <element signature="e#2232#2233#0" expanded="false" />
+            <element signature="e#2268#2269#0" expanded="false" />
+            <element signature="e#2306#2307#0" expanded="false" />
+            <element signature="e#2331#2332#0" expanded="false" />
+            <element signature="e#2384#2385#0" expanded="false" />
+            <element signature="e#2418#2419#0" expanded="false" />
+            <element signature="e#2456#2457#0" expanded="false" />
+            <element signature="e#2481#2482#0" expanded="false" />
+            <element signature="e#2534#2535#0" expanded="false" />
+            <element signature="e#2568#2569#0" expanded="false" />
+            <element signature="e#2651#2652#0" expanded="false" />
+            <element signature="e#2718#2719#0" expanded="false" />
+            <element signature="e#2961#2971#0" expanded="false" />
+            <element signature="e#3234#3235#0" expanded="false" />
+            <element signature="e#3303#3304#0" expanded="false" />
+            <element signature="e#3540#3546#0" expanded="false" />
+            <element signature="e#3835#3836#0" expanded="false" />
+            <element signature="e#3904#3905#0" expanded="false" />
+            <element signature="e#4169#4179#0" expanded="false" />
+            <element signature="e#4482#4483#0" expanded="false" />
+            <element signature="e#4548#4549#0" expanded="false" />
+            <element signature="e#4803#4813#0" expanded="false" />
+            <element signature="e#5099#5100#0" expanded="false" />
+            <element signature="e#5164#5165#0" expanded="false" />
+            <element signature="e#5418#5428#0" expanded="false" />
+            <element signature="e#6150#6183#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1144,15 +1304,39 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="36" column="0" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Merchants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="41" column="46" selection-start-line="41" selection-start-column="46" selection-end-line="41" selection-end-column="46" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#552#553#0" expanded="false" />
+            <element signature="e#580#581#0" expanded="false" />
+            <element signature="e#636#637#0" expanded="false" />
+            <element signature="e#676#677#0" expanded="false" />
+            <element signature="e#716#717#0" expanded="false" />
+            <element signature="e#746#747#0" expanded="false" />
+            <element signature="e#806#807#0" expanded="false" />
+            <element signature="e#850#851#0" expanded="false" />
+            <element signature="e#885#886#0" expanded="false" />
+            <element signature="e#910#911#0" expanded="false" />
+            <element signature="e#952#953#0" expanded="false" />
+            <element signature="e#976#977#0" expanded="false" />
+            <element signature="e#1010#1011#0" expanded="false" />
+            <element signature="e#1034#1035#0" expanded="false" />
+            <element signature="e#1076#1077#0" expanded="false" />
+            <element signature="e#1100#1101#0" expanded="false" />
+            <element signature="e#1193#1194#0" expanded="false" />
+            <element signature="e#1270#1271#0" expanded="false" />
+            <element signature="e#1533#1553#0" expanded="false" />
+            <element signature="e#1846#1847#0" expanded="false" />
+            <element signature="e#1925#1926#0" expanded="false" />
+            <element signature="e#2162#2168#0" expanded="false" />
+            <element signature="e#2851#2871#0" expanded="false" />
+            <element signature="e#3214#3215#0" expanded="false" />
+            <element signature="e#3290#3291#0" expanded="false" />
+            <element signature="e#3565#3585#0" expanded="false" />
+            <element signature="e#3911#3912#0" expanded="false" />
+            <element signature="e#3986#3987#0" expanded="false" />
+            <element signature="e#4260#4280#0" expanded="false" />
+            <element signature="e#5072#5115#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1164,21 +1348,89 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Merchants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="663">
+          <caret line="45" column="2" selection-start-line="45" selection-start-column="2" selection-end-line="45" selection-end-column="2" />
+          <folding>
+            <element signature="e#1194#1195#0" expanded="true" />
+            <element signature="e#1220#1221#0" expanded="true" />
+            <element signature="e#1268#1269#0" expanded="true" />
+            <element signature="e#1304#1305#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="297">
+          <caret line="94" column="7" selection-start-line="88" selection-start-column="6" selection-end-line="94" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/database/DbConstants.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="32" column="58" selection-start-line="32" selection-start-column="31" selection-end-line="32" selection-end-column="58" />
+        <state relative-caret-position="204">
+          <caret line="12" column="48" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="48" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="433">
-          <caret line="60" column="13" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
+        <state relative-caret-position="161">
+          <caret line="85" column="0" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="535">
+          <caret line="70" column="60" selection-start-line="70" selection-start-column="31" selection-end-line="70" selection-end-column="60" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="671">
+          <caret line="62" column="5" selection-start-line="53" selection-start-column="4" selection-end-line="62" selection-end-column="5" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="23" column="0" selection-start-line="23" selection-start-column="0" selection-end-line="31" selection-end-column="3" />
+          <folding>
+            <element signature="e#711#712#0" expanded="true" />
+            <element signature="e#738#739#0" expanded="true" />
+            <element signature="e#786#787#0" expanded="true" />
+            <element signature="e#824#825#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-961">
+          <caret line="79" column="34" selection-start-line="79" selection-start-column="34" selection-end-line="79" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="603">
+          <caret line="315" column="13" selection-start-line="315" selection-start-column="13" selection-end-line="315" selection-end-column="13" />
+          <folding />
         </state>
       </provider>
     </entry>

@@ -53,7 +53,7 @@ public class AppConstants {
     public static final String BL_MYERROR_NO_SUCH_USER = "501";
     public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "502";
     public static final String BL_MYERROR_SEND_SMS_FAILED = "503";
-    public static final String BL_MYERROR_VERIFICATION_FAILED = "504";
+    public static final String BL_MYERROR_WRONG_INPUT_DATA = "504";
 
     public static final String BL_MYERROR_OTP_GENERATE_FAILED = "510";
     public static final String BL_MYERROR_OTP_GENERATED = "511";
@@ -64,6 +64,12 @@ public class AppConstants {
     public static final String BL_MYERROR_WRONG_QR_CARD = "521";
     public static final String BL_MYERROR_QR_CARD_INUSE = "522";
     public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "523";
+
+    public static final String BL_MYERROR_VERIFICATION_FAILED = "530";
+    public static final String BL_MYERROR_VERIFICATION_LIMIT_RCHD = "531";
+
+    public static final String BL_MYERROR_NOT_TRUSTED_DEVICE = "540";
+    public static final String BL_MYERROR_TRUSTED_DEVICE_LIMIT_RCHD = "541";
 
     public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "599";
 

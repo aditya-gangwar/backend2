@@ -2,6 +2,8 @@ package com.mytest.timers;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.exceptions.BackendlessException;
+import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.database.DbConstants;
@@ -71,14 +73,17 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         }
         Merchants merchant = (Merchants) user.getProperty("merchant");
 
-        // TODO: verify merchant admin status
+        // check admin status
+        String status = CommonUtils.checkMerchantStatus(merchant.getAdmin_status());
+        if(status != null) {
+            return status;
+        }
 
         // generate temporary password
         String passwd = CommonUtils.generateMerchantPassword();
         mLogger.debug("Merchant Password: "+passwd);
 
-        // update user account for the password and time
-        // set temp password and time
+        // update user account for the password
         user.setPassword(passwd);
         //merchant.setTemp_pswd_time(new Date());
         if(merchant.getPasswd_wrong_attempts() > 0) {

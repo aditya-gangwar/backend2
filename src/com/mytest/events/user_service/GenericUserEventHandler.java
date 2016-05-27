@@ -15,9 +15,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.AppConstants;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
 * GenericUserEventHandler handles the User Service events.
@@ -40,6 +38,84 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     @Override
     public void afterLogin( RunnerContext context, String login, String password, ExecutionResult<HashMap> result ) throws Exception
     {
+        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
+        BackendOps backendOps = new BackendOps(mLogger);
+
+        mLogger.debug("In GenericUserEventHandler: afterLogin");
+
+        if(result.getException()==null) {
+            String userId = (String) result.getResult().get("user_id");
+            Integer userType = (Integer) result.getResult().get("user_type");
+
+            if (userType == DbConstants.USER_TYPE_MERCHANT) {
+                Merchants merchant = backendOps.getMerchant(userId);
+                if(merchant==null) {
+                    backendOps.logoutUser();
+                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to fetch merchant");
+                    throw new BackendlessException(fault);
+                }
+
+                // check admin status
+                String status = CommonUtils.checkMerchantStatus(merchant.getAdmin_status());
+                if(status != null) {
+                    backendOps.logoutUser();
+                    BackendlessFault fault = new BackendlessFault(status,"Account not active");
+                    throw new BackendlessException(fault);
+                }
+
+                // Check if 'device id' not set
+                String deviceInfo = merchant.getTempDevId();
+                if(deviceInfo==null || deviceInfo.isEmpty()) {
+                    backendOps.logoutUser();
+                    BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_NOT_TRUSTED_DEVICE,"Untrusted device");
+                    throw new BackendlessException(fault);
+                }
+
+                // Add to 'trusted list', if not already there
+                // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
+                String[] csvFields = deviceInfo.split(AppConstants.CSV_DELIMETER);
+                String deviceId = csvFields[0];
+
+                // Match device id
+                boolean matched = false;
+                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                if(trustedDevices != null) {
+                    for (MerchantDevice device : trustedDevices) {
+                        if(device.getDevice_id().equals(deviceId)) {
+                            matched = true;
+                            device.setLast_login(new Date());
+                            break;
+                        }
+                    }
+                } else {
+                    trustedDevices = new ArrayList<>();
+                }
+
+                if(!matched) {
+                    // New device - add as trusted device
+                    MerchantDevice device = new MerchantDevice();
+                    device.setMerchant_id(merchant.getAuto_id());
+                    device.setDevice_id(csvFields[0]);
+                    device.setManufacturer(csvFields[1]);
+                    device.setModel(csvFields[2]);
+                    device.setOs_type("Android");
+                    device.setOs_version(csvFields[3]);
+                    device.setLast_login(new Date());
+
+                    trustedDevices.add(device);
+                }
+
+                // Update merchant
+                merchant.setTempDevId(null);
+                Merchants merchant2 = backendOps.updateMerchant(merchant);
+                if(merchant2==null) {
+                    backendOps.logoutUser();
+                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to add trusted device");
+                    throw new BackendlessException(fault);
+                }
+            }
+        }
     }
 
     @Override

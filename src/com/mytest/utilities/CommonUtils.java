@@ -1,5 +1,8 @@
 package com.mytest.utilities;
 
+import com.mytest.database.DbConstants;
+import org.glassfish.jersey.message.internal.XmlCollectionJaxbProvider;
+
 import java.util.Random;
 
 /**
@@ -48,4 +51,14 @@ public class CommonUtils {
         return new String(id);
     }
 
+    public static String checkMerchantStatus(int status) {
+        switch(status) {
+            case DbConstants.USER_STATUS_DEFAULT:
+            case DbConstants.USER_STATUS_REGISTERED:
+            case DbConstants.USER_STATUS_DISABLED:
+            case DbConstants.USER_STATUS_DISABLED_WRONG_PIN:
+                return AppConstants.BL_MYERROR_CUSTOMER_ACC_DISABLED;
+        }
+        return null;
+    }
 }
