@@ -8,12 +8,9 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.database.*;
-import com.mytest.utilities.BackendOps;
-import com.mytest.utilities.Base61;
-import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.utilities.AppConstants;
 
 import java.util.*;
 
@@ -68,7 +65,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 String deviceInfo = merchant.getTempDevId();
                 if(deviceInfo==null || deviceInfo.isEmpty()) {
                     backendOps.logoutUser();
-                    BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_NOT_TRUSTED_DEVICE,"Untrusted device");
+                    BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_NOT_TRUSTED_DEVICE,"Untrusted device");
                     throw new BackendlessException(fault);
                 }
 
@@ -190,9 +187,10 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         Backendless.Logging.flush();
     }
 
+    /*
     @Override
     public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception {
-    }
+    }*/
         /*
     @Override
     public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception {

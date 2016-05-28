@@ -10,6 +10,7 @@ import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
 import com.mytest.utilities.AppConstants;
 import com.mytest.utilities.BackendOps;
+import com.mytest.utilities.BackendResponseCodes;
 import com.mytest.utilities.CommonUtils;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
@@ -57,7 +58,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       String custOp = customerops.getOp_code();
       if( !custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
               !customer.getQr_card().getQrcode().equals(customerops.getQr_card()) ) {
-        BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_WRONG_QR_CARD, "Wrong Customer card");
+        BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_QR_CARD, "Wrong Customer card");
         throw new BackendlessException(fault);
       }
 
@@ -65,7 +66,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       String pin = customerops.getPin();
       if( !custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
               !customer.getTxn_pin().equals(pin) ) {
-        BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_WRONG_PIN, "Wrong Customer PIN");
+        BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_PIN, "Wrong Customer PIN");
         throw new BackendlessException(fault);
       }
 
@@ -77,12 +78,12 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       newOtp = mBackendOps.generateOtp(newOtp);
       if(newOtp == null) {
         // failed to generate otp
-        BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_OTP_GENERATE_FAILED,"Failed to generate OTP");
+        BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_OTP_GENERATE_FAILED,"Failed to generate OTP");
         throw new BackendlessException(fault);
       }
 
       // OTP generated successfully - return exception to indicate so
-      BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_OTP_GENERATED,"OTP generated");
+      BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_OTP_GENERATED,"OTP generated");
       throw new BackendlessException(fault);
 
     } else {
@@ -90,7 +91,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       AllOtp fetchedOtp = mBackendOps.fetchOtp(customerops.getMobile_num());
       if( fetchedOtp == null ||
               !mBackendOps.validateOtp(fetchedOtp, otp) ) {
-        BackendlessFault fault = new BackendlessFault(AppConstants.BL_MYERROR_WRONG_OTP,"Wrong OTP value");
+        BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_OTP,"Wrong OTP value");
         throw new BackendlessException(fault);
       }
       // remove PIN and OTP from the object
@@ -158,7 +159,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       }
       //mLogger.debug("Fetched customer card: "+newCard.getQrcode()+", "+newCard.getStatus());
       if(newCard.getStatus() != DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
-        return AppConstants.BL_MYERROR_QR_CARD_INUSE;
+        return BackendResponseCodes.BL_MYERROR_QR_CARD_INUSE;
       }
             /*
             //TODO: enable this in final testing
@@ -186,7 +187,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       oldCard = customer.getQr_card();
       if (oldCard == null) {
         mLogger.error("QR card data not available: " + custMobile);
-        return AppConstants.BL_MYERROR_GENERAL;
+        return BackendResponseCodes.BL_MYERROR_GENERAL;
       }
     }
 
@@ -195,7 +196,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     String[] cbTables = cbTablesRow.split(",");
     if(cbTables.length <= 0) {
       mLogger.error("Empty cashback table names: "+custMobile);
-      return AppConstants.BL_MYERROR_GENERAL;
+      return BackendResponseCodes.BL_MYERROR_GENERAL;
     }
 
     // loop on all CB tables for this customer
@@ -217,7 +218,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                     /*
                     customer = mBackendOps.updateCustomer(customer);
                     if(customer==null) {
-                        return AppConstants.BL_MYERROR_GENERAL;
+                        return BackendResponseCodes.BL_MYERROR_GENERAL;
                     }*/
         }
 
@@ -257,12 +258,12 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     user = mBackendOps.updateUser(user);
     if(user==null) {
       // TODO: add in alarms table for manual correction later
-      return AppConstants.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
+      return BackendResponseCodes.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
     }
         /*
         customer = mBackendOps.updateCustomer(customer);
         if(customer==null) {
-            return AppConstants.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
+            return BackendResponseCodes.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
         }*/
 
     // update old qr card status
@@ -279,7 +280,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
   private String processAdminStatus(Customers customer) {
 
     if(customer.getAdmin_status() == DbConstants.USER_STATUS_DISABLED) {
-      return AppConstants.BL_MYERROR_CUSTOMER_ACC_DISABLED;
+      return BackendResponseCodes.BL_MYERROR_CUSTOMER_ACC_DISABLED;
 
     } else if(customer.getAdmin_status() == DbConstants.USER_STATUS_DISABLED_WRONG_PIN) {
       //mLogger.debug("Customer disabled due to wrong PIN: "+customer.getMobile_num());
@@ -306,7 +307,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
           customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
           customer.setTemp_blocked_time(null);
         } else {
-          return AppConstants.BL_MYERROR_CUSTOMER_ACC_DISABLED;
+          return BackendResponseCodes.BL_MYERROR_CUSTOMER_ACC_DISABLED;
         }
       } else {
         mLogger.error("Status is USER_STATUS_DISABLED_WRONG_PIN, but time is null");
@@ -328,7 +329,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       }
     } else {
       mLogger.error("Cashback with non-matching mobile num: "+rowid+","+oldMobile);
-      return AppConstants.BL_MYERROR_GENERAL;
+      return BackendResponseCodes.BL_MYERROR_GENERAL;
     }
     return null;
   }
@@ -344,7 +345,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       }
     } else {
       mLogger.error("Cashback with non-matching qr code: "+cb.getRowid_qr()+","+oldQrCode);
-      return AppConstants.BL_MYERROR_GENERAL;
+      return BackendResponseCodes.BL_MYERROR_GENERAL;
     }
     return null;
   }
@@ -382,7 +383,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     String smsText = buildPwdResetSMS(mobileNum, newPin);
     if( !SmsHelper.sendSMS(smsText, mobileNum) )
     {
-      return AppConstants.BL_MYERROR_SEND_SMS_FAILED;
+      return BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
       // dont care about return code - if failed, user can always reset pin again
     }
 

@@ -89,7 +89,7 @@ public class BackendOps {
             if( user.getTotalObjects() == 0) {
                 // no data found
                 mLogger.warn("No user found: "+userid);
-                mLastOpStatus = AppConstants.BL_MYERROR_NO_SUCH_USER;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);
             }
@@ -118,7 +118,7 @@ public class BackendOps {
             if( user.getTotalObjects() == 0) {
                 // no data found
                 mLogger.warn("No merchant found: "+userId);
-                mLastOpStatus = AppConstants.BL_MYERROR_NO_SUCH_USER;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);
             }
@@ -163,7 +163,7 @@ public class BackendOps {
             if( user.getTotalObjects() == 0) {
                 // no data found
                 mLogger.warn("No customer found: "+custId);
-                mLastOpStatus = AppConstants.BL_MYERROR_NO_SUCH_USER;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);
             }
@@ -198,7 +198,7 @@ public class BackendOps {
             if( collection.getTotalObjects() == 0) {
                 // no data found
                 mLogger.warn("No customer card found: "+qrCode);
-                mLastOpStatus = AppConstants.BL_MYERROR_NO_SUCH_QR_CARD;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_QR_CARD;
             } else {
                 return collection.getData().get(0);
             }
@@ -257,7 +257,7 @@ public class BackendOps {
                 return objects;
             } else {
                 mLogger.warn("No cashback object found: "+whereClause);
-                mLastOpStatus = AppConstants.BL_MYERROR_GENERAL;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_GENERAL;
             }
         } catch (BackendlessException e) {
             mLogger.error("Exception in fetchCashback: " + e.toString());
@@ -314,7 +314,7 @@ public class BackendOps {
 
             if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
             {
-                mLastOpStatus = AppConstants.BL_MYERROR_SEND_SMS_FAILED;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
             } else {
                 return newOtp;
             }
@@ -486,7 +486,7 @@ public class BackendOps {
                 return objects;
             } else {
                 mLogger.debug("No merchantop object found: "+whereClause);
-                mLastOpStatus = AppConstants.BL_MYERROR_GENERAL;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_GENERAL;
             }
         } catch (BackendlessException e) {
             mLogger.error("Exception in fetchMerchantOps: " + e.toString());

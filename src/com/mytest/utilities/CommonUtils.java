@@ -57,7 +57,7 @@ public class CommonUtils {
             case DbConstants.USER_STATUS_REGISTERED:
             case DbConstants.USER_STATUS_DISABLED:
             case DbConstants.USER_STATUS_DISABLED_WRONG_PIN:
-                return AppConstants.BL_MYERROR_CUSTOMER_ACC_DISABLED;
+                return BackendResponseCodes.BL_MYERROR_CUSTOMER_ACC_DISABLED;
         }
         return null;
     }

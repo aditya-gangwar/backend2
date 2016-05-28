@@ -13,6 +13,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.AppConstants;
 import com.mytest.utilities.BackendOps;
+import com.mytest.utilities.BackendResponseCodes;
 import com.mytest.utilities.CommonUtils;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import java.util.Date;
  * the special annotation - BackendlessTimer. The annotation contains a JSON
  * object which describes all properties of the timer.
  */
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':600}},'timername':'MerchantPasswdReset'}")
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':300}},'timername':'MerchantPasswdReset'}")
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private static int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 60;
@@ -100,7 +101,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
         {
-            return AppConstants.BL_MYERROR_SEND_SMS_FAILED;
+            return BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
             // dont care about return code - if failed, user can always do 'forget password' again
         }
 
