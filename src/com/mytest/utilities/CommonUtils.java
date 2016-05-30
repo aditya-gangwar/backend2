@@ -1,7 +1,6 @@
 package com.mytest.utilities;
 
 import com.mytest.database.DbConstants;
-import org.glassfish.jersey.message.internal.XmlCollectionJaxbProvider;
 
 import java.util.Random;
 
@@ -24,9 +23,9 @@ public class CommonUtils {
     public static String generateMerchantPassword() {
         // random alphanumeric string
         Random random = new Random();
-        char[] id = new char[AppConstants.PASSWORD_LEN];
-        for (int i = 0; i < AppConstants.PASSWORD_LEN; i++) {
-            id[i] = AppConstants.pwdChars[random.nextInt(AppConstants.pwdChars.length)];
+        char[] id = new char[BackendConstants.PASSWORD_LEN];
+        for (int i = 0; i < BackendConstants.PASSWORD_LEN; i++) {
+            id[i] = BackendConstants.pwdChars[random.nextInt(BackendConstants.pwdChars.length)];
         }
         return new String(id);
     }
@@ -34,9 +33,9 @@ public class CommonUtils {
     public static String generateCustomerPIN() {
         // random numeric string
         Random random = new Random();
-        char[] id = new char[AppConstants.PIN_LEN];
-        for (int i = 0; i < AppConstants.PIN_LEN; i++) {
-            id[i] = AppConstants.pinAndOtpChars[random.nextInt(AppConstants.pinAndOtpChars.length)];
+        char[] id = new char[CommonConstants.PIN_LEN];
+        for (int i = 0; i < CommonConstants.PIN_LEN; i++) {
+            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
         }
         return new String(id);
     }
@@ -44,9 +43,9 @@ public class CommonUtils {
     public static String generateOTP() {
         // random numeric string
         Random random = new Random();
-        char[] id = new char[AppConstants.OTP_LEN];
-        for (int i = 0; i < AppConstants.OTP_LEN; i++) {
-            id[i] = AppConstants.pinAndOtpChars[random.nextInt(AppConstants.pinAndOtpChars.length)];
+        char[] id = new char[CommonConstants.OTP_LEN];
+        for (int i = 0; i < CommonConstants.OTP_LEN; i++) {
+            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
         }
         return new String(id);
     }
@@ -54,7 +53,6 @@ public class CommonUtils {
     public static String checkMerchantStatus(int status) {
         switch(status) {
             case DbConstants.USER_STATUS_DEFAULT:
-            case DbConstants.USER_STATUS_REGISTERED:
             case DbConstants.USER_STATUS_DISABLED:
             case DbConstants.USER_STATUS_DISABLED_WRONG_PIN:
                 return BackendResponseCodes.BL_MYERROR_CUSTOMER_ACC_DISABLED;

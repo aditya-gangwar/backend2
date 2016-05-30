@@ -4,10 +4,10 @@ package com.mytest.utilities;
  * Created by adgangwa on 28-05-2016.
  */
 public class BackendResponseCodes {
-    // Backend error codes
 
     // these are my own defined
     public static final String BL_MYRESPONSE_NO_ERROR = "100";
+    public static final String BL_MYRESPONSE_OP_SCHEDULED = "102";
 
     public static final String BL_MYERROR_GENERAL = "500";
     public static final String BL_MYERROR_NO_SUCH_USER = "501";

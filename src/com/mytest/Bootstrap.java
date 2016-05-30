@@ -18,7 +18,6 @@ public class Bootstrap implements IBackendlessBootstrap
     Backendless.Data.mapTableToClass("CustomerOps", CustomerOps.class);
     Backendless.Data.mapTableToClass("AllOtp", AllOtp.class);
     Backendless.Data.mapTableToClass("Counters", Counters.class);
-    Backendless.Data.mapTableToClass("GlobalSettings", GlobalSettings.class);
     Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
 
     Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );

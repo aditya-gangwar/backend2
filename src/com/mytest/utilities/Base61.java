@@ -20,7 +20,7 @@ public class Base61 {
         sb.reverse();
 
         // add 0 as filler
-        for (int toAppend = (AppConstants.CUSTOMER_PRIVATE_ID_LEN-sb.length()); toAppend>0; toAppend--) {
+        for (int toAppend = (BackendConstants.CUSTOMER_PRIVATE_ID_LEN-sb.length()); toAppend>0; toAppend--) {
             sb.append('0');
         }
         return sb.toString();

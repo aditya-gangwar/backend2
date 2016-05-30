@@ -5,7 +5,8 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.utilities.AppConstants;
+import com.mytest.utilities.BackendConstants;
+import com.mytest.utilities.CommonConstants;
 import com.mytest.database.Cashback;
 import com.mytest.database.Transaction;
 
@@ -30,7 +31,7 @@ public class TxnTableEventHelper {
 
     public void buildAndSendTxnSMS(Transaction transaction, ExecutionResult<Transaction> result) throws Exception
     {
-        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.events.TxnTableEventHelper");
 
         mLogger.debug("In Transaction afterCreate");
@@ -47,8 +48,8 @@ public class TxnTableEventHelper {
             cb_credit = transaction.getCb_credit();
 
             // Send SMS only in cases of 'redeem > INR 10' and 'add cash in account'
-            if( cl_debit > AppConstants.SEND_TXN_SMS_MIN_AMOUNT
-                    || cl_credit > AppConstants.SEND_TXN_SMS_MIN_AMOUNT
+            if( cl_debit > BackendConstants.SEND_TXN_SMS_MIN_AMOUNT
+                    || cl_credit > BackendConstants.SEND_TXN_SMS_MIN_AMOUNT
                 //|| cb_debit > AppConstants.SEND_TXN_SMS_MIN_AMOUNT
                     ) {
                 Cashback cashback = transaction.getCashback();
@@ -59,7 +60,7 @@ public class TxnTableEventHelper {
                     cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
                     cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 
-                    SimpleDateFormat sdf = new SimpleDateFormat(AppConstants.DATE_FORMAT_ONLY_DATE_BACKEND, AppConstants.DATE_LOCALE);
+                    SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
                     sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
                     txnDate = sdf.format(transaction.getCreate_time());
 
@@ -84,13 +85,13 @@ public class TxnTableEventHelper {
 
         if(cl_debit>0 && cb_debit>0) {
             sms = String.format(SmsConstants.SMS_TXN_DEBIT_CL_CB,merchantName,cl_debit,cb_debit,txnDate,cl_balance,cb_balance);
-        } else if(cl_credit>AppConstants.SEND_TXN_SMS_MIN_AMOUNT && cb_debit>0) {
+        } else if(cl_credit> BackendConstants.SEND_TXN_SMS_MIN_AMOUNT && cb_debit>0) {
             sms = String.format(SmsConstants.SMS_TXN_CREDIT_CL_DEBIT_CB,merchantName,cl_credit,cb_debit,txnDate,cl_balance,cb_balance);
         } else if(cl_credit>0) {
             sms = String.format(SmsConstants.SMS_TXN_CREDIT_CL,merchantName,cl_credit,txnDate,cl_balance,cb_balance);
-        } else if(cl_debit>AppConstants.SEND_TXN_SMS_MIN_AMOUNT) {
+        } else if(cl_debit> BackendConstants.SEND_TXN_SMS_MIN_AMOUNT) {
             sms = String.format(SmsConstants.SMS_TXN_DEBIT_CL,merchantName,cl_debit,txnDate,cl_balance,cb_balance);
-        } else if(cb_debit>AppConstants.SEND_TXN_SMS_MIN_AMOUNT) {
+        } else if(cb_debit> BackendConstants.SEND_TXN_SMS_MIN_AMOUNT) {
             sms = String.format(SmsConstants.SMS_TXN_DEBIT_CB,merchantName,cb_debit,txnDate,cl_balance,cb_balance);
         }
         return sms;

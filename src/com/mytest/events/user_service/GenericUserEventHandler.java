@@ -1,7 +1,6 @@
 package com.mytest.events.user_service;
 
 import com.backendless.Backendless;
-import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
@@ -9,8 +8,6 @@ import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.database.*;
 import com.mytest.utilities.*;
-import com.mytest.messaging.SmsConstants;
-import com.mytest.messaging.SmsHelper;
 
 import java.util.*;
 
@@ -35,7 +32,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     @Override
     public void afterLogin( RunnerContext context, String login, String password, ExecutionResult<HashMap> result ) throws Exception
     {
-        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
         BackendOps backendOps = new BackendOps(mLogger);
 
@@ -71,7 +68,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 // Add to 'trusted list', if not already there
                 // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
-                String[] csvFields = deviceInfo.split(AppConstants.CSV_DELIMETER);
+                String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
                 String deviceId = csvFields[0];
 
                 // Match device id
@@ -105,6 +102,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 // Update merchant
                 merchant.setTempDevId(null);
+                merchant.setTrusted_devices(trustedDevices);
                 Merchants merchant2 = backendOps.updateMerchant(merchant);
                 if(merchant2==null) {
                     backendOps.logoutUser();
@@ -118,7 +116,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     @Override
     public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
     {
-        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
         BackendOps backendOps = new BackendOps(mLogger);
 
@@ -174,12 +172,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 userValue.put("password",pwd);
 
                 // set cashback and transaction table names
+                /*
                 GlobalSettings gSettings = backendOps.fetchGlobalSettings();
                 if(gSettings==null) {
                     BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to fetch global settings");
                     throw new BackendlessException(fault);
-                }
-                setCbAndTransTables(merchant, merchantCnt.longValue(), gSettings);
+                }*/
+                setCbAndTransTables(merchant, merchantCnt.longValue());
             } else {
                 mLogger.error("Merchant object is null: " + userId);
             }
@@ -245,8 +244,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         // second alphabet = counter / 9999
         // digits = counter % 9999
         StringBuilder sb = new StringBuilder();
-        sb.append(AppConstants.numToChar[(int)(regCounter/(26*divisor))]);
-        sb.append(AppConstants.numToChar[(int) (regCounter/divisor)]);
+        sb.append(CommonConstants.numToChar[(int)(regCounter/(26*divisor))]);
+        sb.append(CommonConstants.numToChar[(int) (regCounter/divisor)]);
         if(rem==0) {
             sb.append(divisor);
         } else {
@@ -259,19 +258,21 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     private String generatePassword() {
         // random alphanumeric string
         Random random = new Random();
-        char[] id = new char[AppConstants.PASSWORD_LEN];
-        for (int i = 0;  i < AppConstants.PASSWORD_LEN;  i++) {
-            id[i] = AppConstants.pwdChars[random.nextInt(AppConstants.pwdChars.length)];
+        char[] id = new char[BackendConstants.PASSWORD_LEN];
+        for (int i = 0; i < BackendConstants.PASSWORD_LEN; i++) {
+            id[i] = BackendConstants.pwdChars[random.nextInt(BackendConstants.pwdChars.length)];
         }
         String passwd = new String(id);
         //return passwd;
         return "adi";
     }
 
-    private void setCbAndTransTables(Merchants merchant, long regCounter, GlobalSettings gSettings) {
+    private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin
-        int pool_size = gSettings.getCb_table_pool_size();
-        int pool_start = gSettings.getCb_table_pool_start();
+        //int pool_size = gSettings.getCb_table_pool_size();
+        //int pool_start = gSettings.getCb_table_pool_start();
+        int pool_size = BackendConstants.CASHBACK_TABLE_POOL_SIZE;
+        int pool_start = BackendConstants.CASHBACK_TABLE_POOL_START;
 
         // use last 4 numeric digits for round-robin
         //int num = Integer.parseInt(getUser_id().substring(2));

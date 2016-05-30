@@ -6,7 +6,8 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.utilities.AppConstants;
+import com.mytest.utilities.BackendConstants;
+import com.mytest.utilities.CommonConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
 
@@ -44,9 +45,9 @@ public class TxnArchiver
         mMerchantIdSuffix = merchantIdSuffix;
 
         mToday = new Date();
-        mSdfDateWithTime = new SimpleDateFormat(AppConstants.DATE_FORMAT_WITH_TIME, AppConstants.DATE_LOCALE);
-        mSdfOnlyDateBackend = new SimpleDateFormat(AppConstants.DATE_FORMAT_ONLY_DATE_BACKEND, AppConstants.DATE_LOCALE);
-        mSdfOnlyDateFilename = new SimpleDateFormat(AppConstants.DATE_FORMAT_ONLY_DATE_FILENAME, AppConstants.DATE_LOCALE);
+        mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+        mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+        mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
         mCsvFiles = new HashMap<>();
         mCsvDataMap = new HashMap<>();
@@ -55,7 +56,7 @@ public class TxnArchiver
     public void execute() throws Exception
     {
         long startTime = System.currentTimeMillis();
-        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.timers.TxnArchiver");
 
         mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix);
@@ -139,8 +140,8 @@ public class TxnArchiver
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("PUT");
-            conn.setRequestProperty("application-id", AppConstants.APP_ID);
-            conn.setRequestProperty("secret-key", AppConstants.SECRET_KEY);
+            conn.setRequestProperty("application-id", BackendConstants.APP_ID);
+            conn.setRequestProperty("secret-key", BackendConstants.SECRET_KEY);
             conn.setRequestProperty("Content-Type", "application/json");
 
             String input;
@@ -236,15 +237,15 @@ public class TxnArchiver
 
     private String getMerchantTxnDir(String merchantId) {
         // directory: merchants/txn_files/<first 2 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
-        return AppConstants.MERCHANT_TXN_ROOT_DIR +
-                merchantId.substring(0,2) + AppConstants.FILE_PATH_SEPERATOR +
-                merchantId.substring(2,4) + AppConstants.FILE_PATH_SEPERATOR +
-                merchantId + AppConstants.FILE_PATH_SEPERATOR;
+        return CommonConstants.MERCHANT_TXN_ROOT_DIR +
+                merchantId.substring(0,2) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId.substring(2,4) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId + CommonConstants.FILE_PATH_SEPERATOR;
     }
 
     private String getTxnCsvFilename(String date, String merchantId) {
         // File name: txns_<merchant_id>_<ddMMMyy>.csv
-        return AppConstants.MERCHANT_TXN_FILE_PREFIX + merchantId + "_" + date + AppConstants.CSV_FILE_EXT;
+        return CommonConstants.MERCHANT_TXN_FILE_PREFIX + merchantId + "_" + date + CommonConstants.CSV_FILE_EXT;
     }
 
     // Assumes mLastFetchTransactions can contain txns prior to yesterday too
@@ -264,27 +265,27 @@ public class TxnArchiver
                 sb = new StringBuilder(CSV_RECORD_MAX_CHARS*size);
                 // new file - write first line as header
                 sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
-                sb.append(AppConstants.CSV_NEWLINE);
+                sb.append(CommonConstants.CSV_NEWLINE);
                 mCsvDataMap.put(txnDateStr,sb);
             }
 
             // trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
             // total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent\n
-            sb.append(txn.getTrans_id()).append(AppConstants.CSV_DELIMETER);
+            sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
             //SimpleDateFormat sdf = new SimpleDateFormat(AppConstants.DATE_FORMAT_WITH_TIME, AppConstants.DATE_LOCALE);
-            sb.append(mSdfDateWithTime.format(txnDate)).append(AppConstants.CSV_DELIMETER);
-            sb.append(mLastFetchMerchant.getAuto_id()).append(AppConstants.CSV_DELIMETER);
-            sb.append(mLastFetchMerchant.getName()).append(AppConstants.CSV_DELIMETER);
-            sb.append(txn.getCustomer_id()).append(AppConstants.CSV_DELIMETER);
-            sb.append(txn.getCust_private_id()).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getTotal_billed())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_billed())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCl_debit())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCl_credit())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_debit())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_credit())).append(AppConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_percent())).append(AppConstants.CSV_DELIMETER);
-            sb.append(AppConstants.CSV_NEWLINE);
+            sb.append(mSdfDateWithTime.format(txnDate)).append(CommonConstants.CSV_DELIMETER);
+            sb.append(mLastFetchMerchant.getAuto_id()).append(CommonConstants.CSV_DELIMETER);
+            sb.append(mLastFetchMerchant.getName()).append(CommonConstants.CSV_DELIMETER);
+            sb.append(txn.getCustomer_id()).append(CommonConstants.CSV_DELIMETER);
+            sb.append(txn.getCust_private_id()).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getTotal_billed())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCb_billed())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCl_debit())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCl_credit())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCb_debit())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCb_credit())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(String.valueOf(txn.getCb_percent())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(CommonConstants.CSV_NEWLINE);
         }
     }
 
@@ -349,7 +350,7 @@ public class TxnArchiver
             // sorted by create time
             QueryOptions queryOptions = new QueryOptions("create_time");
             dataQuery.setQueryOptions(queryOptions);
-            dataQuery.setPageSize(AppConstants.dbQueryMaxPageSize);
+            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
             dataQuery.setWhereClause(whereClause);
 
             BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);

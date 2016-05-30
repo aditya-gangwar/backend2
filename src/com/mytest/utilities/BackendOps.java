@@ -31,7 +31,7 @@ public class BackendOps {
      * BackendlessUser operations
      */
     public BackendlessUser loginUser(String userId, String password) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
 
         try {
             return Backendless.UserService.login(userId, password, false);
@@ -43,7 +43,7 @@ public class BackendOps {
     }
 
     public boolean logoutUser() {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
 
         try {
             Backendless.UserService.logout();
@@ -56,7 +56,7 @@ public class BackendOps {
     }
 
     public BackendlessUser updateUser(BackendlessUser user) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
 
         // Save merchant object
         try {
@@ -69,7 +69,7 @@ public class BackendOps {
     }
 
     public BackendlessUser fetchUser(String userid, int userType) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
 
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
@@ -105,7 +105,7 @@ public class BackendOps {
      */
     public Merchants getMerchant(String userId) {
         mLogger.debug("In getMerchant: "+userId);
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
             query.setWhereClause("auto_id = '"+userId+"'");
@@ -145,7 +145,7 @@ public class BackendOps {
      */
     public Customers getCustomer(String custId, boolean mobileAsId) {
         mLogger.debug("In getCustomer: "+custId);
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
             if(mobileAsId) {
@@ -189,7 +189,7 @@ public class BackendOps {
      * Customer card operations
      */
     public CustomerCards getCustomerCard(String qrCode) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
             dataQuery.setWhereClause("qrcode = '" + qrCode + "'");
@@ -211,7 +211,7 @@ public class BackendOps {
     }
 
     public CustomerCards saveQrCard(CustomerCards card) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             Backendless.Persistence.save( card );
@@ -227,11 +227,11 @@ public class BackendOps {
      * Cashback operations
      */
     public ArrayList<Cashback> fetchCashback(String whereClause) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         // fetch cashback objects from DB
         try {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize( AppConstants.dbQueryMaxPageSize );
+            dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
             // TODO: check if putting index on cust_private_id improves performance
             // or using rowid_qr in where clause improves performance
@@ -268,7 +268,7 @@ public class BackendOps {
     }
 
     public Cashback saveCashback(Cashback cb) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             return Backendless.Persistence.save( cb );
@@ -285,7 +285,7 @@ public class BackendOps {
      * OTP operations
      */
     public AllOtp generateOtp(AllOtp otp) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         // check if any OTP object already available for this user_id
         // if yes, update the same for new OTP, op and time.
         // If no, create new object
@@ -310,7 +310,7 @@ public class BackendOps {
                     newOtp.getOpcode(),
                     CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
                     newOtp.getOtp_value(),
-                    AppConstants.OTP_VALID_MINS);
+                    GlobalSettingsConstants.OTP_VALID_MINS);
 
             if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
             {
@@ -328,7 +328,7 @@ public class BackendOps {
     }
 
     public boolean deleteOtp(AllOtp otp) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             Backendless.Persistence.of( AllOtp.class ).remove( otp );
@@ -345,7 +345,7 @@ public class BackendOps {
         Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
-        if ( ((currTime.getTime() - otpTime.getTime()) < (AppConstants.OTP_VALID_MINS*60*1000)) &&
+        if ( ((currTime.getTime() - otpTime.getTime()) < (GlobalSettingsConstants.OTP_VALID_MINS*60*1000)) &&
                 rcvdOtp.equals(otp.getOtp_value()) ) {
             // active otp available and matched
             deleteOtp(otp);
@@ -356,7 +356,7 @@ public class BackendOps {
     }
 
     public AllOtp fetchOtp(String userId) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -378,8 +378,9 @@ public class BackendOps {
     /*
      * Global settings operations
      */
+    /*
     public GlobalSettings fetchGlobalSettings() {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try {
             return Backendless.Persistence.of( GlobalSettings.class).findLast();
         } catch (BackendlessException e) {
@@ -387,13 +388,13 @@ public class BackendOps {
             mLastOpStatus = e.getCode();
         }
         return null;
-    }
+    }*/
 
     /*
      * Counters operations
      */
     public Double fetchCounterValue(String name) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -418,7 +419,7 @@ public class BackendOps {
     }
 
     public MerchantDevice fetchDevice(String deviceId) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -438,6 +439,7 @@ public class BackendOps {
     }
 
     public MerchantOps addMerchantOp(String opCode, Merchants merchant) {
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             MerchantOps op = new MerchantOps();
@@ -447,6 +449,7 @@ public class BackendOps {
             op.setOp_status(DbConstants.MERCHANT_OP_STATUS_PENDING);
 
             op = Backendless.Persistence.save( op );
+            return op;
         }
         catch( BackendlessException e )
         {
@@ -457,11 +460,11 @@ public class BackendOps {
     }
 
     public ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         // fetch cashback objects from DB
         try {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize( AppConstants.dbQueryMaxPageSize );
+            dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
             // TODO: check if putting index on cust_private_id improves performance
             // or using rowid_qr in where clause improves performance
@@ -497,7 +500,7 @@ public class BackendOps {
     }
 
     public MerchantOps saveMerchantOp(MerchantOps op) {
-        mLastOpStatus = "";
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
         {
             return Backendless.Persistence.save( op );

@@ -1,31 +1,13 @@
 package com.mytest.events.persistence_service;
 
-import com.backendless.Backendless;
-import com.backendless.BackendlessUser;
-import com.backendless.exceptions.BackendlessException;
-import com.backendless.exceptions.BackendlessFault;
-import com.backendless.logging.Logger;
-import com.backendless.servercode.ExecutionResult;
-import com.backendless.servercode.RunnerContext;
-import com.backendless.servercode.annotation.Asset;
-import com.mytest.utilities.AppConstants;
-import com.mytest.utilities.BackendOps;
-import com.mytest.utilities.BackendResponseCodes;
-import com.mytest.utilities.CommonUtils;
-import com.mytest.database.*;
-import com.mytest.messaging.SmsConstants;
-import com.mytest.messaging.SmsHelper;
-
-import java.util.ArrayList;
-import java.util.Date;
-
 /**
 * CustomerOpsTableEventHandler handles events for all entities. This is accomplished
 * with the @Asset( "CustomerOps" ) annotation. 
 * The methods in the class correspond to the events selected in Backendless
 * Console.
 */
-    
+
+/*
 @Asset( "CustomerOps" )
 public class CustomerOpsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<CustomerOps>
 {
@@ -138,14 +120,12 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
     //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
-    /*
-     * fetch new card record
-     * if ok, fetch customer record
-     * if ok, disable customer record temporarily, till all records are updated
-     * if ok, update rowid_qr for all cashback records for this customer
-     * if ok, save new card in the customer record & enable the customer again
-     * if ok, update old card record status
-     */
+    // fetch new card record
+    // if ok, fetch customer record
+    // if ok, disable customer record temporarily, till all records are updated
+    // if ok, update rowid_qr for all cashback records for this customer
+    // if ok, save new card in the customer record & enable the customer again
+    // if ok, update old card record status
 
     String newQrCode = custOp.getQr_card();
     String newMobile = custOp.getExtra_op_params();
@@ -161,11 +141,10 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       if(newCard.getStatus() != DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
         return BackendResponseCodes.BL_MYERROR_QR_CARD_INUSE;
       }
-            /*
             //TODO: enable this in final testing
-            if(!newCard.getMerchantId().equals(merchantId)) {
-                return ResponseCodes.RESPONSE_CODE_QR_WRONG_MERCHANT;
-            }*/
+            //if(!newCard.getMerchantId().equals(merchantId)) {
+              //  return ResponseCodes.RESPONSE_CODE_QR_WRONG_MERCHANT;
+            //}
     }
 
     // fetch user with the given id with related customer object
@@ -215,11 +194,6 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
           if(user==null) {
             return mBackendOps.mLastOpStatus;
           }
-                    /*
-                    customer = mBackendOps.updateCustomer(customer);
-                    if(customer==null) {
-                        return BackendResponseCodes.BL_MYERROR_GENERAL;
-                    }*/
         }
 
         // loop on all cashback objects and update rowid_qr
@@ -260,11 +234,6 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
       // TODO: add in alarms table for manual correction later
       return BackendResponseCodes.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
     }
-        /*
-        customer = mBackendOps.updateCustomer(customer);
-        if(customer==null) {
-            return BackendResponseCodes.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
-        }*/
 
     // update old qr card status
     if(isNewCardCase) {
@@ -395,4 +364,4 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
   }
 
 }
-        
+*/

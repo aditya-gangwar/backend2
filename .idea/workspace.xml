@@ -2,14 +2,25 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2787f8a4-2254-4a73-9b45-f8008f85f2a3" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/BackendConstants.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/GlobalSettingsConstants.java" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/src/com/mytest/database/GlobalSettings.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/classes/com/mytest/Bootstrap.class" afterPath="$PROJECT_DIR$/classes/com/mytest/Bootstrap.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" afterPath="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" afterPath="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" afterPath="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" afterPath="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" afterPath="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" afterPath="$PROJECT_DIR$/src/com/mytest/utilities/CommonConstants.java" />
     </list>
     <ignored path="backend2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,21 +42,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="MerchantPasswdResetTimer.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="MerchantPasswdResetTimer.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GenericUserEventHandler.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="137" column="111" selection-start-line="137" selection-start-column="111" selection-end-line="137" selection-end-column="111" />
+            <state relative-caret-position="484">
+              <caret line="111" column="49" selection-start-line="111" selection-start-column="49" selection-end-line="111" selection-end-column="49" />
               <folding />
             </state>
           </provider>
@@ -54,8 +55,18 @@
       <file leaf-file-name="TxnArchiver.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1487">
-              <caret line="335" column="0" selection-start-line="332" selection-start-column="0" selection-end-line="335" selection-end-column="0" />
+            <state relative-caret-position="680">
+              <caret line="58" column="104" selection-start-line="58" selection-start-column="104" selection-end-line="58" selection-end-column="104" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BackendConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendConstants.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="153">
+              <caret line="9" column="53" selection-start-line="9" selection-start-column="28" selection-end-line="9" selection-end-column="53" />
               <folding />
             </state>
           </provider>
@@ -64,18 +75,8 @@
       <file leaf-file-name="BackendResponseCodes.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="476">
-              <caret line="28" column="67" selection-start-line="28" selection-start-column="67" selection-end-line="28" selection-end-column="67" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AppConstants.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="365">
-              <caret line="40" column="0" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
+            <state relative-caret-position="170">
+              <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -84,8 +85,28 @@
       <file leaf-file-name="BackendOps.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="162">
-              <caret line="488" column="52" selection-start-line="488" selection-start-column="52" selection-end-line="488" selection-end-column="52" />
+            <state relative-caret-position="3255">
+              <caret line="498" column="20" selection-start-line="498" selection-start-column="20" selection-end-line="498" selection-end-column="20" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GlobalSettingsConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/GlobalSettingsConstants.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="289">
+              <caret line="17" column="62" selection-start-line="17" selection-start-column="62" selection-end-line="17" selection-end-column="62" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GenericUserEventHandler.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="195">
+              <caret line="120" column="56" selection-start-line="120" selection-start-column="56" selection-end-line="120" selection-end-column="56" />
               <folding />
             </state>
           </provider>
@@ -94,30 +115,8 @@
       <file leaf-file-name="CustomerOpsTableEventHandler.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-4998">
-              <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Transaction0TableEventHandler.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="26" column="2" selection-start-line="26" selection-start-column="2" selection-end-line="26" selection-end-column="2" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TxnTableEventHelper.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="8">
-              <caret line="56" column="24" selection-start-line="56" selection-start-column="24" selection-end-line="56" selection-end-column="24" />
+            <state relative-caret-position="561">
+              <caret line="81" column="4" selection-start-line="81" selection-start-column="4" selection-end-line="81" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -126,11 +125,19 @@
       <file leaf-file-name="CommonUtils.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="299">
-              <caret line="59" column="43" selection-start-line="59" selection-start-column="43" selection-end-line="59" selection-end-column="43" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state relative-caret-position="518">
+              <caret line="55" column="0" selection-start-line="55" selection-start-column="0" selection-end-line="55" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DbConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/mytest/database/DbConstants.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="348">
+              <caret line="37" column="0" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -156,16 +163,11 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="D:/userdata/adgangwa/Desktop/Android/backend2/src/com/mytest/timers/TxnArchiveTimer.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/models/Merchants.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/models/Cities.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/models/Transaction.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiveTimer.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive0.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/models/Transaction0.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/models/Cashback0.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/models/AppConstants.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/models/Cashback.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive2Timer.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive3Timer.java" />
@@ -175,13 +177,11 @@
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive7Timer.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive8Timer.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive9Timer.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/BusinessCategories.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/CustomerOps.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/BackendUtils.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/AllOtp.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/CommonUtils.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/AllOtpTableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive1Timer.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchive0Timer.java" />
@@ -193,20 +193,27 @@
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/MerchantOps.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/messaging/SmsConstants.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/Merchants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
-        <option value="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/GlobalSettingConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/Bootstrap.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/CommonConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/Base61.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendConstants.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java" />
         <option value="$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/database/DbConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/utilities/GlobalSettingsConstants.java" />
+        <option value="$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java" />
       </list>
     </option>
   </component>
@@ -444,13 +451,14 @@
       <recent name="D:\Projects\Android" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="com.mytest.utilities" />
       <recent name="com.mytest.database" />
+      <recent name="com.mytest.utilities" />
       <recent name="com.mytest" />
       <recent name="com.mytest.events.persistence_service" />
       <recent name="com.mytest.timers" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Projects\Android\backend2\src\com\mytest\utilities" />
       <recent name="D:\Projects\Android\backend2\src\com\mytest\database" />
       <recent name="D:\Projects\Android\backend2\src\com\mytest" />
       <recent name="D:\Projects\Android\backend2\src\com\mytest\events\persistence_service" />
@@ -779,7 +787,14 @@
       <option name="project" value="LOCAL" />
       <updated>1464382553667</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="29 May">
+      <created>1464472418626</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1464472418626</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -794,6 +809,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -802,14 +818,13 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39895698" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985657" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39895698" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -832,11 +847,20 @@
     <MESSAGE value="15 May" />
     <MESSAGE value="17 May" />
     <MESSAGE value="22 May" />
-    <option name="LAST_COMMIT_MESSAGE" value="22 May" />
+    <MESSAGE value="29 May" />
+    <option name="LAST_COMMIT_MESSAGE" value="29 May" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="5" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java</url>
+          <line>129</line>
+          <properties />
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="6" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -845,8 +869,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchive8Timer.java" />
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchive7Timer.java" />
     <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchive6Timer.java" />
     <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchive5Timer.java" />
     <entry file="jar://$PROJECT_DIR$/bin/CodeRunner.jar!/com/backendless/commons/DeviceType.class">
@@ -942,39 +964,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="26" column="2" selection-start-line="26" selection-start-column="2" selection-end-line="26" selection-end-column="2" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/database/Counters.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="17" column="26" selection-start-line="17" selection-start-column="26" selection-end-line="17" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/Base61.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="22" column="65" selection-start-line="22" selection-start-column="42" selection-end-line="22" selection-end-column="65" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1017,13 +1010,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
           <caret line="78" column="0" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/Bootstrap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="21" column="71" selection-start-line="21" selection-start-column="71" selection-end-line="21" selection-end-column="71" />
         </state>
       </provider>
     </entry>
@@ -1324,14 +1310,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/DbConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="48" selection-start-line="12" selection-start-column="28" selection-end-line="12" selection-end-column="48" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/database/MerchantDevice.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
@@ -1345,38 +1323,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8">
-          <caret line="56" column="24" selection-start-line="56" selection-start-column="24" selection-end-line="56" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1487">
-          <caret line="335" column="0" selection-start-line="332" selection-start-column="0" selection-end-line="335" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="476">
-          <caret line="28" column="67" selection-start-line="28" selection-start-column="67" selection-end-line="28" selection-end-column="67" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/AppConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="365">
-          <caret line="40" column="0" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction0TableEventHandler.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
@@ -1385,46 +1331,138 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/Transaction1TableEventHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4998">
-          <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="374">
+          <caret line="26" column="2" selection-start-line="26" selection-start-column="2" selection-end-line="26" selection-end-column="2" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java">
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/Bootstrap.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+        <state relative-caret-position="306">
+          <caret line="20" column="0" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/Base61.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" column="45" selection-start-line="22" selection-start-column="45" selection-end-line="22" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="19" selection-start-line="11" selection-start-column="19" selection-end-line="11" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/TxnTableEventHelper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="518">
+          <caret line="93" column="44" selection-start-line="93" selection-start-column="44" selection-end-line="93" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CountersTableEventHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/TxnArchiver.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="680">
+          <caret line="58" column="104" selection-start-line="58" selection-start-column="104" selection-end-line="58" selection-end-column="104" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendOps.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="488" column="52" selection-start-line="488" selection-start-column="52" selection-end-line="488" selection-end-column="52" />
+        <state relative-caret-position="3255">
+          <caret line="498" column="20" selection-start-line="498" selection-start-column="20" selection-end-line="498" selection-end-column="20" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/CommonUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="59" column="43" selection-start-line="59" selection-start-column="43" selection-end-line="59" selection-end-column="43" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="518">
+          <caret line="55" column="0" selection-start-line="55" selection-start-column="0" selection-end-line="55" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" column="53" selection-start-line="9" selection-start-column="28" selection-end-line="9" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/BackendResponseCodes.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/messaging/SmsHelper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/mytest/events/user_service/GenericUserEventHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="137" column="111" selection-start-line="137" selection-start-column="111" selection-end-line="137" selection-end-column="111" />
+        <state relative-caret-position="195">
+          <caret line="120" column="56" selection-start-line="120" selection-start-column="56" selection-end-line="120" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/events/persistence_service/CustomerOpsTableEventHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="81" column="4" selection-start-line="81" selection-start-column="4" selection-end-line="81" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/database/DbConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="348">
+          <caret line="37" column="0" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/utilities/GlobalSettingsConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="62" selection-start-line="17" selection-start-column="62" selection-end-line="17" selection-end-column="62" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/mytest/timers/MerchantPasswdResetTimer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="484">
+          <caret line="111" column="49" selection-start-line="111" selection-start-column="49" selection-end-line="111" selection-end-column="49" />
           <folding />
         </state>
       </provider>

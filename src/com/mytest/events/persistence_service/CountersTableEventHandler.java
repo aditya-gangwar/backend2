@@ -1,17 +1,5 @@
 package com.mytest.events.persistence_service;
 
-import com.backendless.Backendless;
-import com.backendless.BackendlessCollection;
-import com.backendless.exceptions.BackendlessException;
-import com.backendless.exceptions.BackendlessFault;
-import com.backendless.logging.Logger;
-import com.backendless.persistence.BackendlessDataQuery;
-import com.backendless.servercode.ExecutionResult;
-import com.backendless.servercode.RunnerContext;
-import com.backendless.servercode.annotation.Asset;
-import com.mytest.utilities.AppConstants;
-import com.mytest.database.Counters;
-
 /**
  * CountersTableEventHandler handles events for all entities. This is accomplished
  * with the @Asset( "Counters" ) annotation.

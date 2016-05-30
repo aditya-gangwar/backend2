@@ -1,7 +1,8 @@
 package com.mytest.messaging;
 
 import com.backendless.Backendless;
-import com.mytest.utilities.AppConstants;
+import com.mytest.utilities.BackendConstants;
+import com.mytest.utilities.CommonConstants;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,7 +18,7 @@ public class SmsHelper {
 
     public static boolean sendSMS(String message, String recipient) {
 
-        Backendless.Logging.setLogReportingPolicy(AppConstants.LOG_POLICY_NUM_MSGS, AppConstants.LOG_POLICY_FREQ_SECS);
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
 
         mLogger.debug("SMS to send: " + message);
@@ -32,7 +33,6 @@ public class SmsHelper {
                     "&message=" + URLEncoder.encode(message, SmsConstants.SMSGW_URL_ENCODING);
 
             URL url = new URL(requestUrl);
-            mLogger.debug("SMS URL: " + url.toString());
 
             /*
             uc = (HttpURLConnection) url.openConnection();
