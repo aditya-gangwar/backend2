@@ -5,8 +5,10 @@ import com.mytest.database.CustomerCards;
 import com.mytest.database.Customers;
 import com.mytest.database.Merchants;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by adgangwa on 22-05-2016.
@@ -54,9 +56,21 @@ public class CommonUtils {
         return new String(id);
     }
 
+    public static String generateTxnId(String merchantId) {
+        char[] id = new char[CommonConstants.TRANSACTION_ID_LEN];
+        // unique id is base 32
+        // seed = merchant id + curr time in secs
+        String timeSecs = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        String seed =  merchantId + timeSecs;
+        Random r = new SecureRandom(seed.getBytes());
+        for (int i = 0;  i < CommonConstants.TRANSACTION_ID_LEN;  i++) {
+            id[i] = BackendConstants.txnChars[r.nextInt(BackendConstants.txnChars.length)];
+        }
+        return CommonConstants.TRANSACTION_ID_PREFIX + new String(id);
+    }
+
     public static String checkMerchantStatus(Merchants merchant) {
         switch (merchant.getAdmin_status()) {
-            case DbConstants.USER_STATUS_DEFAULT:
             case DbConstants.USER_STATUS_DISABLED:
                 return BackendResponseCodes.BL_MYERROR_ACC_DISABLED;
 
@@ -86,7 +100,6 @@ public class CommonUtils {
 
     public static String checkCustomerStatus(Customers customer) {
         switch(customer.getAdmin_status()) {
-            case DbConstants.USER_STATUS_DEFAULT:
             case DbConstants.USER_STATUS_DISABLED:
                 return BackendResponseCodes.BL_MYERROR_ACC_DISABLED;
 

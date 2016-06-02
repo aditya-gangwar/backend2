@@ -135,6 +135,7 @@ public class Cashback
     this.rowid = rowid;
   }
 
+  /*
   public Customers getCustomer()
   {
     return customer;
@@ -154,7 +155,7 @@ public class Cashback
   {
     this.merchant = merchant;
   }
-
+  */
                                                     
   public Cashback save()
   {

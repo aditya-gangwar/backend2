@@ -13,15 +13,21 @@ import com.mytest.database.*;
 * The methods in the class correspond to the events selected in Backendless
 * Console.
 */
-/*@Asset( "Transaction0" )
+@Asset( "Transaction0" )
 public class Transaction0TableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Transaction>
 {
+    @Override
+    public void beforeCreate( RunnerContext context, Transaction transaction) throws Exception
+    {
+        TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
+        txnEventHelper.handleBeforeCreate(transaction, "Cashback0");
+    }
+
   @Async
   @Override
   public void afterCreate( RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result ) throws Exception
   {
       TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-      txnEventHelper.buildAndSendTxnSMS(transaction, result);
+      txnEventHelper.handleAfterCreate(transaction, result);
   }
 }
-*/

@@ -29,6 +29,16 @@ public class Transaction
   private Integer cb_debit;
   private Cashback cashback;
   private String merchant_name;
+  /*
+  private String cb_object_id;
+
+  public String getCb_object_id() {
+    return cb_object_id;
+  }
+
+  public void setCb_object_id(String cb_object_id) {
+    this.cb_object_id = cb_object_id;
+  }*/
 
   public String getMerchant_name() {
     return merchant_name;

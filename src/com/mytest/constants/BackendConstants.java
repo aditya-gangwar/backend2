@@ -16,6 +16,9 @@ public class BackendConstants {
     // used in generating temporary passwords
     public final static char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
     public final static char[] pinAndOtpChars = "0123456789".toCharArray();
+    // used in generating random transaction ids, passwords and PINs
+    public final static char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+
 
     public static int SEND_TXN_SMS_MIN_AMOUNT = 10;
     public static String APP_ID = "09667F8B-98A7-E6B9-FFEB-B2B6EE831A00";

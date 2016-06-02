@@ -535,6 +535,22 @@ public class BackendOps {
     /*
      * WrongAttempts operations
      */
+    // returns 'null' if not found and new created
+    public WrongAttempts fetchOrCreateWrongAttempt(String userId, String type) {
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        WrongAttempts attempt = fetchWrongAttempts(userId, type);
+        if(attempt==null) {
+            // create row
+            WrongAttempts newAttempt = new WrongAttempts();
+            newAttempt.setUser_id(userId);
+            newAttempt.setAttempt_type(type);
+            newAttempt.setAttempt_cnt(1);
+            saveWrongAttempt(newAttempt);
+            return null;
+        }
+        return attempt;
+    }
+
     public WrongAttempts fetchWrongAttempts(String userId, String type) {
         mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
