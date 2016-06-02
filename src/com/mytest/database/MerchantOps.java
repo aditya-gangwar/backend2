@@ -2,7 +2,9 @@ package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
+import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
+import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
 public class MerchantOps
@@ -137,12 +139,12 @@ public class MerchantOps
     Backendless.Data.of( MerchantOps.class ).remove( this, callback );
   }
 
-  public static MerchantOps findById(String id )
+  public static MerchantOps findById( String id )
   {
     return Backendless.Data.of( MerchantOps.class ).findById( id );
   }
 
-  public static Future<MerchantOps> findByIdAsync(String id )
+  public static Future<MerchantOps> findByIdAsync( String id )
   {
     if( Backendless.isAndroid() )
     {
@@ -212,12 +214,12 @@ public class MerchantOps
     Backendless.Data.of( MerchantOps.class ).findLast( callback );
   }
 
-  public static BackendlessCollection<MerchantOps> find(BackendlessDataQuery query )
+  public static BackendlessCollection<MerchantOps> find( BackendlessDataQuery query )
   {
     return Backendless.Data.of( MerchantOps.class ).find( query );
   }
 
-  public static Future<BackendlessCollection<MerchantOps>> findAsync(BackendlessDataQuery query )
+  public static Future<BackendlessCollection<MerchantOps>> findAsync( BackendlessDataQuery query )
   {
     if( Backendless.isAndroid() )
     {
@@ -232,7 +234,7 @@ public class MerchantOps
     }
   }
 
-  public static void findAsync(BackendlessDataQuery query, AsyncCallback<BackendlessCollection<MerchantOps>> callback )
+  public static void findAsync( BackendlessDataQuery query, AsyncCallback<BackendlessCollection<MerchantOps>> callback )
   {
     Backendless.Data.of( MerchantOps.class ).find( query, callback );
   }

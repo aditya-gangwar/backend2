@@ -6,6 +6,10 @@ import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
+import com.mytest.constants.BackendConstants;
+import com.mytest.constants.BackendResponseCodes;
+import com.mytest.constants.CommonConstants;
+import com.mytest.constants.DbConstants;
 import com.mytest.database.*;
 import com.mytest.utilities.*;
 
@@ -28,14 +32,12 @@ import java.util.*;
 public class GenericUserEventHandler extends com.backendless.servercode.extension.UserExtender
 {
     private Logger mLogger;
+    private BackendOps mBackendOps;
 
     @Override
     public void afterLogin( RunnerContext context, String login, String password, ExecutionResult<HashMap> result ) throws Exception
     {
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
-        BackendOps backendOps = new BackendOps(mLogger);
-
+        initCommon();
         mLogger.debug("In GenericUserEventHandler: afterLogin");
 
         if(result.getException()==null) {
@@ -43,25 +45,26 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             Integer userType = (Integer) result.getResult().get("user_type");
 
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
-                Merchants merchant = backendOps.getMerchant(userId);
+                Merchants merchant = mBackendOps.getMerchant(userId);
                 if(merchant==null) {
-                    backendOps.logoutUser();
-                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to fetch merchant");
+                    mBackendOps.logoutUser();
+                    BackendlessFault fault = new BackendlessFault(mBackendOps.mLastOpStatus,"Failed to fetch merchant");
                     throw new BackendlessException(fault);
                 }
 
                 // check admin status
-                String status = CommonUtils.checkMerchantStatus(merchant.getAdmin_status());
+                String status = CommonUtils.checkMerchantStatus(merchant);
                 if(status != null) {
-                    backendOps.logoutUser();
+                    mBackendOps.logoutUser();
                     BackendlessFault fault = new BackendlessFault(status,"Account not active");
                     throw new BackendlessException(fault);
                 }
 
                 // Check if 'device id' not set
+                // This is set in setDeviceId() backend API, only after OTP verification
                 String deviceInfo = merchant.getTempDevId();
                 if(deviceInfo==null || deviceInfo.isEmpty()) {
-                    backendOps.logoutUser();
+                    mBackendOps.logoutUser();
                     BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_NOT_TRUSTED_DEVICE,"Untrusted device");
                     throw new BackendlessException(fault);
                 }
@@ -85,7 +88,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 } else {
                     trustedDevices = new ArrayList<>();
                 }
-
+                // Add new device in the trusted list
                 if(!matched) {
                     // New device - add as trusted device
                     MerchantDevice device = new MerchantDevice();
@@ -98,16 +101,21 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     device.setLast_login(new Date());
 
                     trustedDevices.add(device);
-                }
 
-                // Update merchant
-                merchant.setTempDevId(null);
-                merchant.setTrusted_devices(trustedDevices);
-                Merchants merchant2 = backendOps.updateMerchant(merchant);
-                if(merchant2==null) {
-                    backendOps.logoutUser();
-                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to add trusted device");
-                    throw new BackendlessException(fault);
+                    // Update merchant
+                    merchant.setTempDevId(null);
+                    merchant.setTrusted_devices(trustedDevices);
+                    // when USER_STATUS_NEW_REGISTERED, the device will also be new
+                    // so it is not required to update this outside this if block
+                    if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
+                        merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+                    }
+                    Merchants merchant2 = mBackendOps.updateMerchant(merchant);
+                    if(merchant2==null) {
+                        mBackendOps.logoutUser();
+                        BackendlessFault fault = new BackendlessFault(mBackendOps.mLastOpStatus,"Failed to add trusted device");
+                        throw new BackendlessException(fault);
+                    }
                 }
             }
         }
@@ -116,10 +124,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     @Override
     public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
     {
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
-        BackendOps backendOps = new BackendOps(mLogger);
-
+        initCommon();
         mLogger.debug("In GenericUserEventHandler: beforeRegister");
 
         // If merchant, generate login id and password
@@ -131,9 +136,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             Customers customer = (Customers) userValue.get("customer");
             if (customer != null) {
                 // get customer counter value and encode the same to get customer private id
-                Double customerCnt =  backendOps.fetchCounterValue(DbConstants.CUSTOMER_ID_COUNTER);
+                Double customerCnt =  mBackendOps.fetchCounterValue(DbConstants.CUSTOMER_ID_COUNTER);
                 if(customerCnt == null) {
-                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to fetch customer id counter value");
+                    BackendlessFault fault = new BackendlessFault(mBackendOps.mLastOpStatus,"Failed to fetch customer id counter value");
                     throw new BackendlessException(fault);
                 }
                 mLogger.debug("Fetched customer cnt: "+customerCnt.longValue());
@@ -154,9 +159,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             Merchants merchant = (Merchants) userValue.get("merchant");
             if (merchant != null) {
                 // get merchant counter value and use the same to generate merchant id
-                Double merchantCnt =  backendOps.fetchCounterValue(DbConstants.MERCHANT_ID_COUNTER);
+                Double merchantCnt =  mBackendOps.fetchCounterValue(DbConstants.MERCHANT_ID_COUNTER);
                 if(merchantCnt == null) {
-                    BackendlessFault fault = new BackendlessFault(backendOps.mLastOpStatus,"Failed to fetch merchant id counter value");
+                    BackendlessFault fault = new BackendlessFault(mBackendOps.mLastOpStatus,"Failed to fetch merchant id counter value");
                     throw new BackendlessException(fault);
                 }
                 mLogger.debug("Fetched merchant cnt: "+merchantCnt.longValue());
@@ -165,6 +170,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 mLogger.debug("Generated merchant id: "+merchantId);
                 userValue.put("user_id", merchantId);
                 merchant.setAuto_id(merchantId);
+                merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
+                merchant.setAdmin_remarks("New registered merchant");
 
                 // generate and set password
                 String pwd = generatePassword();
@@ -230,6 +237,16 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         }
     }
     */
+
+    /*
+     * Private helper methods
+     */
+    private void initCommon() {
+        // Init logger and utils
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+        mLogger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+        mBackendOps = new BackendOps(mLogger);
+    }
 
     private String generateMerchantId(long regCounter) {
         // Generate unique merchant id based on merchant reg counter value

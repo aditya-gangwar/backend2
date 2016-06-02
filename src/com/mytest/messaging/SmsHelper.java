@@ -1,8 +1,7 @@
 package com.mytest.messaging;
 
 import com.backendless.Backendless;
-import com.mytest.utilities.BackendConstants;
-import com.mytest.utilities.CommonConstants;
+import com.mytest.constants.BackendConstants;
 
 import java.net.HttpURLConnection;
 import java.net.URL;

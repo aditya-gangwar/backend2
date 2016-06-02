@@ -7,31 +7,19 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
-import java.util.Date;
-
 public class MerchantDevice
 {
   private String device_id;
   private String manufacturer;
   private String os_version;
   private String model;
+  private java.util.Date last_login;
   private java.util.Date created;
   private String ownerId;
   private String objectId;
   private java.util.Date updated;
   private String os_type;
   private String merchant_id;
-  private java.util.Date last_login;
-
-  public Date getLast_login() {
-    return last_login;
-  }
-
-  public void setLast_login(Date last_login) {
-    this.last_login = last_login;
-  }
-
-
   public String getDevice_id()
   {
     return device_id;
@@ -70,6 +58,16 @@ public class MerchantDevice
   public void setModel( String model )
   {
     this.model = model;
+  }
+
+  public java.util.Date getLast_login()
+  {
+    return last_login;
+  }
+
+  public void setLast_login( java.util.Date last_login )
+  {
+    this.last_login = last_login;
   }
 
   public java.util.Date getCreated()

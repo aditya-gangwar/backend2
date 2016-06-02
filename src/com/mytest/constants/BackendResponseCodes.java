@@ -1,4 +1,4 @@
-package com.mytest.utilities;
+package com.mytest.constants;
 
 /**
  * Created by adgangwa on 28-05-2016.
@@ -11,19 +11,22 @@ public class BackendResponseCodes {
 
     public static final String BL_MYERROR_GENERAL = "500";
     public static final String BL_MYERROR_NO_SUCH_USER = "501";
-    public static final String BL_MYERROR_CUSTOMER_ACC_DISABLED = "502";
+    public static final String BL_MYERROR_ACC_DISABLED = "502";
     public static final String BL_MYERROR_SEND_SMS_FAILED = "503";
     public static final String BL_MYERROR_WRONG_INPUT_DATA = "504";
+    public static final String BL_MYERROR_ACC_LOCKED = "505";
+    public static final String BL_MYERROR_DUPLICATE_USER = "506";
 
     public static final String BL_MYERROR_OTP_GENERATE_FAILED = "510";
     public static final String BL_MYERROR_OTP_GENERATED = "511";
     public static final String BL_MYERROR_WRONG_OTP = "512";
     public static final String BL_MYERROR_WRONG_PIN = "513";
 
-    public static final String BL_MYERROR_NO_SUCH_QR_CARD = "520";
-    public static final String BL_MYERROR_WRONG_QR_CARD = "521";
-    public static final String BL_MYERROR_QR_CARD_INUSE = "522";
-    public static final String BL_MYERROR_QR_CARD_WRONG_MERCHANT = "523";
+    public static final String BL_MYERROR_NO_SUCH_CARD = "520";
+    public static final String BL_MYERROR_WRONG_CARD = "521";
+    public static final String BL_MYERROR_CARD_INUSE = "522";
+    public static final String BL_MYERROR_CARD_WRONG_MERCHANT = "523";
+    public static final String BL_MYERROR_CARD_BLOCKED = "524";
 
     public static final String BL_MYERROR_VERIFICATION_FAILED = "530";
     public static final String BL_MYERROR_FAILED_ATTEMPT_LIMIT_RCHD = "531";

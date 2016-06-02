@@ -10,48 +10,27 @@ import com.backendless.persistence.BackendlessDataQuery;
 public class Merchants
 {
   private String name;
-  private Double longitude_reg;
   private String objectId;
-  private java.util.Date temp_pswd_time;
   private Boolean cl_add_enable;
   private String ownerId;
-  private java.util.Date last_archive;
-  private String address_pincode;
-  private String address_line;
+  private java.util.Date last_txn_archive;
+  private Integer admin_status;
   private java.util.Date created;
   private String image_url;
   private java.util.Date updated;
+  private java.util.Date status_update_time;
+  private Integer status_reason;
+  private String admin_remarks;
   private String cashback_table;
   private String mobile_num;
   private String email;
-  private String admin_remarks;
   private String txn_table;
   private String auto_id;
-  private Integer admin_status;
-  private Double latitude_reg;
+  private String tempDevId;
   private String cb_rate;
   private java.util.List<MerchantDevice> trusted_devices;
-  private Cities city;
   private BusinessCategories buss_category;
-  private Integer passwd_wrong_attempts;
-  private String tempDevId;
-
-  public String getTempDevId() {
-    return tempDevId;
-  }
-
-  public void setTempDevId(String tempDevId) {
-    this.tempDevId = tempDevId;
-  }
-
-  public Integer getPasswd_wrong_attempts() {
-    return passwd_wrong_attempts;
-  }
-
-  public void setPasswd_wrong_attempts(Integer passwd_wrong_attempts) {
-    this.passwd_wrong_attempts = passwd_wrong_attempts;
-  }
-
+  private Address address;
   public String getName()
   {
     return name;
@@ -62,29 +41,9 @@ public class Merchants
     this.name = name;
   }
 
-  public Double getLongitude_reg()
-  {
-    return longitude_reg;
-  }
-
-  public void setLongitude_reg( Double longitude_reg )
-  {
-    this.longitude_reg = longitude_reg;
-  }
-
   public String getObjectId()
   {
     return objectId;
-  }
-
-  public java.util.Date getTemp_pswd_time()
-  {
-    return temp_pswd_time;
-  }
-
-  public void setTemp_pswd_time( java.util.Date temp_pswd_time )
-  {
-    this.temp_pswd_time = temp_pswd_time;
   }
 
   public Boolean getCl_add_enable()
@@ -102,34 +61,24 @@ public class Merchants
     return ownerId;
   }
 
-  public java.util.Date getLast_archive()
+  public java.util.Date getLast_txn_archive()
   {
-    return last_archive;
+    return last_txn_archive;
   }
 
-  public void setLast_archive( java.util.Date last_archive )
+  public void setLast_txn_archive( java.util.Date last_txn_archive )
   {
-    this.last_archive = last_archive;
+    this.last_txn_archive = last_txn_archive;
   }
 
-  public String getAddress_pincode()
+  public Integer getAdmin_status()
   {
-    return address_pincode;
+    return admin_status;
   }
 
-  public void setAddress_pincode( String address_pincode )
+  public void setAdmin_status( Integer admin_status )
   {
-    this.address_pincode = address_pincode;
-  }
-
-  public String getAddress_line()
-  {
-    return address_line;
-  }
-
-  public void setAddress_line( String address_line )
-  {
-    this.address_line = address_line;
+    this.admin_status = admin_status;
   }
 
   public java.util.Date getCreated()
@@ -150,6 +99,36 @@ public class Merchants
   public java.util.Date getUpdated()
   {
     return updated;
+  }
+
+  public java.util.Date getStatus_update_time()
+  {
+    return status_update_time;
+  }
+
+  public void setStatus_update_time( java.util.Date status_update_time )
+  {
+    this.status_update_time = status_update_time;
+  }
+
+  public Integer getStatus_reason()
+  {
+    return status_reason;
+  }
+
+  public void setStatus_reason( Integer status_reason )
+  {
+    this.status_reason = status_reason;
+  }
+
+  public String getAdmin_remarks()
+  {
+    return admin_remarks;
+  }
+
+  public void setAdmin_remarks( String admin_remarks )
+  {
+    this.admin_remarks = admin_remarks;
   }
 
   public String getCashback_table()
@@ -182,16 +161,6 @@ public class Merchants
     this.email = email;
   }
 
-  public String getAdmin_remarks()
-  {
-    return admin_remarks;
-  }
-
-  public void setAdmin_remarks( String admin_remarks )
-  {
-    this.admin_remarks = admin_remarks;
-  }
-
   public String getTxn_table()
   {
     return txn_table;
@@ -212,24 +181,14 @@ public class Merchants
     this.auto_id = auto_id;
   }
 
-  public Integer getAdmin_status()
+  public String getTempDevId()
   {
-    return admin_status;
+    return tempDevId;
   }
 
-  public void setAdmin_status( Integer admin_status )
+  public void setTempDevId( String tempDevId )
   {
-    this.admin_status = admin_status;
-  }
-
-  public Double getLatitude_reg()
-  {
-    return latitude_reg;
-  }
-
-  public void setLatitude_reg( Double latitude_reg )
-  {
-    this.latitude_reg = latitude_reg;
+    this.tempDevId = tempDevId;
   }
 
   public String getCb_rate()
@@ -252,16 +211,6 @@ public class Merchants
     this.trusted_devices = trusted_devices;
   }
 
-  public Cities getCity()
-  {
-    return city;
-  }
-
-  public void setCity( Cities city )
-  {
-    this.city = city;
-  }
-
   public BusinessCategories getBuss_category()
   {
     return buss_category;
@@ -270,6 +219,16 @@ public class Merchants
   public void setBuss_category( BusinessCategories buss_category )
   {
     this.buss_category = buss_category;
+  }
+
+  public Address getAddress()
+  {
+    return address;
+  }
+
+  public void setAddress( Address address )
+  {
+    this.address = address;
   }
 
                                                     

@@ -7,48 +7,30 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
-import java.util.Date;
-
 public class Customers
 {
-  private String admin_remarks;
+  private java.util.Date status_update_time;
   private String txn_pin;
+  private Integer status_reason;
   private String mobile_num;
+  private String admin_remarks;
   private String ownerId;
-  private Date updated;
-  private Date created;
+  private java.util.Date updated;
+  private java.util.Date created;
   private String objectId;
+  private String cashback_table;
   private Integer admin_status;
   private String name;
   private String private_id;
-  private CustomerCards qr_card;
-  private String cashback_table;
-  private Date temp_blocked_time;
-
-  public Date getTemp_blocked_time() {
-    return temp_blocked_time;
-  }
-
-  public void setTemp_blocked_time(Date temp_blocked_time) {
-    this.temp_blocked_time = temp_blocked_time;
-  }
-
-  public String getCashback_table() {
-    return cashback_table;
-  }
-
-  public void setCashback_table(String cashback_table) {
-    this.cashback_table = cashback_table;
-  }
-
-  public String getAdmin_remarks()
+  private CustomerCards membership_card;
+  public java.util.Date getStatus_update_time()
   {
-    return admin_remarks;
+    return status_update_time;
   }
 
-  public void setAdmin_remarks( String admin_remarks )
+  public void setStatus_update_time( java.util.Date status_update_time )
   {
-    this.admin_remarks = admin_remarks;
+    this.status_update_time = status_update_time;
   }
 
   public String getTxn_pin()
@@ -61,6 +43,16 @@ public class Customers
     this.txn_pin = txn_pin;
   }
 
+  public Integer getStatus_reason()
+  {
+    return status_reason;
+  }
+
+  public void setStatus_reason( Integer status_reason )
+  {
+    this.status_reason = status_reason;
+  }
+
   public String getMobile_num()
   {
     return mobile_num;
@@ -71,17 +63,27 @@ public class Customers
     this.mobile_num = mobile_num;
   }
 
+  public String getAdmin_remarks()
+  {
+    return admin_remarks;
+  }
+
+  public void setAdmin_remarks( String admin_remarks )
+  {
+    this.admin_remarks = admin_remarks;
+  }
+
   public String getOwnerId()
   {
     return ownerId;
   }
 
-  public Date getUpdated()
+  public java.util.Date getUpdated()
   {
     return updated;
   }
 
-  public Date getCreated()
+  public java.util.Date getCreated()
   {
     return created;
   }
@@ -89,6 +91,16 @@ public class Customers
   public String getObjectId()
   {
     return objectId;
+  }
+
+  public String getCashback_table()
+  {
+    return cashback_table;
+  }
+
+  public void setCashback_table( String cashback_table )
+  {
+    this.cashback_table = cashback_table;
   }
 
   public Integer getAdmin_status()
@@ -121,14 +133,14 @@ public class Customers
     this.private_id = private_id;
   }
 
-  public CustomerCards getQr_card()
+  public CustomerCards getMembership_card()
   {
-    return qr_card;
+    return membership_card;
   }
 
-  public void setQr_card( CustomerCards qr_card )
+  public void setMembership_card( CustomerCards membership_card )
   {
-    this.qr_card = qr_card;
+    this.membership_card = membership_card;
   }
 
                                                     

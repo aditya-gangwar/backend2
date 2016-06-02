@@ -1,4 +1,4 @@
-package com.mytest.utilities;
+package com.mytest.constants;
 
 import java.util.Locale;
 

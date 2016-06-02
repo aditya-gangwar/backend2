@@ -7,6 +7,10 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
+import com.mytest.constants.BackendResponseCodes;
+import com.mytest.constants.CommonConstants;
+import com.mytest.constants.DbConstants;
+import com.mytest.constants.GlobalSettingsConstants;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -144,7 +148,6 @@ public class BackendOps {
      * Customer operations
      */
     public Customers getCustomer(String custId, boolean mobileAsId) {
-        mLogger.debug("In getCustomer: "+custId);
         mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
@@ -154,10 +157,9 @@ public class BackendOps {
                 query.setWhereClause("qr_card.qrcode = '"+custId+"'");
             }
 
-            /*
             QueryOptions queryOptions = new QueryOptions();
             queryOptions.addRelated("qr_card");
-            query.setQueryOptions(queryOptions);*/
+            query.setQueryOptions(queryOptions);
 
             BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
             if( user.getTotalObjects() == 0) {
@@ -165,6 +167,7 @@ public class BackendOps {
                 mLogger.warn("No customer found: "+custId);
                 mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
             } else {
+                mLogger.debug("Found customer: "+custId);
                 return user.getData().get(0);
             }
         } catch (BackendlessException e) {
@@ -198,8 +201,9 @@ public class BackendOps {
             if( collection.getTotalObjects() == 0) {
                 // no data found
                 mLogger.warn("No customer card found: "+qrCode);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_QR_CARD;
+                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_CARD;
             } else {
+                mLogger.debug("Fetched customer card: "+qrCode);
                 return collection.getData().get(0);
             }
         } catch (BackendlessException e) {
@@ -226,16 +230,25 @@ public class BackendOps {
     /*
      * Cashback operations
      */
-    public ArrayList<Cashback> fetchCashback(String whereClause) {
+    public ArrayList<Cashback> fetchCashback(String whereClause, boolean fetchCustomer, String cashbackTable) {
         mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         // fetch cashback objects from DB
         try {
+            Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
+
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
             dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
             // TODO: check if putting index on cust_private_id improves performance
             // or using rowid_qr in where clause improves performance
             dataQuery.setWhereClause(whereClause);
+
+            if(fetchCustomer) {
+                QueryOptions queryOptions = new QueryOptions();
+                queryOptions.addRelated("customer");
+                queryOptions.addRelated("customer.membership_card");
+                dataQuery.setQueryOptions(queryOptions);
+            }
 
             BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
 
@@ -306,7 +319,7 @@ public class BackendOps {
             }
 
             // Send SMS through HTTP
-            String smsText = String.format(SmsConstants.SMS_TEMPLATE_OTP,
+            String smsText = String.format(SmsConstants.SMS_OTP,
                     newOtp.getOpcode(),
                     CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
                     newOtp.getOtp_value(),
@@ -316,6 +329,7 @@ public class BackendOps {
             {
                 mLastOpStatus = BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
             } else {
+                mLogger.debug("OTP generated and SMS sent successfully "+newOtp.getMobile_num());
                 return newOtp;
             }
         }
@@ -418,6 +432,9 @@ public class BackendOps {
         return null;
     }
 
+    /*
+     * Trusted Devices operations
+     */
     public MerchantDevice fetchDevice(String deviceId) {
         mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
@@ -438,6 +455,9 @@ public class BackendOps {
         return null;
     }
 
+    /*
+     * Merchant operations
+     */
     public MerchantOps addMerchantOp(String opCode, Merchants merchant) {
         mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
         try
@@ -510,6 +530,54 @@ public class BackendOps {
             mLastOpStatus = e.getCode();
         }
         return null;
+    }
+
+    /*
+     * WrongAttempts operations
+     */
+    public WrongAttempts fetchWrongAttempts(String userId, String type) {
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        try
+        {
+            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+            dataQuery.setWhereClause("user_id = '" + userId + "'" + "AND attempt_type = '" + type + "'");
+
+            BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
+            if( collection.getTotalObjects() > 0) {
+                return collection.getData().get(0);
+            }
+        }
+        catch( BackendlessException e )
+        {
+            mLogger.error("Exception in fetchDevice: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    public WrongAttempts saveWrongAttempt(WrongAttempts attempt) {
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        try
+        {
+            return Backendless.Persistence.save( attempt );
+        }
+        catch( BackendlessException e ) {
+            mLogger.error("Exception in saveWrongAttempt: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    public void deleteWrongAttempt(WrongAttempts attempt) {
+        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        try
+        {
+            Backendless.Persistence.of(WrongAttempts.class).remove(attempt);
+        }
+        catch( BackendlessException e ) {
+            mLogger.error("Exception in deleteWrongAttempt: " + e.toString());
+            mLastOpStatus = e.getCode();
+        }
     }
 
 }

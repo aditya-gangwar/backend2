@@ -7,9 +7,7 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
-import java.io.Serializable;
-
-public class CustomerOps implements Serializable
+public class CustomerOps
 {
   private String extra_op_params;
   private java.util.Date created;
@@ -20,26 +18,9 @@ public class CustomerOps implements Serializable
   private String requestor_id;
   private String op_code;
   private String op_status;
-  private String pin;
   private String otp;
+  private String pin;
   private String objectId;
-
-  public String getPin() {
-    return pin;
-  }
-
-  public void setPin(String pin) {
-    this.pin = pin;
-  }
-
-  public String getOtp() {
-    return otp;
-  }
-
-  public void setOtp(String otp) {
-    this.otp = otp;
-  }
-
   public String getExtra_op_params()
   {
     return extra_op_params;
@@ -113,6 +94,26 @@ public class CustomerOps implements Serializable
   public void setOp_status( String op_status )
   {
     this.op_status = op_status;
+  }
+
+  public String getOtp()
+  {
+    return otp;
+  }
+
+  public void setOtp( String otp )
+  {
+    this.otp = otp;
+  }
+
+  public String getPin()
+  {
+    return pin;
+  }
+
+  public void setPin( String pin )
+  {
+    this.pin = pin;
   }
 
   public String getObjectId()

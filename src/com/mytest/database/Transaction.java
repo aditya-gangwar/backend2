@@ -2,12 +2,12 @@ package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
+import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
+import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
-import java.io.Serializable;
-
-public class Transaction implements Serializable
+public class Transaction
 {
   private Integer cb_credit;
   private Integer cl_credit;
@@ -20,6 +20,7 @@ public class Transaction implements Serializable
   private String customer_id;
   private String objectId;
   private java.util.Date updated;
+  private String cpin;
   private String cb_percent;
   private String trans_id;
   private String merchant_id;
@@ -27,6 +28,16 @@ public class Transaction implements Serializable
   private Integer total_billed;
   private Integer cb_debit;
   private Cashback cashback;
+  private String merchant_name;
+
+  public String getMerchant_name() {
+    return merchant_name;
+  }
+
+  public void setMerchant_name(String merchant_name) {
+    this.merchant_name = merchant_name;
+  }
+
   public Integer getCb_credit()
   {
     return cb_credit;
@@ -122,6 +133,16 @@ public class Transaction implements Serializable
     return updated;
   }
 
+  public String getCpin()
+  {
+    return cpin;
+  }
+
+  public void setCpin( String cpin )
+  {
+    this.cpin = cpin;
+  }
+
   public String getCb_percent()
   {
     return cb_percent;
@@ -202,7 +223,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).save(this, future);
+      Backendless.Data.of( Transaction.class ).save( this, future );
 
       return future;
     }
@@ -210,7 +231,7 @@ public class Transaction implements Serializable
 
   public void saveAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).save(this, callback);
+    Backendless.Data.of( Transaction.class ).save( this, callback );
   }
 
   public Long remove()
@@ -227,7 +248,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Long> future = new Future<Long>();
-      Backendless.Data.of( Transaction.class ).remove(this, future);
+      Backendless.Data.of( Transaction.class ).remove( this, future );
 
       return future;
     }
@@ -235,7 +256,7 @@ public class Transaction implements Serializable
 
   public void removeAsync( AsyncCallback<Long> callback )
   {
-    Backendless.Data.of( Transaction.class ).remove(this, callback);
+    Backendless.Data.of( Transaction.class ).remove( this, callback );
   }
 
   public static Transaction findById( String id )
@@ -252,7 +273,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findById(id, future);
+      Backendless.Data.of( Transaction.class ).findById( id, future );
 
       return future;
     }
@@ -260,7 +281,7 @@ public class Transaction implements Serializable
 
   public static void findByIdAsync( String id, AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findById(id, callback);
+    Backendless.Data.of( Transaction.class ).findById( id, callback );
   }
 
   public static Transaction findFirst()
@@ -277,7 +298,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findFirst(future);
+      Backendless.Data.of( Transaction.class ).findFirst( future );
 
       return future;
     }
@@ -285,7 +306,7 @@ public class Transaction implements Serializable
 
   public static void findFirstAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findFirst(callback);
+    Backendless.Data.of( Transaction.class ).findFirst( callback );
   }
 
   public static Transaction findLast()
@@ -302,7 +323,7 @@ public class Transaction implements Serializable
     else
     {
       Future<Transaction> future = new Future<Transaction>();
-      Backendless.Data.of( Transaction.class ).findLast(future);
+      Backendless.Data.of( Transaction.class ).findLast( future );
 
       return future;
     }
@@ -310,7 +331,7 @@ public class Transaction implements Serializable
 
   public static void findLastAsync( AsyncCallback<Transaction> callback )
   {
-    Backendless.Data.of( Transaction.class ).findLast(callback);
+    Backendless.Data.of( Transaction.class ).findLast( callback );
   }
 
   public static BackendlessCollection<Transaction> find( BackendlessDataQuery query )
@@ -327,7 +348,7 @@ public class Transaction implements Serializable
     else
     {
       Future<BackendlessCollection<Transaction>> future = new Future<BackendlessCollection<Transaction>>();
-      Backendless.Data.of( Transaction.class ).find(query, future);
+      Backendless.Data.of( Transaction.class ).find( query, future );
 
       return future;
     }
@@ -335,6 +356,6 @@ public class Transaction implements Serializable
 
   public static void findAsync( BackendlessDataQuery query, AsyncCallback<BackendlessCollection<Transaction>> callback )
   {
-    Backendless.Data.of( Transaction.class ).find(query, callback);
+    Backendless.Data.of( Transaction.class ).find( query, callback );
   }
 }

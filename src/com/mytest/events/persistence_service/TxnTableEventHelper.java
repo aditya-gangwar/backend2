@@ -5,8 +5,8 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.utilities.BackendConstants;
-import com.mytest.utilities.CommonConstants;
+import com.mytest.constants.BackendConstants;
+import com.mytest.constants.CommonConstants;
 import com.mytest.database.Cashback;
 import com.mytest.database.Transaction;
 
@@ -56,7 +56,7 @@ public class TxnTableEventHelper {
                 if(cashback==null) {
                     mLogger.error("Cashback object is not available.");
                 } else {
-                    merchantName = cashback.getMerchant_name().toUpperCase(Locale.ENGLISH);
+                    merchantName = transaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
                     cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
                     cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 

@@ -13,12 +13,11 @@ public class CustomerCards
   private java.util.Date created;
   private java.util.Date updated;
   private String ownerId;
-  private java.util.Date allocationTime;
-  private java.util.Date removedTime;
-  private String removedReason;
+  private java.util.Date status_update_time;
+  private String status_reason;
   private String objectId;
-  private String qrcode;
-  private String merchantId;
+  private String card_id;
+  private String merchant_id;
   public Integer getStatus()
   {
     return status;
@@ -44,34 +43,24 @@ public class CustomerCards
     return ownerId;
   }
 
-  public java.util.Date getAllocationTime()
+  public java.util.Date getStatus_update_time()
   {
-    return allocationTime;
+    return status_update_time;
   }
 
-  public void setAllocationTime( java.util.Date allocationTime )
+  public void setStatus_update_time( java.util.Date status_update_time )
   {
-    this.allocationTime = allocationTime;
+    this.status_update_time = status_update_time;
   }
 
-  public java.util.Date getRemovedTime()
+  public String getStatus_reason()
   {
-    return removedTime;
+    return status_reason;
   }
 
-  public void setRemovedTime( java.util.Date removedTime )
+  public void setStatus_reason( String status_reason )
   {
-    this.removedTime = removedTime;
-  }
-
-  public String getRemovedReason()
-  {
-    return removedReason;
-  }
-
-  public void setRemovedReason( String removedReason )
-  {
-    this.removedReason = removedReason;
+    this.status_reason = status_reason;
   }
 
   public String getObjectId()
@@ -79,24 +68,24 @@ public class CustomerCards
     return objectId;
   }
 
-  public String getQrcode()
+  public String getCard_id()
   {
-    return qrcode;
+    return card_id;
   }
 
-  public void setQrcode( String qrcode )
+  public void setCard_id( String card_id )
   {
-    this.qrcode = qrcode;
+    this.card_id = card_id;
   }
 
-  public String getMerchantId()
+  public String getMerchant_id()
   {
-    return merchantId;
+    return merchant_id;
   }
 
-  public void setMerchantId( String merchantId )
+  public void setMerchant_id( String merchant_id )
   {
-    this.merchantId = merchantId;
+    this.merchant_id = merchant_id;
   }
 
                                                     

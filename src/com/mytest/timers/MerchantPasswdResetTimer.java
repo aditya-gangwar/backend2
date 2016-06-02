@@ -4,12 +4,17 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
-import com.mytest.database.DbConstants;
+import com.mytest.constants.BackendConstants;
+import com.mytest.constants.BackendResponseCodes;
+import com.mytest.constants.DbConstants;
+import com.mytest.constants.GlobalSettingsConstants;
 import com.mytest.database.MerchantOps;
 import com.mytest.database.Merchants;
+import com.mytest.database.WrongAttempts;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.utilities.*;
+import com.mytest.utilities.BackendOps;
+import com.mytest.utilities.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,7 +27,8 @@ import java.util.Date;
  * the special annotation - BackendlessTimer. The annotation contains a JSON
  * object which describes all properties of the timer.
  */
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':120}},'timername':'MerchantPasswdReset'}")
+
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':900}},'timername':'MerchantPasswdReset'}")
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private Logger mLogger;
@@ -77,7 +83,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         Merchants merchant = (Merchants) user.getProperty("merchant");
 
         // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant.getAdmin_status());
+        String status = CommonUtils.checkMerchantStatus(merchant);
         if(status != null) {
             mLogger.info("Merchant is disabled: "+merchant.getAuto_id()+", "+merchant.getAdmin_status());
             return status;
@@ -89,11 +95,12 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
         // update user account for the password
         user.setPassword(passwd);
-        //merchant.setTemp_pswd_time(new Date());
-        if(merchant.getPasswd_wrong_attempts() > 0) {
-            mLogger.debug("Resetting password wrong attempts to 0: "+merchant.getAuto_id());
-            merchant.setPasswd_wrong_attempts(0);
-            user.setProperty("merchant",merchant);
+        // update user account for the password
+        user.setPassword(passwd);
+        // delete any row, if exists, of earlier wrong attempts
+        WrongAttempts attempt = mBackendOps.fetchWrongAttempts(merchant.getAuto_id(), DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
+        if(attempt!=null) {
+            mBackendOps.deleteWrongAttempt(attempt);
         }
 
         user = mBackendOps.updateUser(user);
@@ -126,6 +133,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         whereClause.append(" AND op_status = '").append(DbConstants.MERCHANT_OP_STATUS_PENDING).append("'");
         // older than configured cool off period
         long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+
         whereClause.append(" AND created < ").append(time);
 
         mLogger.debug("where clause: "+whereClause.toString());
@@ -133,6 +141,6 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
     }
 
     private String buildPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_TEMPLATE_PASSWD,CommonUtils.getHalfVisibleId(userId),password);
+        return String.format(SmsConstants.SMS_PASSWD,CommonUtils.getHalfVisibleId(userId),password);
     }
 }

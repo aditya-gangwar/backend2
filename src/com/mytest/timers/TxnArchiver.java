@@ -6,8 +6,8 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.utilities.BackendConstants;
-import com.mytest.utilities.CommonConstants;
+import com.mytest.constants.BackendConstants;
+import com.mytest.constants.CommonConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
 
@@ -188,7 +188,7 @@ public class TxnArchiver
     private boolean updateMerchantArchiveTime() {
         // update archive date in merchant record
         // set to current time
-        mLastFetchMerchant.setLast_archive(mToday);
+        mLastFetchMerchant.setLast_txn_archive(mToday);
 
         // Save merchant object
         try {

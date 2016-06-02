@@ -1,4 +1,4 @@
-package com.mytest.utilities;
+package com.mytest.constants;
 
 /**
  * This class defines constants that are only relevant for backend code
