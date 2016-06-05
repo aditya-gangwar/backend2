@@ -1,13 +1,10 @@
 package com.mytest.events.persistence_service;
 
 import com.backendless.Backendless;
-import com.backendless.exceptions.BackendlessException;
-import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.mytest.constants.*;
 import com.mytest.database.Customers;
-import com.mytest.database.WrongAttempts;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.database.Cashback;
@@ -48,33 +45,22 @@ public class TxnTableEventHelper {
         Customers customer = mBackendOps.getCustomer(customerId, true);
         if(customer==null) {
             //TODO: add in alarms
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_GENERAL,"");
-            throw new BackendlessException(fault);
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
 
         // verify PIN
-        if( !transaction.getCpin().equals(customer.getTxn_pin()) ) {
-            // fetch or create related wrong attempt row
-            WrongAttempts attempt = mBackendOps.fetchOrCreateWrongAttempt(customerId, DbConstants.ATTEMPT_TYPE_USER_PIN);
-            if(attempt != null) {
-                // Lock account, if max wrong attempt limit reached
-                if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.CUSTOMER_WRONG_ATTEMPT_LIMIT) {
-                    // lock customer account
-                    customer.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
-                    customer.setStatus_reason(DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD);
-                    customer.setStatus_update_time(new Date());
-                    mBackendOps.updateCustomer(customer);
+        if( transaction.getCpin() != null ) {
 
-                    BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_FAILED_ATTEMPT_LIMIT_RCHD,"");
-                    throw new BackendlessException(fault);
+            if(!transaction.getCpin().equals(customer.getTxn_pin()) ) {
+
+                if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
+
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                            "Wrong PIN attempt limit reached: " + customerId, false);
+                } else {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
                 }
-                // increase attempt count
-                attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
-                mBackendOps.saveWrongAttempt(attempt);
             }
-
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_PIN,"Wrong PIN");
-            throw new BackendlessException(fault);
         }
 
         // Fetch cashback record
@@ -95,16 +81,19 @@ public class TxnTableEventHelper {
             transaction.setCust_private_id(cashback.getCust_private_id());
             transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
             transaction.setCreate_time(new Date());
-            // the only use of adding cashback in txn (thus maintaining relationship in DB) is that
-            // both will get updated in one go
+            // following are uses to adding cashback object to txn:
+            // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
+            // 2) updated cashback object will be automatically returned,
+            // along with updated transaction object to calling app,
+            // which can thus use it to display updated balance - instead of fetching cashback again.
+            // 3) cashback object in transaction will be used in afterCreate() of txn table too - to get updated balance
             transaction.setCashback(cashback);
 
         } else {
             //TODO: add in alarms
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_GENERAL,"");
-            throw new BackendlessException(fault);
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
-
+        Backendless.Logging.flush();
     }
 
     public void handleAfterCreate(Transaction transaction, ExecutionResult<Transaction> result) throws Exception {
@@ -115,8 +104,12 @@ public class TxnTableEventHelper {
         if(result.getException()==null) {
             buildAndSendTxnSMS(transaction);
         }
+        Backendless.Logging.flush();
     }
 
+    /*
+     * Private helper methods
+     */
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);

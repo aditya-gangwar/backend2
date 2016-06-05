@@ -25,6 +25,7 @@ import java.util.Iterator;
 public class BackendOps {
 
     public String mLastOpStatus;
+    public String mLastOpErrorMsg;
     private Logger mLogger;
 
     public BackendOps(Logger logger) {
@@ -34,25 +35,49 @@ public class BackendOps {
     /*
      * BackendlessUser operations
      */
+    public BackendlessUser registerUser(BackendlessUser user) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+        try
+        {
+            return Backendless.UserService.register(user);
+        }
+        catch( BackendlessException e )
+        {
+            mLastOpErrorMsg = "User register failed: "+e.toString();
+            ////mLogger.error(mLastOpErrorMsg);
+            // Handle backend error codes
+            mLastOpStatus = e.getCode();
+            if (mLastOpStatus.equals(BackendResponseCodes.BL_ERROR_REGISTER_DUPLICATE)) {
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_DUPLICATE_USER;
+            }
+        }
+        return null;
+    }
+
     public BackendlessUser loginUser(String userId, String password) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
 
         try {
             return Backendless.UserService.login(userId, password, false);
         } catch (BackendlessException e) {
-            mLogger.error("Exception in loginUser: " + e.toString());
+            mLastOpErrorMsg = "Exception in loginUser: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public boolean logoutUser() {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
 
         try {
             Backendless.UserService.logout();
         } catch (BackendlessException e) {
-            mLogger.error("Exception in logoutUser: " + e.toString());
+            mLastOpErrorMsg = "Exception in logoutUser: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
             return false;
         }
@@ -60,20 +85,23 @@ public class BackendOps {
     }
 
     public BackendlessUser updateUser(BackendlessUser user) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
 
         // Save merchant object
         try {
             return Backendless.UserService.update( user );
         } catch(BackendlessException e) {
-            mLogger.error("Exception in updateUser: " + e.toString());
+            mLastOpErrorMsg = "Exception in updateUser: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public BackendlessUser fetchUser(String userid, int userType) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
 
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
@@ -82,7 +110,7 @@ public class BackendOps {
             QueryOptions queryOptions = new QueryOptions();
             if(userType == DbConstants.USER_TYPE_CUSTOMER) {
                 queryOptions.addRelated( "customer");
-                queryOptions.addRelated( "customer.qr_card");
+                queryOptions.addRelated( "customer.membership_card");
 
             } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
                 queryOptions.addRelated( "merchant");
@@ -92,13 +120,15 @@ public class BackendOps {
             BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
             if( user.getTotalObjects() == 0) {
                 // no data found
-                mLogger.warn("No user found: "+userid);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
+                mLastOpErrorMsg = "No user found: "+userid;
+                //mLogger.warn(mLastOpErrorMsg);
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in fetchUser: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchUser: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -108,8 +138,9 @@ public class BackendOps {
      * Customer operations
      */
     public Merchants getMerchant(String userId) {
-        mLogger.debug("In getMerchant: "+userId);
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
             query.setWhereClause("auto_id = '"+userId+"'");
@@ -121,13 +152,15 @@ public class BackendOps {
             BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
             if( user.getTotalObjects() == 0) {
                 // no data found
-                mLogger.warn("No merchant found: "+userId);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
+                mLastOpErrorMsg = "No merchant found: "+userId;
+                //mLogger.warn(mLastOpErrorMsg);
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in getMerchant: " + e.toString());
+            mLastOpErrorMsg = "Exception in getMerchant: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
 
@@ -135,10 +168,13 @@ public class BackendOps {
     }
 
     public Merchants updateMerchant(Merchants merchant) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try {
             return Backendless.Persistence.save(merchant);
         } catch(BackendlessException e) {
-            mLogger.error("Exception in updateMerchant: " + e.toString());
+            mLastOpErrorMsg = "Exception in updateMerchant: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -148,30 +184,33 @@ public class BackendOps {
      * Customer operations
      */
     public Customers getCustomer(String custId, boolean mobileAsId) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try {
             BackendlessDataQuery query = new BackendlessDataQuery();
             if(mobileAsId) {
                 query.setWhereClause("mobile_num = '"+custId+"'");
             } else {
-                query.setWhereClause("qr_card.qrcode = '"+custId+"'");
+                query.setWhereClause("membership_card.card_id = '"+custId+"'");
             }
 
             QueryOptions queryOptions = new QueryOptions();
-            queryOptions.addRelated("qr_card");
+            queryOptions.addRelated("membership_card");
             query.setQueryOptions(queryOptions);
 
             BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
             if( user.getTotalObjects() == 0) {
                 // no data found
-                mLogger.warn("No customer found: "+custId);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_USER;
+                mLastOpErrorMsg = "No customer found: "+custId;
+                //mLogger.warn(mLastOpErrorMsg);
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
             } else {
-                mLogger.debug("Found customer: "+custId);
+                //mLogger.debug("Found customer: "+custId);
                 return user.getData().get(0);
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in getCustomer: " + e.toString());
+            mLastOpErrorMsg = "Exception in getCustomer: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
 
@@ -179,10 +218,13 @@ public class BackendOps {
     }
 
     public Customers updateCustomer(Customers customer) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try {
             return Backendless.Persistence.save(customer);
         } catch(BackendlessException e) {
-            mLogger.error("Exception in updateCustomer: " + e.toString());
+            mLastOpErrorMsg = "Exception in updateCustomer: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -191,23 +233,26 @@ public class BackendOps {
     /*
      * Customer card operations
      */
-    public CustomerCards getCustomerCard(String qrCode) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+    public CustomerCards getCustomerCard(String cardId) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("qrcode = '" + qrCode + "'");
+            dataQuery.setWhereClause("card_id = '" + cardId + "'");
 
             BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
             if( collection.getTotalObjects() == 0) {
                 // no data found
-                mLogger.warn("No customer card found: "+qrCode);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_NO_SUCH_CARD;
+                mLastOpErrorMsg = "No customer card found: "+cardId;
+                //mLogger.warn(mLastOpErrorMsg);
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_CARD;
             } else {
-                mLogger.debug("Fetched customer card: "+qrCode);
+                //mLogger.debug("Fetched customer card: "+cardId);
                 return collection.getData().get(0);
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in getCustomerCard: " + e.toString());
+            mLastOpErrorMsg = "Exception in getCustomerCard: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
 
@@ -215,13 +260,15 @@ public class BackendOps {
     }
 
     public CustomerCards saveQrCard(CustomerCards card) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             Backendless.Persistence.save( card );
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in saveQrCard: " + e.toString());
+            mLastOpErrorMsg = "Exception in saveQrCard: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -231,7 +278,8 @@ public class BackendOps {
      * Cashback operations
      */
     public ArrayList<Cashback> fetchCashback(String whereClause, boolean fetchCustomer, String cashbackTable) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         // fetch cashback objects from DB
         try {
             Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
@@ -269,11 +317,12 @@ public class BackendOps {
                 }
                 return objects;
             } else {
-                mLogger.warn("No cashback object found: "+whereClause);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_GENERAL;
+                mLastOpErrorMsg = "No cashback object found: "+whereClause;
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in fetchCashback: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchCashback: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
 
@@ -281,13 +330,15 @@ public class BackendOps {
     }
 
     public Cashback saveCashback(Cashback cb) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             return Backendless.Persistence.save( cb );
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in saveCashback: " + e.toString());
+            mLastOpErrorMsg = "Exception in saveCashback: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -298,7 +349,8 @@ public class BackendOps {
      * OTP operations
      */
     public AllOtp generateOtp(AllOtp otp) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         // check if any OTP object already available for this user_id
         // if yes, update the same for new OTP, op and time.
         // If no, create new object
@@ -327,29 +379,33 @@ public class BackendOps {
 
             if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
             {
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
+                mLastOpErrorMsg = "In generateOtp: Failed to send SMS";
             } else {
-                mLogger.debug("OTP generated and SMS sent successfully "+newOtp.getMobile_num());
+                //mLogger.debug("OTP generated and SMS sent successfully "+newOtp.getMobile_num());
                 return newOtp;
             }
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in generateOtp: " + e.toString());
+            mLastOpErrorMsg = "Exception in generateOtp: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public boolean deleteOtp(AllOtp otp) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             Backendless.Persistence.of( AllOtp.class ).remove( otp );
             return true;
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in deleteOtp: " + e.toString());
+            mLastOpErrorMsg = "Exception in deleteOtp: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return false;
@@ -370,7 +426,8 @@ public class BackendOps {
     }
 
     public AllOtp fetchOtp(String userId) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -379,11 +436,15 @@ public class BackendOps {
             BackendlessCollection<AllOtp> collection = Backendless.Data.of(AllOtp.class).find(dataQuery);
             if( collection.getTotalObjects() > 0) {
                 return collection.getData().get(0);
+            } else {
+                mLastOpErrorMsg = "Iin fetchOtp: No data found" + userId;
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in fetchOtp: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchOtp: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -394,11 +455,11 @@ public class BackendOps {
      */
     /*
     public GlobalSettings fetchGlobalSettings() {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         try {
             return Backendless.Persistence.of( GlobalSettings.class).findLast();
         } catch (BackendlessException e) {
-            mLogger.error("Exception in fetchGlobalSettings: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchGlobalSettings: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -408,7 +469,8 @@ public class BackendOps {
      * Counters operations
      */
     public Double fetchCounterValue(String name) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -422,11 +484,14 @@ public class BackendOps {
                 counter.setValue(counter.getValue()+1);
                 counter = Backendless.Persistence.save( counter );
                 return counter.getValue();
+            } else {
+                mLastOpErrorMsg = "In fetchCounter: No data found" + name;
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in fetchCounter: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchCounter: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -436,7 +501,8 @@ public class BackendOps {
      * Trusted Devices operations
      */
     public MerchantDevice fetchDevice(String deviceId) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -445,11 +511,14 @@ public class BackendOps {
             BackendlessCollection<MerchantDevice> collection = Backendless.Data.of(MerchantDevice.class).find(dataQuery);
             if( collection.getTotalObjects() > 0) {
                 return collection.getData().get(0);
+            } else {
+                mLastOpErrorMsg = "In fetchDevice: No data found" + deviceId;
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in fetchDevice: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchDevice: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -459,7 +528,8 @@ public class BackendOps {
      * Merchant operations
      */
     public MerchantOps addMerchantOp(String opCode, Merchants merchant) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             MerchantOps op = new MerchantOps();
@@ -473,14 +543,15 @@ public class BackendOps {
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in addMerchantOp: " + e.toString());
+            mLastOpErrorMsg = "Exception in addMerchantOp: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         // fetch cashback objects from DB
         try {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -509,10 +580,10 @@ public class BackendOps {
                 return objects;
             } else {
                 mLogger.debug("No merchantop object found: "+whereClause);
-                mLastOpStatus = BackendResponseCodes.BL_MYERROR_GENERAL;
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         } catch (BackendlessException e) {
-            mLogger.error("Exception in fetchMerchantOps: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchMerchantOps: " + e.toString();
             mLastOpStatus = e.getCode();
         }
 
@@ -520,13 +591,14 @@ public class BackendOps {
     }
 
     public MerchantOps saveMerchantOp(MerchantOps op) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             return Backendless.Persistence.save( op );
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in saveMerchantOp: " + e.toString());
+            mLastOpErrorMsg = "Exception in saveMerchantOp: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -537,7 +609,8 @@ public class BackendOps {
      */
     // returns 'null' if not found and new created
     public WrongAttempts fetchOrCreateWrongAttempt(String userId, String type) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         WrongAttempts attempt = fetchWrongAttempts(userId, type);
         if(attempt==null) {
             // create row
@@ -552,7 +625,8 @@ public class BackendOps {
     }
 
     public WrongAttempts fetchWrongAttempts(String userId, String type) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -561,37 +635,42 @@ public class BackendOps {
             BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
             if( collection.getTotalObjects() > 0) {
                 return collection.getData().get(0);
+            } else {
+                mLogger.debug("No WrongAttempts object found: "+userId+type);
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
             }
         }
         catch( BackendlessException e )
         {
-            mLogger.error("Exception in fetchDevice: " + e.toString());
+            mLastOpErrorMsg = "Exception in fetchDevice: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public WrongAttempts saveWrongAttempt(WrongAttempts attempt) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             return Backendless.Persistence.save( attempt );
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in saveWrongAttempt: " + e.toString());
+            mLastOpErrorMsg = "Exception in saveWrongAttempt: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return null;
     }
 
     public void deleteWrongAttempt(WrongAttempts attempt) {
-        mLastOpStatus = BackendResponseCodes.BL_MYRESPONSE_NO_ERROR;
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
         try
         {
             Backendless.Persistence.of(WrongAttempts.class).remove(attempt);
         }
         catch( BackendlessException e ) {
-            mLogger.error("Exception in deleteWrongAttempt: " + e.toString());
+            mLastOpErrorMsg = "Exception in deleteWrongAttempt: " + e.toString();
             mLastOpStatus = e.getCode();
         }
     }

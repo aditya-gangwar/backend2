@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="services:jar">
+    <output-path>$PROJECT_DIR$/classes_services/services_jar</output-path>
+    <root id="archive" name="services.jar">
+      <element id="module-output" name="services" />
+      <element id="module-output" name="backend" />
+    </root>
+  </artifact>
+</component>

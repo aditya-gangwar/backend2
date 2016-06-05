@@ -6,39 +6,41 @@ package com.mytest.constants;
 public class BackendResponseCodes {
 
     // these are my own defined
-    public static final String BL_MYRESPONSE_NO_ERROR = "100";
-    public static final String BL_MYRESPONSE_OP_SCHEDULED = "102";
+    public static final String BE_RESPONSE_NO_ERROR = "100";
+    public static final String BE_RESPONSE_OP_SCHEDULED = "102";
+    public static final String BE_RESPONSE_OTP_GENERATED = "103";
 
-    public static final String BL_MYERROR_GENERAL = "500";
-    public static final String BL_MYERROR_NO_SUCH_USER = "501";
-    public static final String BL_MYERROR_ACC_DISABLED = "502";
-    public static final String BL_MYERROR_SEND_SMS_FAILED = "503";
-    public static final String BL_MYERROR_WRONG_INPUT_DATA = "504";
-    public static final String BL_MYERROR_ACC_LOCKED = "505";
-    public static final String BL_MYERROR_DUPLICATE_USER = "506";
+    public static final String BE_ERROR_GENERAL = "500";
+    public static final String BE_ERROR_NO_SUCH_USER = "501";
+    public static final String BE_ERROR_ACC_DISABLED = "502";
+    public static final String BE_ERROR_ACC_LOCKED = "503";
 
-    public static final String BL_MYERROR_OTP_GENERATE_FAILED = "510";
-    public static final String BL_MYERROR_OTP_GENERATED = "511";
-    public static final String BL_MYERROR_WRONG_OTP = "512";
-    public static final String BL_MYERROR_WRONG_PIN = "513";
+    public static final String BE_ERROR_SEND_SMS_FAILED = "510";
+    public static final String BE_ERROR_WRONG_INPUT_DATA = "511";
+    public static final String BE_ERROR_DUPLICATE_USER = "512";
+    public static final String BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED = "513";
 
-    public static final String BL_MYERROR_NO_SUCH_CARD = "520";
-    public static final String BL_MYERROR_WRONG_CARD = "521";
-    public static final String BL_MYERROR_CARD_INUSE = "522";
-    public static final String BL_MYERROR_CARD_WRONG_MERCHANT = "523";
-    public static final String BL_MYERROR_CARD_BLOCKED = "524";
+    public static final String BE_ERROR_OTP_GENERATE_FAILED = "520";
+    public static final String BE_ERROR_WRONG_OTP = "521";
+    public static final String BE_ERROR_WRONG_PIN = "522";
 
-    public static final String BL_MYERROR_VERIFICATION_FAILED = "530";
-    public static final String BL_MYERROR_FAILED_ATTEMPT_LIMIT_RCHD = "531";
+    public static final String BE_ERROR_NO_SUCH_CARD = "530";
+    public static final String BE_ERROR_WRONG_CARD = "531";
+    public static final String BE_ERROR_CARD_INUSE = "532";
+    public static final String BE_ERROR_CARD_WRONG_MERCHANT = "533";
+    public static final String BE_ERROR_CARD_BLOCKED = "534";
 
-    public static final String BL_MYERROR_NOT_TRUSTED_DEVICE = "540";
-    public static final String BL_MYERROR_TRUSTED_DEVICE_LIMIT_RCHD = "541";
+    public static final String BE_ERROR_VERIFICATION_FAILED = "540";
+    public static final String BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD = "541";
+    public static final String BE_ERROR_NOT_TRUSTED_DEVICE = "542";
+    public static final String BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD = "543";
 
-    public static final String BL_MYERROR_SERVER_ERROR_ACC_DISABLED = "599";
+    public static final String BE_ERROR_SERVER_ERROR_ACC_DISABLED = "599";
 
 
     // these are defined by backendless
     public static final String BL_ERROR_NO_DATA_FOUND = "1009";
+    public static final String BL_ERROR_DUPLICATE_ENTRY = "1155";
 
     public static final String BL_ERROR_REGISTER_DUPLICATE = "3033";
     public static final String BL_ERROR_LOGIN_DISABLED = "3000";

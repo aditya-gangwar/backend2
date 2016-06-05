@@ -20,6 +20,14 @@ public class DbConstants {
     public static final int USER_STATUS_DISABLED = 3;
     // Locked means temporary - and will be automatically unlocked after defined duration
     public static final int USER_STATUS_LOCKED = 4;
+    // status code to text description
+    public static String userStatusDesc[] = {
+            "",
+            "User is active",
+            "User account is disabled",
+            "User temporarily locked"
+    };
+
 
     // Merchant table - 'status_reason' column values
     public static final int ENABLED_NEW_USER = 1;
@@ -48,6 +56,7 @@ public class DbConstants {
     public static final int CUSTOMER_CARD_STATUS_ALLOTTED = 2;
     public static final int CUSTOMER_CARD_STATUS_BLOCKED = 3;
     public static final int CUSTOMER_CARD_STATUS_REMOVED = 4;
+
 
     // CustomerOps table - 'opcode' column values
     public static final String CUSTOMER_OP_NEW_CARD = "New Card";
@@ -82,9 +91,10 @@ public class DbConstants {
     public static final String SETTINGS_MERCHANT_WRONG_ATTEMPTS = "merchant_wrong_attempts";
     public static final String SETTINGS_MERCHANT_ACCOUNT_BLOCK_HRS = "merchant_account_block_hrs";
 
-    public static final String SETTINGS_CL_LIMIT_FOR_PIN_CARD = "cl_limit_for_pin_card";
+    public static final String SETTINGS_CL_CREDIT_LIMIT_FOR_PIN = "cl_credit_limit_for_pin";
+    public static final String SETTINGS_CL_DEBIT_LIMIT_FOR_PIN = "cl_debit_limit_for_pin";
+    public static final String SETTINGS_CB_DEBIT_LIMIT_FOR_PIN = "cb_debit_limit_for_pin";
     public static final String SETTINGS_CB_REDEEM_LIMIT = "cb_redeem_limit";
-    public static final String SETTINGS_CB_LIMIT_FOR_PIN_CARD = "cb_limit_for_pin_card";
     public static final String SETTINGS_REPORTS_HISTORY_DAYS = "reports_history_days";
     public static final String SETTINGS_REPORTS_BLACKOUT_END = "reports_blackout_end";
     public static final String SETTINGS_REPORTS_BLACKOUT_START = "reports_blackout_start";

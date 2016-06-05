@@ -26,8 +26,7 @@ public class CommonConstants {
     /*
      * Size, Length and Limits
      */
-    public static final int PIN_LEN = 5;
-    public static final int OTP_LEN = 4;
+    public static final int PIN_OTP_LEN = 5;
     public static final int TRANSACTION_ID_LEN = 10;
     public static int MAX_DEVICES_PER_MERCHANT = 3;
     public static int MERCHANT_ID_LEN = 6;

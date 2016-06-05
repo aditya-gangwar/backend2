@@ -26,6 +26,7 @@ public class SmsConstants {
 
     public static String SMS_FIRST_PASSWD = "Dear Merchant - Welcome to MyCash family !! Your User ID is %s, and your first password is '%s'. PLZ CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD = "MyCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_FIRST_PIN = "Dear Customer - Welcome to MyCash family !! Your User ID is %s, and your first PIN is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
@@ -33,5 +34,9 @@ public class SmsConstants {
 
     public static String SMS_NEW_MOBILE = "You have changed registered mobile number of your account %s to %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+
+    public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong password attempts.";
+    public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong PIN attempts.";
+    public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'password reset' attempts.";
 
 }

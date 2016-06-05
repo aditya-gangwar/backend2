@@ -98,10 +98,11 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         // update user account for the password
         user.setPassword(passwd);
         // delete any row, if exists, of earlier wrong attempts
+        /*
         WrongAttempts attempt = mBackendOps.fetchWrongAttempts(merchant.getAuto_id(), DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
         if(attempt!=null) {
             mBackendOps.deleteWrongAttempt(attempt);
-        }
+        }*/
 
         user = mBackendOps.updateUser(user);
         if(user==null) {
@@ -113,7 +114,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
         {
-            return BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
+            return BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
             // dont care about return code - if failed, user can always do 'forget password' again
         }
         mLogger.debug("Sent password reset SMS: "+merchant.getAuto_id());

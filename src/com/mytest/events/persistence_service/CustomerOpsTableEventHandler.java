@@ -3,7 +3,6 @@ package com.mytest.events.persistence_service;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
@@ -11,7 +10,6 @@ import com.backendless.servercode.annotation.Asset;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.DbConstants;
-import com.mytest.constants.GlobalSettingsConstants;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -38,6 +36,9 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     {
         initCommon();
         mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate");
+        /*
+        Backendless.Logging.flush();
+        throw new BackendlessException( "123", "testing");*/
 
         String otp = customerops.getOtp();
         if(otp==null || otp.isEmpty()) {
@@ -48,31 +49,35 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             String mobileNum = customerops.getMobile_num();
             Customers customer = mBackendOps.getCustomer(mobileNum, true);
             if(customer==null) {
-                BackendlessFault fault = new BackendlessFault(mBackendOps.mLastOpStatus,errorMsg);
-                throw new BackendlessException(fault);
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
             }
 
             // check if customer is enabled
             String status = CommonUtils.checkCustomerStatus(customer);
             if( status != null) {
-                BackendlessFault fault = new BackendlessFault(status, "");
-                throw new BackendlessException(fault);
+                CommonUtils.throwException(mLogger,status, "Customer account is not active", false);
             }
 
             // Don't verify QR card# for 'new card' operation
             String custOp = customerops.getOp_code();
             if( !custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
                     !customer.getMembership_card().getCard_id().equals(customerops.getQr_card()) ) {
-                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_CARD, "Wrong Customer card");
-                throw new BackendlessException(fault);
+
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card", false);
             }
 
             // Don't verify PIN for 'reset PIN' operation
             String pin = customerops.getPin();
             if( !custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
                     !customer.getTxn_pin().equals(pin) ) {
-                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_PIN, "Wrong Customer PIN");
-                throw new BackendlessException(fault);
+
+                if( CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN) ) {
+
+                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                            "Wrong PIN attempt limit reached: "+customer.getMobile_num(), false);
+                } else {
+                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: "+customer.getMobile_num(), false);
+                }
             }
 
             // Generate OTP and send SMS
@@ -83,22 +88,18 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             newOtp = mBackendOps.generateOtp(newOtp);
             if(newOtp == null) {
                 // failed to generate otp
-                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_OTP_GENERATE_FAILED,"Failed to generate OTP");
-                throw new BackendlessException(fault);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, "OTP generate failed", false);
             }
 
             // OTP generated successfully - return exception to indicate so
-            Backendless.Logging.flush();
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_OTP_GENERATED,"OTP generated");
-            throw new BackendlessException(fault);
+            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
 
         } else {
             // Second run, as OTP available
             AllOtp fetchedOtp = mBackendOps.fetchOtp(customerops.getMobile_num());
             if( fetchedOtp == null ||
                     !mBackendOps.validateOtp(fetchedOtp, otp) ) {
-                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_MYERROR_WRONG_OTP,"Wrong OTP value");
-                throw new BackendlessException(fault);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "", false);
             }
             // remove PIN and OTP from the object
             customerops.setPin(null);
@@ -106,9 +107,9 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             customerops.setOp_status(DbConstants.CUSTOMER_OP_STATUS_OTP_MATCHED);
 
             mLogger.debug("OTP matched for given customer operation: "+customerops.getMobile_num()+", "+customerops.getOp_code());
-            Backendless.Logging.flush();
         }
 
+        Backendless.Logging.flush();
     }
 
     @Override
@@ -135,11 +136,10 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 break;
         }
 
-        Backendless.Logging.flush();
         if(errorCode != null) {
-            BackendlessFault fault = new BackendlessFault(errorCode,"");
-            throw new BackendlessException(fault);
+            CommonUtils.throwException(mLogger,errorCode, "", false);
         }
+        Backendless.Logging.flush();
     }
 
     /*
@@ -173,7 +173,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 return mBackendOps.mLastOpStatus;
             }
             if(newCard.getStatus() != DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
-                return BackendResponseCodes.BL_MYERROR_CARD_INUSE;
+                return BackendResponseCodes.BE_ERROR_CARD_INUSE;
             }
             //TODO: enable this in final testing
             //if(!newCard.getMerchantId().equals(merchantId)) {
@@ -200,7 +200,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             oldCard = customer.getMembership_card();
             if (oldCard == null) {
                 mLogger.error("QR card data not available: " + custMobile);
-                return BackendResponseCodes.BL_MYERROR_GENERAL;
+                return BackendResponseCodes.BE_ERROR_GENERAL;
             }
         }
 
@@ -209,7 +209,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         String[] cbTables = cbTablesRow.split(",");
         if(cbTables.length <= 0) {
             mLogger.error("Empty cashback table names: "+custMobile);
-            return BackendResponseCodes.BL_MYERROR_GENERAL;
+            return BackendResponseCodes.BE_ERROR_GENERAL;
         }
 
         // loop on all CB tables for this customer
@@ -268,7 +268,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         user = mBackendOps.updateUser(user);
         if(user==null) {
             // TODO: add in alarms table for manual correction later
-            return BackendResponseCodes.BL_MYERROR_SERVER_ERROR_ACC_DISABLED;
+            return BackendResponseCodes.BE_ERROR_SERVER_ERROR_ACC_DISABLED;
         }
 
         // update old qr card status
@@ -302,7 +302,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             }
         } else {
             mLogger.error("Cashback with non-matching mobile num: "+rowid+","+oldMobile);
-            return BackendResponseCodes.BL_MYERROR_GENERAL;
+            return BackendResponseCodes.BE_ERROR_GENERAL;
         }
         return null;
     }
@@ -318,7 +318,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             }
         } else {
             mLogger.error("Cashback with non-matching qr code: "+cb.getRowid_card()+","+oldQrCode);
-            return BackendResponseCodes.BL_MYERROR_GENERAL;
+            return BackendResponseCodes.BE_ERROR_GENERAL;
         }
         return null;
     }
@@ -356,7 +356,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         String smsText = buildPwdResetSMS(mobileNum, newPin);
         if( !SmsHelper.sendSMS(smsText, mobileNum) )
         {
-            return BackendResponseCodes.BL_MYERROR_SEND_SMS_FAILED;
+            return BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
             // dont care about return code - if failed, user can always reset pin again
         }
 
