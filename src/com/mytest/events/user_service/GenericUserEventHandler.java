@@ -38,10 +38,10 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         initCommon();
         mLogger.debug("In GenericUserEventHandler: afterLogin");
 
-        if(result.getException()==null) {
-            String userId = (String) result.getResult().get("user_id");
-            Integer userType = (Integer) result.getResult().get("user_type");
+        String userId = (String) result.getResult().get("user_id");
+        Integer userType = (Integer) result.getResult().get("user_type");
 
+        if(result.getException()==null) {
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
                 Merchants merchant = mBackendOps.getMerchant(userId);
                 if(merchant==null) {
@@ -112,6 +112,20 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     }
                 }
             }
+        } else {
+            if (userType == DbConstants.USER_TYPE_MERCHANT) {
+                // login failed - increase count if failed due to wrong password
+                if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
+                    // fetch merchant
+                    Merchants merchant = mBackendOps.getMerchant(userId);
+                    if(merchant!=null &&
+                            CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_USER_LOGIN) ) {
+                        // override exception type
+                        CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                "Merchant wrong password attempt limit reached: "+merchant.getAuto_id(), false);
+                    }
+                }
+            }
         }
     }
 
@@ -158,6 +172,49 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             }
         }
         Backendless.Logging.flush();
+    }
+
+    @Override
+    public void beforeUpdate( RunnerContext context, HashMap userValue ) throws Exception
+    {
+        initCommon();
+        mLogger.debug("In GenericUserEventHandler: beforeRegister");
+
+        // If merchant, generate login id and password
+        // If customer, generate private id and PIN
+        String userId = (String) userValue.get("user_id");
+        Integer userType = (Integer) userValue.get("user_type");
+
+        if (userType == DbConstants.USER_TYPE_MERCHANT) {
+            Merchants merchant = (Merchants) userValue.get("merchant");
+            if(merchant==null) {
+                // fetch merchant
+                merchant = mBackendOps.getMerchant(userId);
+                if(merchant==null) {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_NO_SUCH_USER, "No merchant object with id "+userId, false);
+                }
+            }
+
+            String status = CommonUtils.checkMerchantStatus(merchant);
+            if(status != null) {
+                CommonUtils.throwException(mLogger, status, "Merchant account not active: "+userId, false);
+            }
+
+        } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {
+            Customers customer = (Customers) userValue.get("customer");
+            if(customer==null) {
+                // fetch merchant
+                customer = mBackendOps.getCustomer(userId, true);
+                if(customer==null) {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_NO_SUCH_USER, "No customer object with id "+userId, false);
+                }
+            }
+
+            String status = CommonUtils.checkCustomerStatus(customer);
+            if(status != null) {
+                CommonUtils.throwException(mLogger, status, "Customer account not active: "+userId, false);
+            }
+        }
     }
 
     /*

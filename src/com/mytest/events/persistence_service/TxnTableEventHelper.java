@@ -48,6 +48,18 @@ public class TxnTableEventHelper {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
 
+        // check if customer is enabled
+        String status = CommonUtils.checkCustomerStatus(customer);
+        if( status != null) {
+            CommonUtils.throwException(mLogger,status, "Customer account is not active", false);
+        }
+
+        // check that card is not blocked
+        String cardStatus = CommonUtils.getCardStatusForUse(customer.getMembership_card());
+        if(cardStatus != null) {
+            CommonUtils.throwException(mLogger,status, "Invalid customer card", false);
+        }
+
         // verify PIN
         if( transaction.getCpin() != null ) {
 

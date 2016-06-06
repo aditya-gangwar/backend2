@@ -618,8 +618,7 @@ public class BackendOps {
             newAttempt.setUser_id(userId);
             newAttempt.setAttempt_type(type);
             newAttempt.setAttempt_cnt(1);
-            saveWrongAttempt(newAttempt);
-            return null;
+            return saveWrongAttempt(newAttempt);
         }
         return attempt;
     }

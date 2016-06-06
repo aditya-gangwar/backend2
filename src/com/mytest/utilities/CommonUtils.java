@@ -155,14 +155,34 @@ public class CommonUtils {
         return null;
     }
 
-    public static String checkCustomerCardStatus(CustomerCards card) {
+    public static String getCardStatusForUse(CustomerCards card) {
+        switch(card.getStatus()) {
+
+            case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
+                return null;
+
+            case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
+                return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;
+
+            case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
+            case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
+            case DbConstants.CUSTOMER_CARD_STATUS_NEW:
+                return BackendResponseCodes.BE_ERROR_WRONG_CARD;
+        }
+        return BackendResponseCodes.BE_ERROR_WRONG_CARD;
+    }
+
+    public static String getCardStatusForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
                 return null;
+
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
                 return BackendResponseCodes.BE_ERROR_CARD_INUSE;
+
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;
+
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
                 return BackendResponseCodes.BE_ERROR_WRONG_CARD;

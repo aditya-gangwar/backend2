@@ -56,6 +56,14 @@ public class DbConstants {
     public static final int CUSTOMER_CARD_STATUS_ALLOTTED = 2;
     public static final int CUSTOMER_CARD_STATUS_BLOCKED = 3;
     public static final int CUSTOMER_CARD_STATUS_REMOVED = 4;
+    // Map int status values to corresponding descriptions
+    public static String cardStatusDescriptions[] = {
+            "Invalid customer card",
+            "",
+            "",
+            "Card is Blocked",
+            "Invalid Card",
+    };
 
 
     // CustomerOps table - 'opcode' column values
@@ -72,7 +80,7 @@ public class DbConstants {
     public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
     public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
     // MerchantOps table - 'opcode' column values
-    public static final String MERCHANT_OP_RESET_PASSWD = "reset_password";
+    public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
 
     // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
     public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";

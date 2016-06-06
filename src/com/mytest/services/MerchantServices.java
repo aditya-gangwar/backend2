@@ -41,7 +41,7 @@ public class MerchantServices implements IBackendlessService {
         if(card == null) {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         } else {
-            String status = CommonUtils.checkCustomerCardStatus(card);
+            String status = CommonUtils.getCardStatusForAllocation(card);
             if(status != null) {
                 CommonUtils.throwException(mLogger,status, "Invalid customer card", false);
             }
@@ -116,6 +116,9 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
             //throw new BackendlessException( "No such customer", BackendResponseCodes.BE_ERROR_NO_SUCH_USER );
         }
+
+        // Cashback details to be returned - even if customer account/card is disabled/locked
+        // so not checking for customer account/card status
 
         // Create where clause to fetch cashback
         String whereClause = null;
@@ -338,7 +341,7 @@ public class MerchantServices implements IBackendlessService {
             if( CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET) ) {
 
                 CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                        "Merchant wrong password attempt limit reached"+merchant.getAuto_id(), false);
+                        "Merchant wrong 'password reset' attempt limit reached"+merchant.getAuto_id(), false);
             } else {
                 CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
                         "Merchant password reset verification failed"+merchant.getAuto_id(), false);
