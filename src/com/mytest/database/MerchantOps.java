@@ -18,6 +18,18 @@ public class MerchantOps
   private java.util.Date updated;
   private String otp;
   private String op_status;
+  private String extra_op_params;
+
+  public String getExtra_op_params()
+  {
+    return extra_op_params;
+  }
+
+  public void setExtra_op_params( String extra_op_params )
+  {
+    this.extra_op_params = extra_op_params;
+  }
+
   public String getOwnerId()
   {
     return ownerId;

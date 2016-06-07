@@ -77,10 +77,13 @@ public class DbConstants {
 
     // MerchantOps table - 'status' column values
     public static final String MERCHANT_OP_STATUS_PENDING = "pending";
+    public static final String MERCHANT_OP_STATUS_OTP_GENERATED = "pending_otp_generated";
+    public static final String MERCHANT_OP_STATUS_OTP_MATCHED = "OTP Matched";
     public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
     public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
     // MerchantOps table - 'opcode' column values
     public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
+    public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
 
     // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
     public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";

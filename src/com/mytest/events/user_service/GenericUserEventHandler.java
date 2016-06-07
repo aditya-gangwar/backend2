@@ -43,7 +43,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
         if(result.getException()==null) {
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
-                Merchants merchant = mBackendOps.getMerchant(userId);
+                Merchants merchant = mBackendOps.getMerchant(userId, true);
                 if(merchant==null) {
                     mBackendOps.logoutUser();
                     CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
@@ -117,7 +117,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // login failed - increase count if failed due to wrong password
                 if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
                     // fetch merchant
-                    Merchants merchant = mBackendOps.getMerchant(userId);
+                    Merchants merchant = mBackendOps.getMerchant(userId, false);
                     if(merchant!=null &&
                             CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_USER_LOGIN) ) {
                         // override exception type
@@ -189,7 +189,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             Merchants merchant = (Merchants) userValue.get("merchant");
             if(merchant==null) {
                 // fetch merchant
-                merchant = mBackendOps.getMerchant(userId);
+                merchant = mBackendOps.getMerchant(userId, false);
                 if(merchant==null) {
                     CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_NO_SUCH_USER, "No merchant object with id "+userId, false);
                 }

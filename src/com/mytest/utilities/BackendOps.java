@@ -137,7 +137,7 @@ public class BackendOps {
     /*
      * Customer operations
      */
-    public Merchants getMerchant(String userId) {
+    public Merchants getMerchant(String userId, boolean fetchTrustedDevices) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
 
@@ -145,9 +145,11 @@ public class BackendOps {
             BackendlessDataQuery query = new BackendlessDataQuery();
             query.setWhereClause("auto_id = '"+userId+"'");
 
-            QueryOptions queryOptions = new QueryOptions();
-            queryOptions.addRelated("trusted_devices");
-            query.setQueryOptions(queryOptions);
+            if(fetchTrustedDevices) {
+                QueryOptions queryOptions = new QueryOptions();
+                queryOptions.addRelated("trusted_devices");
+                query.setQueryOptions(queryOptions);
+            }
 
             BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
             if( user.getTotalObjects() == 0) {
