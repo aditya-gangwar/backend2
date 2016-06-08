@@ -78,7 +78,7 @@ public class TxnTableEventHelper {
         // Fetch cashback record
         String whereClause = "rowid = '"+customerId+merchantId+"'";
         Cashback cashback = null;
-        ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, false, cbTable);
+        ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, cbTable);
         if(data!=null) {
             cashback = data.get(0);
 
@@ -88,6 +88,7 @@ public class TxnTableEventHelper {
             cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
             cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
             cashback.setTotal_billed(cashback.getTotal_billed() + transaction.getTotal_billed());
+            cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
 
             // add missing transaction fields
             transaction.setCust_private_id(cashback.getCust_private_id());

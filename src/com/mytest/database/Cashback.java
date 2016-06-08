@@ -20,10 +20,27 @@ public class Cashback
   private String rowid_card;
   private Integer total_billed;
   private String rowid;
-  private Customers customer;
   private Merchants merchant;
   private String cust_private_id;
   private String customer_details;
+  private String merchant_id;
+  private Integer cb_billed;
+
+  public Integer getCb_billed() {
+    return cb_billed;
+  }
+
+  public void setCb_billed(Integer cb_billed) {
+    this.cb_billed = cb_billed;
+  }
+
+  public String getMerchant_id() {
+    return merchant_id;
+  }
+
+  public void setMerchant_id(String merchant_id) {
+    this.merchant_id = merchant_id;
+  }
 
   public String getCustomer_details() {
     return customer_details;
@@ -135,17 +152,6 @@ public class Cashback
     this.rowid = rowid;
   }
 
-  /*
-  public Customers getCustomer()
-  {
-    return customer;
-  }
-
-  public void setCustomer( Customers customer )
-  {
-    this.customer = customer;
-  }
-
   public Merchants getMerchant()
   {
     return merchant;
@@ -155,8 +161,7 @@ public class Cashback
   {
     this.merchant = merchant;
   }
-  */
-                                                    
+
   public Cashback save()
   {
     return Backendless.Data.of( Cashback.class ).save( this );

@@ -131,7 +131,7 @@ public class MerchantServices implements IBackendlessService {
 
         // Fetch cashback record
         Cashback cashback = null;
-        ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, false, merchantCbTable);
+        ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, merchantCbTable);
         if(data!=null) {
             cashback = data.get(0);
         } else {
@@ -153,6 +153,73 @@ public class MerchantServices implements IBackendlessService {
         return cashback;
     }
 
+    public MerchantStats getMerchantStats(String merchantId) {
+        initCommon();
+        mLogger.debug("In getMerchantStats: "+merchantId);
+
+        // assume role of calling user
+        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+
+        // Fetch merchant
+        Merchants merchant = mBackendOps.getMerchant(merchantId, false);
+        if(merchant==null) {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+        // check if merchant is enabled
+        String status = CommonUtils.checkMerchantStatus(merchant);
+        if( status != null) {
+            CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
+        }
+
+        // create new stats object
+        MerchantStats stats = new MerchantStats();
+        stats.setMerchant_id(merchantId);
+        // fetch merchant stat object, if exists
+        MerchantStats fetchedStats = mBackendOps.fetchMerchantStats(merchantId);
+        if(fetchedStats!=null) {
+            // copy object id - this will allow to all values be zero, but still update old object in DB, when saved later
+            stats.setObjectId(fetchedStats.getObjectId());
+        }
+
+        // fetch all CB records for this merchant
+        ArrayList<Cashback> data = mBackendOps.fetchCashback("merchant_id = '"+merchantId+"'", merchant.getCashback_table());
+        if(data!=null) {
+            // loop on all cashback objects and calculate stats
+            mLogger.debug("Fetched cashback records: "+merchantId+", "+data.size());
+            for (int k = 0; k < data.size(); k++) {
+                Cashback cb = data.get(k);
+
+                // update customer counts
+                // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
+                if(cb.getCb_credit()>0 && cb.getCl_credit()>0) {
+                    stats.cust_cnt_cb_and_cash++;
+                } else if(cb.getCb_credit()>0) {
+                    stats.cust_cnt_cb++;
+                } else if(cb.getCl_credit()>0) {
+                    stats.cust_cnt_cash++;
+                } else {
+                    stats.cust_cnt_no_balance++;
+                }
+
+                // update amounts
+                stats.cb_credit = stats.cb_credit + cb.getCb_credit();
+                stats.cb_debit = stats.cb_debit + cb.getCb_debit();
+                stats.cash_credit = stats.cash_credit + cb.getCl_credit();
+                stats.cash_debit = stats.cash_debit + cb.getCl_debit();
+                stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
+                stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
+            }
+
+            // save stats object - don't bother about return status
+            mBackendOps.saveMerchantStats(stats);
+
+        } else {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+
+        Backendless.Logging.flush();
+        return stats;
+    }
 
     public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
         initCommon();
@@ -496,12 +563,15 @@ public class MerchantServices implements IBackendlessService {
         // rowid - "customer mobile no"+"merchant id"+"terminal id"
         cashback.setRowid(customer.getMobile_num() + merchantId);
 
+        cashback.setMerchant_id(merchantId);
         cashback.setCust_private_id(customer.getPrivate_id());
+
         cashback.setCb_credit(0);
         cashback.setCb_debit(0);
         cashback.setCl_credit(0);
         cashback.setCl_debit(0);
         cashback.setTotal_billed(0);
+        cashback.setCb_billed(0);
 
         // not setting 'merchant' or 'customer'
         return cashback;

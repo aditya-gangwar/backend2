@@ -217,7 +217,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         for(int i=0; i<cbTables.length; i++) {
             // fetch all CB records for this customer from this CB table
             //Backendless.Data.mapTableToClass(cbTables[i], Cashback.class);
-            ArrayList<Cashback> data = mBackendOps.fetchCashback("cust_private_id = '"+priv_id+"'", false, cbTables[i]);
+            ArrayList<Cashback> data = mBackendOps.fetchCashback("cust_private_id = '"+priv_id+"'", cbTables[i]);
             if(data!=null) {
                 // disable account temporarily till we complete the update
                 // do it only once for first cashback table (i==0)

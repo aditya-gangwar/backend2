@@ -279,7 +279,7 @@ public class BackendOps {
     /*
      * Cashback operations
      */
-    public ArrayList<Cashback> fetchCashback(String whereClause, boolean fetchCustomer, String cashbackTable) {
+    public ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
         // fetch cashback objects from DB
@@ -293,12 +293,13 @@ public class BackendOps {
             // or using rowid_qr in where clause improves performance
             dataQuery.setWhereClause(whereClause);
 
+            /*
             if(fetchCustomer) {
                 QueryOptions queryOptions = new QueryOptions();
                 queryOptions.addRelated("customer");
                 queryOptions.addRelated("customer.membership_card");
                 dataQuery.setQueryOptions(queryOptions);
-            }
+            }*/
 
             BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
 
@@ -663,17 +664,45 @@ public class BackendOps {
         return null;
     }
 
-    public void deleteWrongAttempt(WrongAttempts attempt) {
+    /*
+     * MerchantStats operations
+     */
+    public MerchantStats fetchMerchantStats(String merchantId) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
         try
         {
-            Backendless.Persistence.of(WrongAttempts.class).remove(attempt);
+            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+            dataQuery.setWhereClause("merchant_id = '" + merchantId + "'");
+
+            BackendlessCollection<MerchantStats> collection = Backendless.Data.of(MerchantStats.class).find(dataQuery);
+            if( collection.getTotalObjects() > 0) {
+                return collection.getData().get(0);
+            } else {
+                mLogger.debug("No MerchantStats object found: "+merchantId);
+                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
+            }
         }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in deleteWrongAttempt: " + e.toString();
+        catch( BackendlessException e )
+        {
+            mLastOpErrorMsg = "Exception in fetchMerchantStats: " + e.toString();
             mLastOpStatus = e.getCode();
         }
+        return null;
+    }
+
+    public MerchantStats saveMerchantStats(MerchantStats stats) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+        try
+        {
+            return Backendless.Persistence.save( stats );
+        }
+        catch( BackendlessException e ) {
+            mLastOpErrorMsg = "Exception in saveMerchantStats: " + e.toString();
+            mLastOpStatus = e.getCode();
+        }
+        return null;
     }
 
 }
