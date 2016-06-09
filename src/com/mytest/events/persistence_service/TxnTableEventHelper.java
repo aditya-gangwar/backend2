@@ -85,6 +85,11 @@ public class TxnTableEventHelper {
             // update amounts in cashback oject
             cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
             cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
+            // check for cash account limit
+            if( (cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT ) {
+                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId, false);
+            }
+
             cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
             cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
             cashback.setTotal_billed(cashback.getTotal_billed() + transaction.getTotal_billed());

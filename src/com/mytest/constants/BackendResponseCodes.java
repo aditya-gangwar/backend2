@@ -35,6 +35,7 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD = "541";
     public static final String BE_ERROR_NOT_TRUSTED_DEVICE = "542";
     public static final String BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD = "543";
+    public static final String BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD = "544";
 
     public static final String BE_ERROR_SERVER_ERROR_ACC_DISABLED = "599";
 

@@ -172,14 +172,23 @@ public class MerchantServices implements IBackendlessService {
         }
 
         // create new stats object
-        MerchantStats stats = new MerchantStats();
-        stats.setMerchant_id(merchantId);
         // fetch merchant stat object, if exists
-        MerchantStats fetchedStats = mBackendOps.fetchMerchantStats(merchantId);
-        if(fetchedStats!=null) {
-            // copy object id - this will allow to all values be zero, but still update old object in DB, when saved later
-            stats.setObjectId(fetchedStats.getObjectId());
+        MerchantStats stats = mBackendOps.fetchMerchantStats(merchantId);
+        if(stats==null) {
+            stats = new MerchantStats();
+            stats.setMerchant_id(merchantId);
         }
+        //reset all stats to 0
+        stats.setBill_amt_no_cb(0);
+        stats.setBill_amt_total(0);
+        stats.setCash_credit(0);
+        stats.setCb_credit(0);
+        stats.setCash_debit(0);
+        stats.setCb_debit(0);
+        stats.setCust_cnt_cash(0);
+        stats.setCust_cnt_cb(0);
+        stats.setCust_cnt_cb_and_cash(0);
+        stats.setCust_cnt_no_balance(0);
 
         // fetch all CB records for this merchant
         ArrayList<Cashback> data = mBackendOps.fetchCashback("merchant_id = '"+merchantId+"'", merchant.getCashback_table());
@@ -208,11 +217,12 @@ public class MerchantServices implements IBackendlessService {
                 stats.cash_debit = stats.cash_debit + cb.getCl_debit();
                 stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
                 stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
+
+                stats.setUpdate_time(new Date());
             }
 
             // save stats object - don't bother about return status
             mBackendOps.saveMerchantStats(stats);
-
         } else {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }

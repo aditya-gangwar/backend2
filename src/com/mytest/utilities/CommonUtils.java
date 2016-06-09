@@ -311,6 +311,8 @@ public class CommonUtils {
             logger.error("Raising exception: "+errorCode+", "+errorMsg);
         }
 
+        // to be removed once issue is fixed on backendless side
+        errorMsg = "ZZ"+errorCode;
         BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
 
         Backendless.Logging.flush();

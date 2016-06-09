@@ -45,7 +45,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
         mLogger.debug("In MerchantOpsTableEventHandler: beforeCreate");
 
         // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
-        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
         String otp = merchantops.getOtp();
         if(otp==null || otp.isEmpty()) {
@@ -87,10 +87,10 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
 
         } else {
             // Second run, as OTP available
-            AllOtp fetchedOtp = mBackendOps.fetchOtp(merchantops.getMobile_num());
+            AllOtp fetchedOtp = mBackendOps.fetchOtp(merchantops.getMerchant_id());
             if( fetchedOtp == null ||
                     !mBackendOps.validateOtp(fetchedOtp, otp) ) {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP provided", false);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP provided: "+otp, false);
             }
             // remove PIN and OTP from the object
             merchantops.setOtp(null);
@@ -109,7 +109,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
         mLogger.debug("In MerchantOpsTableEventHandler: afterCreate");
 
         // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
-        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
         String opcode = merchantops.getOp_code();
         switch(opcode) {

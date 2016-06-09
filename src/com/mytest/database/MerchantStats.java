@@ -7,6 +7,8 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
+import java.util.Date;
+
 public class MerchantStats
 {
   public Integer cust_cnt_no_balance;
@@ -24,6 +26,16 @@ public class MerchantStats
   public Integer cust_cnt_cb_and_cash;
   private String ownerId;
   public Integer cust_cnt_cb;
+  private java.util.Date update_time;
+
+  public Date getUpdate_time() {
+    return update_time;
+  }
+
+  public void setUpdate_time(Date update_time) {
+    this.update_time = update_time;
+  }
+
   public Integer getCust_cnt_no_balance()
   {
     return cust_cnt_no_balance;
@@ -127,10 +139,6 @@ public class MerchantStats
   public String getObjectId()
   {
     return objectId;
-  }
-
-  public void setObjectId(String objectId) {
-    this.objectId = objectId;
   }
 
   public Integer getCust_cnt_cb_and_cash()

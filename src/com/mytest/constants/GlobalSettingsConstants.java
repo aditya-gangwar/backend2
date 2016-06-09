@@ -25,4 +25,7 @@ public class GlobalSettingsConstants {
 
     // Corresponding 'merchant_account_block_hrs' in GlobalSettings table
     public static int MERCHANT_ACCOUNT_BLOCKED_HOURS = 2;
+
+    // Corresponding 'cash_account_max_limit' in GlobalSettings table
+    public static int CUSTOMER_CASH_MAX_LIMIT = 500;
 }
