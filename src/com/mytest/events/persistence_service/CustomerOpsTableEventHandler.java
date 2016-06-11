@@ -4,6 +4,7 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
+import com.backendless.servercode.AbstractContext;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
@@ -35,7 +36,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     public void beforeCreate(RunnerContext context, CustomerOps customerops) throws Exception
     {
         initCommon();
-        mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate");
+        mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate: "+context.getUserRoles());
         /*
         Backendless.Logging.flush();
         throw new BackendlessException( "123", "testing");*/
@@ -83,7 +84,12 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             // Generate OTP and send SMS
             AllOtp newOtp = new AllOtp();
             newOtp.setUser_id(mobileNum);
-            newOtp.setMobile_num(mobileNum);
+            if(custOp.equals(DbConstants.CUSTOMER_OP_CHANGE_MOBILE)) {
+                newOtp.setMobile_num(customerops.getExtra_op_params());
+            } else {
+                newOtp.setMobile_num(mobileNum);
+            }
+
             newOtp.setOpcode(custOp);
             newOtp = mBackendOps.generateOtp(newOtp);
             if(newOtp == null) {
@@ -116,7 +122,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     public void afterCreate( RunnerContext context, CustomerOps customerops, ExecutionResult<CustomerOps> result ) throws Exception
     {
         initCommon();
-        mLogger.debug("In CustomerOpsTableEventHandler: afterCreate");
+        mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+((AbstractContext)context).toString());
 
         // not required, as operation invoked by merchant
         // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
@@ -163,6 +169,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         // if ok, update old card record status
 
         String newCardId = custOp.getQr_card();
+        String oldMobile = custOp.getMobile_num();
         String newMobile = custOp.getExtra_op_params();
 
         CustomerCards newCard = null;
@@ -283,10 +290,11 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         String smsText = null;
         if(isNewCardCase) {
             smsText = buildNewCardSMS(customer.getMobile_num(), newCard.getCard_id());
+            SmsHelper.sendSMS(smsText, customer.getMobile_num());
         } else {
-            smsText = buildMobileChangeSMS(customer.getMobile_num(), newMobile);
+            smsText = buildMobileChangeSMS(oldMobile, customer.getMobile_num());
+            SmsHelper.sendSMS(smsText, oldMobile+","+customer.getMobile_num());
         }
-        SmsHelper.sendSMS(smsText, customer.getMobile_num());
 
         return null;
     }
@@ -372,7 +380,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     }
 
     private String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_NEW_MOBILE, CommonUtils.getHalfVisibleId(userId), mobile_num);
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), mobile_num);
     }
 
 

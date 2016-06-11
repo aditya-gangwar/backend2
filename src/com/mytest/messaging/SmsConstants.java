@@ -5,14 +5,18 @@ package com.mytest.messaging;
  */
 public class SmsConstants {
 
-    public static String SMSGW_BASE_URL = "https://www.txtguru.in/imobile/api.php?";
     public static String SMSGW_URL_ENCODING = "UTF-8";
-    public static String SMSGW_USERNAME = "aditya_gang";
-    public static String SMSGW_PASSWORD = "50375135";
-    public static String SMSGW_SENDER_ID = "UPDATE";
-
+    public static String SMSGW_SENDER_ID = "MYCASH";
     public static String COUNTRY_CODE = "91";
 
+    public static String SMSGW_TXTGURU_BASE_URL = "https://www.txtguru.in/imobile/api.php?";
+    public static String SMSGW_TXTGURU_USERNAME = "aditya_gang";
+    public static String SMSGW_TXTGURU_PASSWORD = "50375135";
+
+    public static String SMSGW_MSG91_BASE_URL = "https://control.msg91.com/api/sendhttp.php?";
+    public static String SMSGW_MSG91_AUTHKEY = "115853A9qGXSHBf575aaeb1";
+    public static String SMSGW_MSG91_ROUTE_TXN = "4";
+    public static String SMSGW_MSG91_ROUTE_PROMOTIONAL = "1";
     /*
      * SMS templates
      */
@@ -32,7 +36,7 @@ public class SmsConstants {
 
     public static String SMS_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
 
-    public static String SMS_NEW_MOBILE = "You have changed registered mobile number of your account %s to %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE = "Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong password attempts.";
