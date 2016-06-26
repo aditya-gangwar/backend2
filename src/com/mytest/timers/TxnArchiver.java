@@ -8,8 +8,12 @@ import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.CommonConstants;
+import com.mytest.constants.DbConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
+import com.mytest.utilities.BackendOps;
+import com.mytest.utilities.DateUtil;
+import com.sun.deploy.association.utility.AppConstants;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
@@ -25,10 +29,12 @@ public class TxnArchiver
     //transid(10),time(20),merchantid(6),merchantname(50),customermobile(10),customerprivid(5),amts(6x4=24),rate(2) = 115 chars = 115x2 = 250 bytes
     private static final int CSV_RECORD_MAX_CHARS = 250;
 
+    private Logger mLogger;
+    private BackendOps mBackendOps;
+
     private List<Transaction> mLastFetchTransactions;
     private Merchants mLastFetchMerchant;
     private String mMerchantIdSuffix;
-    private Logger mLogger;
 
     // map of 'txn date' -> 'csv file url'
     private HashMap<String,String> mCsvFiles;
@@ -38,6 +44,7 @@ public class TxnArchiver
     // All required date formatters
     private SimpleDateFormat mSdfDateWithTime;
     private SimpleDateFormat mSdfOnlyDateBackend;
+    private SimpleDateFormat mSdfOnlyDateBackendGMT;
     private SimpleDateFormat mSdfOnlyDateFilename;
     private Date mToday;
 
@@ -47,6 +54,7 @@ public class TxnArchiver
         mToday = new Date();
         mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
         mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+        mSdfOnlyDateBackendGMT = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
         mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
         mCsvFiles = new HashMap<>();
@@ -58,60 +66,72 @@ public class TxnArchiver
         long startTime = System.currentTimeMillis();
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.timers.TxnArchiver");
+        mBackendOps = new BackendOps(mLogger);
 
         mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix);
 
         mSdfDateWithTime.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
         mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        mSdfOnlyDateBackendGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
 
         // Fetch next not processed merchant
         mLastFetchMerchant = null;
-        mLastFetchMerchant = fetchNextMerchant();
+        //mLastFetchMerchant = fetchNextMerchant();
+        ArrayList<Merchants> merchants = mBackendOps.fetchMerchants(buildMerchantWhereClause());
+        if(merchants != null) {
+            int merchantCnt = merchants.size();
+            for (int k = 0; k < merchantCnt; k++) {
+                mLastFetchMerchant = merchants.get(k);
+                archiveMerchantTxns();
+                Backendless.Logging.flush();
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        mLogger.debug( "Exiting TxnArchiver: "+((endTime-startTime)/1000));
+        Backendless.Logging.flush();
+    }
 
-        if(mLastFetchMerchant!=null) {
-            String merchantId = mLastFetchMerchant.getAuto_id();
-            mLogger.debug("Fetched merchant id: "+merchantId);
+    private void archiveMerchantTxns() {
+        String merchantId = mLastFetchMerchant.getAuto_id();
+        mLogger.debug("Fetched merchant id: "+merchantId);
 
-            String txnTableName = mLastFetchMerchant.getTxn_table();
-            Backendless.Data.mapTableToClass(txnTableName, Transaction.class);
+        String txnTableName = mLastFetchMerchant.getTxn_table();
+        Backendless.Data.mapTableToClass(txnTableName, Transaction.class);
 
-            mLastFetchTransactions = null;
-            mLastFetchTransactions = fetchTransactions(buildTxnWhereClause(merchantId));
-            if(mLastFetchTransactions != null) {
-                mLogger.info("Fetched "+mLastFetchTransactions.size()+" transactions for "+merchantId);
-                if(mLastFetchTransactions.size() > 0) {
-                    // convert txns into csv strings
-                    buildCsvString();
+        mLastFetchTransactions = null;
+        mLastFetchTransactions = mBackendOps.fetchTransactions(buildTxnWhereClause(merchantId));
+        if(mLastFetchTransactions != null) {
+            mLogger.debug("Fetched "+mLastFetchTransactions.size()+" transactions for "+merchantId);
+            if(mLastFetchTransactions.size() > 0) {
+                // convert txns into csv strings
+                buildCsvString();
 
-                    // TODO: encrypt CSV string
+                // TODO: encrypt CSV string sensitive params
 
-                    // store CSV file in merchant directory
-                    if( createCsvFiles(merchantId) ) {
-                        int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
-                        if(recordsUpdated == -1) {
-                            // rollback
-                            deleteCsvFiles();
-                        } else if(recordsUpdated != mLastFetchTransactions.size()) {
-                            mLogger.error( "Count of txns updated for status does not match.");
+                // store CSV file in merchant directory
+                if( createCsvFiles(merchantId) ) {
+                    int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
+                    if(recordsUpdated == -1) {
+                        // rollback
+                        deleteCsvFiles();
+                    } else if(recordsUpdated != mLastFetchTransactions.size()) {
+                        mLogger.error( "Count of txns updated for status does not match.");
+                        // rollback
+                        updateTxnArchiveStatus(txnTableName,merchantId,false);
+                        deleteCsvFiles();
+                    } else {
+                        if(updateMerchantArchiveTime()) {
+                            mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
+                        } else {
                             // rollback
                             updateTxnArchiveStatus(txnTableName,merchantId,false);
                             deleteCsvFiles();
-                        } else {
-                            if(updateMerchantArchiveTime()) {
-                                mLogger.info("Txns archived successfully: "+recordsUpdated+", "+merchantId);
-                            } else {
-                                // rollback
-                                updateTxnArchiveStatus(txnTableName,merchantId,false);
-                                deleteCsvFiles();
-                            }
                         }
                     }
                 }
             }
         }
-        long endTime = System.currentTimeMillis();
-        mLogger.info( "Exiting TxnArchiver: "+((endTime-startTime)/1000));
     }
 
     private int updateTxnArchiveStatus(String txnTableName, String merchantId, boolean status) {
@@ -173,13 +193,7 @@ public class TxnArchiver
             mLogger.debug("Updated archive status of txns: "+recordsUpdated);
             return recordsUpdated;
 
-        } catch (MalformedURLException e) {
-            mLogger.error("Failed to update txn status: "+e.toString());
-            return -1;
-        } catch (IOException e) {
-            mLogger.error("Failed to update txn status: "+e.toString());
-            return -1;
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             mLogger.error("Failed to update txn status: "+e.toString());
             return -1;
         }
@@ -189,12 +203,7 @@ public class TxnArchiver
         // update archive date in merchant record
         // set to current time
         mLastFetchMerchant.setLast_txn_archive(mToday);
-
-        // Save merchant object
-        try {
-            mLastFetchMerchant = Backendless.Persistence.save( mLastFetchMerchant );
-        } catch(BackendlessException e) {
-            System.out.println("Merchant update failed: " + e.toString());
+        if( mBackendOps.updateMerchant(mLastFetchMerchant)==null ) {
             return false;
         }
         return true;
@@ -211,7 +220,7 @@ public class TxnArchiver
 
             try {
                 String fileUrl = Backendless.Files.saveFile(filepath, sb.toString().getBytes("UTF-8"), true);
-                mLogger.info("Txn CSV file uploaded: " + fileUrl);
+                mLogger.debug("Txn CSV file uploaded: " + fileUrl);
                 mCsvFiles.put(txnDate,filepath);
             } catch (Exception e) {
                 mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
@@ -289,13 +298,12 @@ public class TxnArchiver
         }
     }
 
-    private Merchants fetchNextMerchant() {
+    /*private Merchants fetchNextMerchant() {
         BackendlessDataQuery query = new BackendlessDataQuery();
         // fetch only 1 record sorted by 'created'
         QueryOptions queryOptions = new QueryOptions("created");
         query.setQueryOptions(queryOptions);
-        // TODO: to be set to AppConstants.dbQueryMaxPageSize in production
-        query.setPageSize(1);
+        query.setPageSize(CommonConstants.dbQueryMaxPageSize);
 
         query.setWhereClause(buildMerchantWhereClause());
 
@@ -303,7 +311,7 @@ public class TxnArchiver
         int cnt = users.getTotalObjects();
         if( cnt == 0) {
             // No unprocessed merchant left with this prefix
-            mLogger.info("No merchant available for archive: "+mMerchantIdSuffix);
+            mLogger.debug("No merchant available for archive: "+mMerchantIdSuffix);
         } else {
             // just return the first merchant
             // in the next timer run, this merchant will not be processed
@@ -311,15 +319,21 @@ public class TxnArchiver
             return users.getData().get(0);
         }
         return null;
-    }
+    }*/
 
     private String buildMerchantWhereClause() {
         StringBuilder whereClause = new StringBuilder();
-        whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
+        //TODO: use mMerchantIdSuffix in production
+        //whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
+        whereClause.append("auto_id LIKE '%").append("'");
 
-        String today = mSdfOnlyDateBackend.format(mToday);
-        // merchants with last_archive time before today midnight
-        whereClause.append(" AND (last_archive < '").append(today).append("'").append(" OR last_archive is null)");
+        //String today = mSdfOnlyDateBackend.format(mToday);
+        // merchants with last_txn_archive time before today midnight
+        DateUtil todayMidnight = new DateUtil();
+        todayMidnight.setTZ("Asia/Kolkata");
+        todayMidnight.toMidnight();
+
+        whereClause.append(" AND (last_txn_archive < '").append(todayMidnight.getTime().getTime()).append("'").append(" OR last_txn_archive is null)");
 
         mLogger.debug("Merchant where clause: " + whereClause.toString());
         return whereClause.toString();
@@ -331,46 +345,15 @@ public class TxnArchiver
         // for particular merchant
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
-        String today = mSdfOnlyDateBackend.format(mToday);
-        // all txns older than today midnight - the timer runs 1 AM each day
-        whereClause.append(" AND create_time < '").append(today).append("'");
+        DateUtil todayMidnight = new DateUtil();
+        todayMidnight.setTZ("Asia/Kolkata");
+        todayMidnight.toMidnight();
+
+        // all txns older than today 00:00 hrs - the timer runs 1 AM each day
+        whereClause.append(" AND create_time < '").append(todayMidnight.getTime().getTime()).append("'");
         whereClause.append(" AND archived=").append("false");
 
         return whereClause.toString();
-    }
-
-    private List<Transaction> fetchTransactions(String whereClause) {
-        mLogger.debug("In fetchTransactions: "+whereClause);
-        // init values
-        List<Transaction> transactions = null;
-
-        // fetch txns object from DB
-        try {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            // sorted by create time
-            QueryOptions queryOptions = new QueryOptions("create_time");
-            dataQuery.setQueryOptions(queryOptions);
-            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
-            dataQuery.setWhereClause(whereClause);
-
-            BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
-
-            int size = collection.getTotalObjects();
-            mLogger.debug("Total txns from DB: " + size+", "+collection.getData().size());
-            transactions = collection.getData();
-            mLogger.debug("First page size: "+transactions.size());
-
-            while(collection.getCurrentPage().size() > 0) {
-                collection = collection.nextPage();
-                mLogger.debug("nextPage size: "+collection.getData().size()+", "+collection.getTotalObjects());
-                transactions.addAll(collection.getData());
-            }
-        } catch (BackendlessException e) {
-            mLogger.error("Failed to fetch transactions: "+e.toString());
-            return null;
-        }
-
-        return transactions;
     }
 
 }

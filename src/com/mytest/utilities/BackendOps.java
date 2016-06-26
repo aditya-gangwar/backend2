@@ -18,6 +18,7 @@ import com.mytest.messaging.SmsHelper;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by adgangwa on 15-05-2016.
@@ -166,6 +167,36 @@ public class BackendOps {
             mLastOpStatus = e.getCode();
         }
 
+        return null;
+    }
+
+    public ArrayList<Merchants> fetchMerchants(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        // fetch all merchants, not yet archived
+        query.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
+        int cnt = users.getTotalObjects();
+        if( cnt == 0) {
+            // No unprocessed merchant left with this prefix
+            mLogger.info("No merchant available for where clause: "+whereClause);
+        } else {
+            ArrayList<Merchants> objects = new ArrayList<>();
+            while (users.getCurrentPage().size() > 0)
+            {
+                int size  = users.getCurrentPage().size();
+                System.out.println( "Loaded " + size + " merchants in the current page" );
+
+                Iterator<Merchants> iterator = users.getCurrentPage().iterator();
+                while( iterator.hasNext() )
+                {
+                    objects.add(iterator.next());
+                }
+                users = users.nextPage();
+            }
+            return objects;
+        }
         return null;
     }
 
@@ -704,5 +735,44 @@ public class BackendOps {
         }
         return null;
     }
+
+
+    /*
+     * Transaction operations
+     */
+    public List<Transaction> fetchTransactions(String whereClause) {
+        mLogger.debug("In fetchTransactions: "+whereClause);
+        // init values
+        List<Transaction> transactions = null;
+
+        // fetch txns object from DB
+        try {
+            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+            // sorted by create time
+            QueryOptions queryOptions = new QueryOptions("create_time");
+            dataQuery.setQueryOptions(queryOptions);
+            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+            dataQuery.setWhereClause(whereClause);
+
+            BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
+
+            int size = collection.getTotalObjects();
+            mLogger.debug("Total txns from DB: " + size+", "+collection.getData().size());
+            transactions = collection.getData();
+            mLogger.debug("First page size: "+transactions.size());
+
+            while(collection.getCurrentPage().size() > 0) {
+                collection = collection.nextPage();
+                mLogger.debug("nextPage size: "+collection.getData().size()+", "+collection.getTotalObjects());
+                transactions.addAll(collection.getData());
+            }
+        } catch (BackendlessException e) {
+            mLogger.error("Failed to fetch transactions: "+e.toString());
+            return null;
+        }
+
+        return transactions;
+    }
+
 
 }
