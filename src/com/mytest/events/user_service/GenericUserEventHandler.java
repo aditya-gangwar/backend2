@@ -171,7 +171,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_GENERAL, errorMsg, false);
             }
         }
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     @Override

@@ -28,15 +28,15 @@ public class SmsHelper {
         HttpURLConnection uc = null;
         try {
 
-            String requestUrl = SmsConstants.SMSGW_MSG91_BASE_URL +
-                    "authkey=" + URLEncoder.encode(SmsConstants.SMSGW_MSG91_AUTHKEY, SmsConstants.SMSGW_URL_ENCODING) +
-                    "&mobiles=" + URLEncoder.encode(recipients, SmsConstants.SMSGW_URL_ENCODING) +
-                    "&message=" + URLEncoder.encode(message, SmsConstants.SMSGW_URL_ENCODING) +
-                    "&sender=" + URLEncoder.encode(SmsConstants.SMSGW_SENDER_ID, SmsConstants.SMSGW_URL_ENCODING) +
-                    "&route=" + URLEncoder.encode(SmsConstants.SMSGW_MSG91_ROUTE_TXN, SmsConstants.SMSGW_URL_ENCODING) +
-                    "&country=" + URLEncoder.encode(SmsConstants.COUNTRY_CODE, SmsConstants.SMSGW_URL_ENCODING);
+            StringBuffer requestUrl = new StringBuffer(SmsConstants.SMSGW_MSG91_BASE_URL)
+                    .append("authkey=").append(URLEncoder.encode(SmsConstants.SMSGW_MSG91_AUTHKEY, SmsConstants.SMSGW_URL_ENCODING))
+                    .append("&mobiles=").append(URLEncoder.encode(recipients, SmsConstants.SMSGW_URL_ENCODING))
+                    .append("&message=").append(URLEncoder.encode(message, SmsConstants.SMSGW_URL_ENCODING))
+                    .append("&sender=").append(URLEncoder.encode(SmsConstants.SMSGW_SENDER_ID, SmsConstants.SMSGW_URL_ENCODING))
+                    .append("&route=").append(URLEncoder.encode(SmsConstants.SMSGW_MSG91_ROUTE_TXN, SmsConstants.SMSGW_URL_ENCODING))
+                    .append("&country=").append(URLEncoder.encode(SmsConstants.COUNTRY_CODE, SmsConstants.SMSGW_URL_ENCODING));
 
-            URL url = new URL(requestUrl);
+            URL url = new URL(requestUrl.toString());
             mLogger.debug("SMS URL: " + url.toString());
 
             uc = (HttpURLConnection) url.openConnection();
@@ -76,4 +76,13 @@ public class SmsHelper {
                     "&source=" + URLEncoder.encode(SmsConstants.SMSGW_SENDER_ID, SmsConstants.SMSGW_URL_ENCODING) +
                     "&dmobile=" + URLEncoder.encode(SmsConstants.COUNTRY_CODE + recipient, SmsConstants.SMSGW_URL_ENCODING) +
                     "&message=" + URLEncoder.encode(message, SmsConstants.SMSGW_URL_ENCODING);*/
+
+            /*
+            String requestUrl = SmsConstants.SMSGW_MSG91_BASE_URL +
+                    "authkey=" + URLEncoder.encode(SmsConstants.SMSGW_MSG91_AUTHKEY, SmsConstants.SMSGW_URL_ENCODING) +
+                    "&mobiles=" + URLEncoder.encode(recipients, SmsConstants.SMSGW_URL_ENCODING) +
+                    "&message=" + URLEncoder.encode(message, SmsConstants.SMSGW_URL_ENCODING) +
+                    "&sender=" + URLEncoder.encode(SmsConstants.SMSGW_SENDER_ID, SmsConstants.SMSGW_URL_ENCODING) +
+                    "&route=" + URLEncoder.encode(SmsConstants.SMSGW_MSG91_ROUTE_TXN, SmsConstants.SMSGW_URL_ENCODING) +
+                    "&country=" + URLEncoder.encode(SmsConstants.COUNTRY_CODE, SmsConstants.SMSGW_URL_ENCODING);*/
 

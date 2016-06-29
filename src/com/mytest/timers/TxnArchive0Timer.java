@@ -1,6 +1,9 @@
 package com.mytest.timers;
 
+import com.backendless.Backendless;
 import com.backendless.servercode.annotation.BackendlessTimer;
+import com.mytest.constants.BackendConstants;
+import com.backendless.logging.Logger;
 
 /**
  * TxnArchive0Timer is a timer.
@@ -19,7 +22,17 @@ public class TxnArchive0Timer extends com.backendless.servercode.extension.Timer
     @Override
     public void execute( String appVersionId ) throws Exception
     {
-        TxnArchiver archiver = new TxnArchiver(MERCHANT_ID_SUFFIX);
-        archiver.execute();
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+        Logger logger = Backendless.Logging.getLogger("com.mytest.timers.TxnArchiver0");
+
+        try {
+            TxnArchiver archiver = new TxnArchiver(MERCHANT_ID_SUFFIX);
+            archiver.execute(logger);
+        } catch(Exception e) {
+            logger.debug("Exception in TxnArchive0Timer: "+e.toString());
+            logger.error("Exception in TxnArchive0Timer: "+e.toString());
+            //Backendless.Logging.flush();
+            throw e;
+        }
     }
 }

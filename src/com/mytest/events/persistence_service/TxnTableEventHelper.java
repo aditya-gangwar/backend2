@@ -111,7 +111,7 @@ public class TxnTableEventHelper {
             //TODO: add in alarms
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     public void handleAfterCreate(Transaction transaction, ExecutionResult<Transaction> result) throws Exception {
@@ -122,7 +122,7 @@ public class TxnTableEventHelper {
         if(result.getException()==null) {
             buildAndSendTxnSMS(transaction);
         }
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     /*

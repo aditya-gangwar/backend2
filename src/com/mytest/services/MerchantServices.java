@@ -98,7 +98,7 @@ public class MerchantServices implements IBackendlessService {
         // remove 'not needed sensitive' fields from cashback object
         stripCashback(cashback);
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         return cashback;
     }
 
@@ -149,7 +149,7 @@ public class MerchantServices implements IBackendlessService {
         // remove 'not needed sensitive' fields from cashback object
         stripCashback(cashback);
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         return cashback;
     }
 
@@ -227,7 +227,7 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         return stats;
     }
 
@@ -318,7 +318,7 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
@@ -364,7 +364,7 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "Failed to send password reset SMS: "+userId, false);
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
@@ -447,7 +447,7 @@ public class MerchantServices implements IBackendlessService {
             }
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 

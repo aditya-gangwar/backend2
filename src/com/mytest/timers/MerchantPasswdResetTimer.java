@@ -71,7 +71,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             }
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     private String handlePasswdReset(MerchantOps op) {

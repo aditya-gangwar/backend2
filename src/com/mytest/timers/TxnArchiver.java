@@ -1,26 +1,20 @@
 package com.mytest.timers;
 
 import com.backendless.Backendless;
-import com.backendless.BackendlessCollection;
-import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
-import com.backendless.persistence.BackendlessDataQuery;
-import com.backendless.persistence.QueryOptions;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.CommonConstants;
-import com.mytest.constants.DbConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.DateUtil;
-import com.sun.deploy.association.utility.AppConstants;
 
-import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -61,11 +55,10 @@ public class TxnArchiver
         mCsvDataMap = new HashMap<>();
     }
 
-    public void execute() throws Exception
+    public void execute(Logger logger) throws Exception
     {
         long startTime = System.currentTimeMillis();
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.timers.TxnArchiver");
+        mLogger = logger;
         mBackendOps = new BackendOps(mLogger);
 
         mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix);
@@ -84,12 +77,12 @@ public class TxnArchiver
             for (int k = 0; k < merchantCnt; k++) {
                 mLastFetchMerchant = merchants.get(k);
                 archiveMerchantTxns();
-                Backendless.Logging.flush();
+                //Backendless.Logging.flush();
             }
         }
         long endTime = System.currentTimeMillis();
         mLogger.debug( "Exiting TxnArchiver: "+((endTime-startTime)/1000));
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     private void archiveMerchantTxns() {
@@ -146,16 +139,16 @@ public class TxnArchiver
         * -v https://api.backendless.com/v1/data/bulk/<tablename>?where=workDays%3E10
         */
         try {
-            String whereClause = URLEncoder.encode(buildTxnWhereClause(merchantId), "UTF-8").replaceAll("\\+", "%20");
-            mLogger.debug( "Txn update where clause: "+whereClause);
+            String whereClause = URLEncoder.encode(buildTxnWhereClause(merchantId), "UTF-8");
 
-            UriBuilder builder = UriBuilder
-                    .fromPath("https://api.backendless.com/v1/data/bulk")
-                    .path("/{txntable}")
-                    .queryParam("where", whereClause);
-            URI uri = builder.build(txnTableName);
-            mLogger.debug( "Txn update URL: "+uri.toString());
-            URL url = new URL(uri.toString());
+            // https://api.backendless.com/v1/data/bulk/Transaction0?where=merchant_id+%3D+%27AA0007%27+AND+create_time+%3C+%271467138600000%27+AND+archived%3Dfalse
+            // Building URL without URI
+            StringBuffer sb = new StringBuffer("https://api.backendless.com/v1/data/bulk/");
+            sb.append(txnTableName);
+            sb.append("?where=");
+            sb.append(whereClause);
+
+            URL url = new URL(sb.toString());
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);

@@ -315,7 +315,7 @@ public class CommonUtils {
         errorMsg = "ZZ"+errorCode;
         BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         throw new BackendlessException(fault);
         //throw new BackendlessException( errorCode, errorMsg);
     }

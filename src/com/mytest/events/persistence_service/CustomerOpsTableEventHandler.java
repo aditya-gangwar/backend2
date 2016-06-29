@@ -115,7 +115,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             mLogger.debug("OTP matched for given customer operation: "+customerops.getMobile_num()+", "+customerops.getOp_code());
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         if(errorCode != null) {
             CommonUtils.throwException(mLogger,errorCode, "", false);
         }
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     /*

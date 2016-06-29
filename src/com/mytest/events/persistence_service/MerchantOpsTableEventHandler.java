@@ -99,7 +99,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             mLogger.debug("OTP matched for given merchant operation: "+merchantops.getMerchant_id()+", "+merchantops.getOp_code());
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     @Override
@@ -120,7 +120,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
                 mLogger.error("Invalid Merchant operation: "+opcode);
         }
 
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
     }
 
     /*
