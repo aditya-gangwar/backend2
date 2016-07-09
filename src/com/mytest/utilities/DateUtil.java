@@ -133,12 +133,6 @@ public class DateUtil {
         return this;
     }
 
-    public DateUtil setTZ(String tz) {
-        cal.setTimeZone(TimeZone.getTimeZone(tz));
-
-        return this;
-    }
-
     /**
      * Get the days passed from the specified date up to the date provided
      * in the constructor

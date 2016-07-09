@@ -271,10 +271,13 @@ public class TxnArchiver
                 mCsvDataMap.put(txnDateStr,sb);
             }
 
-            // trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
-            // total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent\n
+            /*
+             * Format:
+             *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
+             *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent\n
+             * The sequence in format should match 'index constants' defined in CommonConstants class
+             */
             sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
-            //SimpleDateFormat sdf = new SimpleDateFormat(AppConstants.DATE_FORMAT_WITH_TIME, AppConstants.DATE_LOCALE);
             sb.append(mSdfDateWithTime.format(txnDate)).append(CommonConstants.CSV_DELIMETER);
             sb.append(mLastFetchMerchant.getAuto_id()).append(CommonConstants.CSV_DELIMETER);
             sb.append(mLastFetchMerchant.getName()).append(CommonConstants.CSV_DELIMETER);
@@ -323,7 +326,7 @@ public class TxnArchiver
         //String today = mSdfOnlyDateBackend.format(mToday);
         // merchants with last_txn_archive time before today midnight
         DateUtil todayMidnight = new DateUtil();
-        todayMidnight.setTZ("Asia/Kolkata");
+        todayMidnight.toTZ("Asia/Kolkata");
         todayMidnight.toMidnight();
 
         whereClause.append(" AND (last_txn_archive < '").append(todayMidnight.getTime().getTime()).append("'").append(" OR last_txn_archive is null)");
@@ -339,7 +342,7 @@ public class TxnArchiver
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
         DateUtil todayMidnight = new DateUtil();
-        todayMidnight.setTZ("Asia/Kolkata");
+        todayMidnight.toTZ("Asia/Kolkata");
         todayMidnight.toMidnight();
 
         // all txns older than today 00:00 hrs - the timer runs 1 AM each day

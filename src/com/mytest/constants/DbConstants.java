@@ -54,14 +54,13 @@ public class DbConstants {
     public static final int CUSTOMER_CARD_STATUS_NEW = 0;
     public static final int CUSTOMER_CARD_STATUS_WITH_MERCHANT = 1;
     public static final int CUSTOMER_CARD_STATUS_ALLOTTED = 2;
-    public static final int CUSTOMER_CARD_STATUS_BLOCKED = 3;
-    public static final int CUSTOMER_CARD_STATUS_REMOVED = 4;
+    //public static final int CUSTOMER_CARD_STATUS_BLOCKED = 3;
+    public static final int CUSTOMER_CARD_STATUS_REMOVED = 3;
     // Map int status values to corresponding descriptions
     public static String cardStatusDescriptions[] = {
             "Invalid customer card",
             "",
             "",
-            "Card is Blocked",
             "Invalid Card",
     };
 

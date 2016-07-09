@@ -49,6 +49,28 @@ public class CommonConstants {
     public static final String CSV_NEWLINE = "\n";
 
     /*
+     * Index of various parameters in Txn CSV records
+     * Per day file containing these records is created by backend,
+     * but used by app to show txns to user.
+     * Format:
+     * trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
+     * total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent\n
+     */
+    public static int TXN_CSV_IDX_ID = 0;
+    public static int TXN_CSV_IDX_TIME = 1;
+    public static int TXN_CSV_IDX_MERCHANT_ID = 2;
+    public static int TXN_CSV_IDX_MERCHANT_NAME = 3;
+    public static int TXN_CSV_IDX_CUSTOMER_ID = 4;
+    public static int TXN_CSV_IDX_CUSTOMER_PVT_ID = 5;
+    public static int TXN_CSV_IDX_TOTAL_BILLED = 6;
+    public static int TXN_CSV_IDX_CB_BILLED = 7;
+    public static int TXN_CSV_IDX_ACC_DEBIT = 8;
+    public static int TXN_CSV_IDX_ACC_CREDIT = 9;
+    public static int TXN_CSV_IDX_CB_REDEEM = 10;
+    public static int TXN_CSV_IDX_CB_AWARD = 11;
+    public static int TXN_CSV_IDX_CB_RATE = 12;
+
+    /*
      * Other common constants
      */
     public static String TRANSACTION_ID_PREFIX = "TX";
