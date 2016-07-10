@@ -92,6 +92,7 @@ public class DbConstants {
     public static final String MERCHANT_ID_COUNTER = "merchant_id";
 
     // WrongAttempts table - 'attempt_type' column values
+    public static final String ATTEMPT_TYPE_FORGOT_ID = "forgotId";
     public static final String ATTEMPT_TYPE_PASSWORD_RESET = "passwordReset";
     public static final String ATTEMPT_TYPE_USER_LOGIN = "userLogin";
     public static final String ATTEMPT_TYPE_USER_PIN = "userPin";

@@ -136,7 +136,7 @@ public class BackendOps {
     }
 
     /*
-     * Customer operations
+     * Merchant operations
      */
     public Merchants getMerchant(String userId, boolean fetchTrustedDevices) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
@@ -157,6 +157,31 @@ public class BackendOps {
                 // no data found
                 mLastOpErrorMsg = "No merchant found: "+userId;
                 //mLogger.warn(mLastOpErrorMsg);
+                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
+            } else {
+                return user.getData().get(0);
+            }
+        } catch (BackendlessException e) {
+            mLastOpErrorMsg = "Exception in getMerchant: " + e.toString();
+            //mLogger.error(mLastOpErrorMsg);
+            mLastOpStatus = e.getCode();
+        }
+
+        return null;
+    }
+
+    public Merchants getMerchantByMobile(String mobileNum) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+
+        try {
+            BackendlessDataQuery query = new BackendlessDataQuery();
+            query.setWhereClause("mobile_num = '"+mobileNum+"'");
+
+            BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
+            if( user.getTotalObjects() == 0) {
+                // no data found
+                mLastOpErrorMsg = "No merchant found by mobile num: "+mobileNum;
                 mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
             } else {
                 return user.getData().get(0);

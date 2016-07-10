@@ -451,6 +451,48 @@ public class MerchantServices implements IBackendlessService {
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
+    public void sendMerchantId(String mobileNum) {
+        initCommon();
+        mLogger.debug("In sendMerchantId: "+mobileNum);
+
+        // not required, as supposed to be called by user without logging in (forget password case)
+        // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+
+        // fetch user with the registered mobile number
+        Merchants merchant = mBackendOps.getMerchantByMobile(mobileNum);
+        if(merchant==null) {
+            //return mBackendOps.mLastOpStatus;
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+
+        // check admin status
+        String status = CommonUtils.checkMerchantStatus(merchant);
+        if(status != null) {
+            //return status;
+            CommonUtils.throwException(mLogger,status, "Merchant account not active", false);
+        }
+
+        // Not checking for trusted device
+
+        // check for 'extra verification'
+        String mobile = merchant.getMobile_num();
+        if(mobile==null || !mobile.equalsIgnoreCase(mobileNum)) {
+
+            // to keep it simple - not imposing any maximum limit on retries, unlike 'forgot password'
+            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
+                    "Merchant forgot user id verification failed: "+mobileNum, false);
+        }
+
+        // send merchant id by SMS
+        String smsText = buildUserIdSMS(merchant.getAuto_id());
+        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
+        {
+            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,
+                    "Merchant forgot user id send SMS failed: "+mobileNum, false);
+        }
+    }
+
     /*
      * Private helper methods
      */
@@ -655,5 +697,9 @@ public class MerchantServices implements IBackendlessService {
 
     private String buildFirstPwdResetSMS(String userId, String password) {
         return String.format(SmsConstants.SMS_FIRST_PASSWD,userId,password);
+    }
+
+    private String buildUserIdSMS(String userId) {
+        return String.format(SmsConstants.SMS_MERCHANT_ID,userId);
     }
 }
