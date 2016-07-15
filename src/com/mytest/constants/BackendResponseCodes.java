@@ -15,6 +15,7 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_ACC_DISABLED = "502";
     public static final String BE_ERROR_ACC_LOCKED = "503";
     public static final String BE_ERROR_OPERATION_NOT_ALLOWED = "504";
+    public static final String BE_ERROR_DUPLICATE_REQUEST = "505";
 
     public static final String BE_ERROR_SEND_SMS_FAILED = "510";
     public static final String BE_ERROR_WRONG_INPUT_DATA = "511";

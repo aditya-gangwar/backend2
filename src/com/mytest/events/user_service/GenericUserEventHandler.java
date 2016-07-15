@@ -1,8 +1,10 @@
 package com.mytest.events.user_service;
 
 import com.backendless.Backendless;
+import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
+import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
@@ -37,6 +39,10 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     {
         initCommon();
         mLogger.debug("In GenericUserEventHandler: afterLogin");
+
+        //mLogger.debug("Before: "+ InvocationContext.asString());
+        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+        mLogger.debug(context.toString());
 
         String userId = (String) result.getResult().get("user_id");
         Integer userType = (Integer) result.getResult().get("user_type");
@@ -180,8 +186,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         initCommon();
         mLogger.debug("In GenericUserEventHandler: beforeRegister");
 
-        // If merchant, generate login id and password
-        // If customer, generate private id and PIN
+        //mLogger.debug("Before: "+ InvocationContext.asString());
+        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+        mLogger.debug(context.toString());
+
+
+        // Fetch to be updated user and check for admin status
         String userId = (String) userValue.get("user_id");
         Integer userType = (Integer) userValue.get("user_type");
 

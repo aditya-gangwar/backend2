@@ -37,7 +37,8 @@ public class SmsConstants {
 
     public static String SMS_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
 
-    public static String SMS_MOBILE_CHANGE = "Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE = "Dear Customer - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE_MERCHANT = "Dear Merchant - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong password attempts.";

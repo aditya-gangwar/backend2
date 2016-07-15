@@ -37,6 +37,8 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     {
         initCommon();
         mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate: "+context.getUserRoles());
+        mLogger.debug(context.toString());
+
         /*
         Backendless.Logging.flush();
         throw new BackendlessException( "123", "testing");*/
@@ -123,6 +125,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     {
         initCommon();
         mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+((AbstractContext)context).toString());
+        mLogger.debug(context.toString());
 
         // not required, as operation invoked by merchant
         // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
@@ -380,7 +383,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     }
 
     private String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), mobile_num);
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
     }
 
 

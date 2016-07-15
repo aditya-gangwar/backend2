@@ -31,7 +31,7 @@ import java.util.Map;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-
+/*
 @Asset( "MerchantOps" )
 public class MerchantOpsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<MerchantOps>
 {
@@ -43,6 +43,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
     {
         initCommon();
         mLogger.debug("In MerchantOpsTableEventHandler: beforeCreate");
+        mLogger.debug(context.toString());
 
         // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
         //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
@@ -123,9 +124,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
         //Backendless.Logging.flush();
     }
 
-    /*
-     * Private helper methods
-     */
+
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
@@ -155,3 +154,4 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
         }
     }
 }
+*/

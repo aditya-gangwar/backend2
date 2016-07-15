@@ -20,6 +20,9 @@ public class GlobalSettingsConstants {
     // to allow for the time between 'message request submitted' and 'message actually delivered'
     public static int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 55;
 
+    // Single password reset request allowed in 2 hours
+    public static int MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS = 120;
+
     // Corresponding 'customer_account_block_hrs' in GlobalSettings table
     public static int CUSTOMER_ACCOUNT_BLOCKED_HOURS = 24;
 

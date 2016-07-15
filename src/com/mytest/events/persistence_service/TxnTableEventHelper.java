@@ -3,6 +3,7 @@ package com.mytest.events.persistence_service;
 import com.backendless.Backendless;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
+import com.backendless.servercode.RunnerContext;
 import com.mytest.constants.*;
 import com.mytest.database.Customers;
 import com.mytest.messaging.SmsConstants;
@@ -34,7 +35,7 @@ public class TxnTableEventHelper {
     private String merchantName;
     private String txnDate;
 
-    public void handleBeforeCreate(Transaction transaction, String cbTable) throws Exception {
+    public void handleBeforeCreate(RunnerContext context, Transaction transaction, String cbTable) throws Exception {
         initCommon();
         mLogger.debug("In Transaction handleBeforeCreate");
 
@@ -114,7 +115,7 @@ public class TxnTableEventHelper {
         //Backendless.Logging.flush();
     }
 
-    public void handleAfterCreate(Transaction transaction, ExecutionResult<Transaction> result) throws Exception {
+    public void handleAfterCreate(RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result) throws Exception {
         initCommon();
         mLogger.debug("In Transaction handleAfterCreate");
 

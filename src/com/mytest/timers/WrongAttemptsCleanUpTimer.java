@@ -5,6 +5,7 @@ import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.CommonConstants;
+import com.mytest.messaging.SmsConstants;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
 

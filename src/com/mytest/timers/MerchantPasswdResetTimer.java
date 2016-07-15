@@ -2,7 +2,9 @@ package com.mytest.timers;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
+import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
@@ -43,6 +45,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         mBackendOps = new BackendOps(mLogger);
 
         mLogger.debug("In MerchantPasswdResetTimer execute");
+        mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
         // Fetch all 'pending' merchant password reset operations
         ArrayList<MerchantOps> ops = mBackendOps.fetchMerchantOps(buildWhereClause());
@@ -60,6 +63,14 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             }
 
             mLogger.info("Locked password reset ops: "+lockedOps.size());
+
+            // login with user which is allowed to update 'Users' table
+            BackendlessUser user2 = mBackendOps.loginUser(BackendConstants.PASSWORD_RESET_USER_ID,BackendConstants.PASSWORD_RESET_USER_PWD);
+            if(user2==null) {
+                //return mBackendOps.mLastOpStatus;
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
+
             // process locked objects
             for (int k = 0; k < ops.size(); k++) {
                 String error = handlePasswdReset(lockedOps.get(k));

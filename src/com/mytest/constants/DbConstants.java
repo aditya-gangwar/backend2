@@ -99,6 +99,7 @@ public class DbConstants {
 
     // GlobalSettings table - should be exactly same as 'names' in DB
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_MINS = "merchant_passwd_reset_mins";
+    public static final String SETTINGS_MERCHANT_PASSWD_RESET_REQUEST_GAP = "merchant_passwd_reset_request_gap_mins";
     public static final String SETTINGS_MERCHANT_WRONG_ATTEMPTS = "merchant_wrong_attempts";
     public static final String SETTINGS_MERCHANT_ACCOUNT_BLOCK_HRS = "merchant_account_block_hrs";
 

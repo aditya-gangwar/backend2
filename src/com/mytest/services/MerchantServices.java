@@ -29,12 +29,124 @@ public class MerchantServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
+    public void changeMobile(String currentMobile, String newMobile, String otp) {
+        initCommon();
+        mLogger.debug("In changeMobile: "+currentMobile+","+newMobile);
+
+        // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+
+        // Fetch merchant
+        BackendlessUser user = mBackendOps.getCurrentMerchantUser();
+        if(user == null) {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+        Merchants merchant = (Merchants) user.getProperty("merchant");
+
+        if(otp==null || otp.isEmpty()) {
+            // First run, generate OTP if all fine
+
+            // check if merchant is enabled
+            String status = CommonUtils.checkMerchantStatus(merchant);
+            if( status != null) {
+                CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
+            }
+
+            // Validate based on given current number
+            if(!merchant.getMobile_num().equals(currentMobile)) {
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "Wrong old mobile number", false);
+            }
+
+            // Generate OTP to verify new mobile number
+            AllOtp newOtp = new AllOtp();
+            newOtp.setUser_id(merchant.getAuto_id());
+            newOtp.setMobile_num(newMobile);
+            newOtp.setOpcode(DbConstants.MERCHANT_OP_CHANGE_MOBILE);
+            newOtp = mBackendOps.generateOtp(newOtp);
+            if(newOtp == null) {
+                // failed to generate otp
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, "OTP generate failed", false);
+            }
+
+            // OTP generated successfully - return exception to indicate so
+            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
+
+        } else {
+            // Second run, as OTP available
+            AllOtp fetchedOtp = mBackendOps.fetchOtp(merchant.getAuto_id());
+            if( fetchedOtp == null ||
+                    !mBackendOps.validateOtp(fetchedOtp, otp) ) {
+                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP provided: "+otp, false);
+            }
+
+            mLogger.debug("OTP matched for given merchant operation: "+merchant.getAuto_id());
+
+            // Update with new mobile number
+            String oldMobile = merchant.getMobile_num();
+            merchant.setMobile_num(newMobile);
+            merchant = mBackendOps.updateMerchant(merchant);
+            if(merchant == null) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
+
+            // save in merchant ops table
+            MerchantOps merchantops = new MerchantOps();
+            merchantops.setMerchant_id(merchant.getAuto_id());
+            merchantops.setOp_code(DbConstants.MERCHANT_OP_CHANGE_MOBILE);
+            merchantops.setMobile_num(oldMobile);
+            merchantops.setExtra_op_params(newMobile);
+            merchantops.setOp_status(DbConstants.MERCHANT_OP_STATUS_COMPLETE);
+            if( mBackendOps.addMerchantOp(merchantops) == null )
+            {
+                //TODO: raise alarm - but dont return error
+            } else {
+                mLogger.debug("Processed mobile change for: "+merchant.getAuto_id());
+            }
+
+            // Send SMS on old and new mobile - ignore sent status
+            String smsText = buildMobileChangeSMS(oldMobile, newMobile);
+            SmsHelper.sendSMS(smsText, oldMobile+","+newMobile);
+        }
+    }
+
+
+    public void updateSettings(String cbRate, boolean addClEnabled, String email) {
+        initCommon();
+        mLogger.debug("In updateSettings: "+cbRate+": "+addClEnabled);
+
+        BackendlessUser user = mBackendOps.getCurrentMerchantUser();
+        if(user == null) {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+        Merchants merchant = (Merchants) user.getProperty("merchant");
+
+        // check if merchant is enabled
+        String status = CommonUtils.checkMerchantStatus(merchant);
+        if( status != null) {
+            CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
+        }
+
+        // update settings
+        merchant.setCb_rate(cbRate);
+        merchant.setCl_add_enable(addClEnabled);
+        merchant.setEmail(email);
+        if( mBackendOps.updateMerchant(merchant)==null ) {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }
+    }
+
     public Cashback registerCustomer(String merchantId, String merchantCbTable, String customerMobile, String name, String cardId) {
         initCommon();
         mLogger.debug("In registerCustomer: "+customerMobile+": "+cardId);
 
+        mLogger.debug("Before: "+InvocationContext.asString());
+        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+
         // assume role of calling user
-        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+
+        //mLogger.debug("After: "+InvocationContext.asString());
+        //mLogger.debug("After: "+HeadersManager.getInstance().getHeaders().toString());
 
         // fetch customer card object
         CustomerCards card = mBackendOps.getCustomerCard(cardId);
@@ -107,8 +219,14 @@ public class MerchantServices implements IBackendlessService {
         initCommon();
         mLogger.debug("In getCashback: "+merchantId+": "+customerId);
 
-        // assume role of calling user
-        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        mLogger.debug("Before: "+InvocationContext.asString());
+        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+
+        // also assume role of calling user
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+
+        //mLogger.debug("After: "+InvocationContext.asString());
+        //mLogger.debug("After: "+HeadersManager.getInstance().getHeaders().toString());
 
         // Fetch customer
         Customers customer = mBackendOps.getCustomer(customerId, mobileIsCustomerId);
@@ -158,7 +276,7 @@ public class MerchantServices implements IBackendlessService {
         mLogger.debug("In getMerchantStats: "+merchantId);
 
         // assume role of calling user
-        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
         // Fetch merchant
         Merchants merchant = mBackendOps.getMerchant(merchantId, false);
@@ -231,107 +349,19 @@ public class MerchantServices implements IBackendlessService {
         return stats;
     }
 
-    public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
-        initCommon();
-
-        if(deviceInfo==null || deviceInfo.isEmpty()) {
-            //return BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA;
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid input data: deviceInfo", false);
-        }
-
-        mLogger.debug("In setDeviceForLogin: "+loginId+": "+deviceInfo);
-
-        // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
-        String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
-        String deviceId = csvFields[0];
-
-        BackendlessUser user = mBackendOps.fetchUser(loginId, DbConstants.USER_TYPE_MERCHANT);
-        if(user==null) {
-            //return BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-        Merchants merchant = (Merchants) user.getProperty("merchant");
-
-        // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if(status != null) {
-            //return status;
-            CommonUtils.throwException(mLogger,status, "Merchant status not active", false);
-        }
-
-        boolean matched = false;
-        if(rcvdOtp==null || rcvdOtp.isEmpty()) {
-            // first run - as did not rcv OTP
-
-            // check if given device id matches trusted list
-            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-            int cnt = 0;
-            if(trustedDevices != null) {
-                cnt = trustedDevices.size();
-                for (MerchantDevice device : trustedDevices) {
-                    if(device.getDevice_id().equals(deviceId)) {
-                        matched = true;
-                        break;
-                    }
-                }
-            }
-
-            // generate OTP if device not matched
-            if( !matched ) {
-                // Check for max devices allowed per user
-                if(cnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
-                    //return BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached", false);
-                }
-                // First login for this - generate OTP
-                AllOtp newOtp = new AllOtp();
-                newOtp.setUser_id(loginId);
-                newOtp.setMobile_num(merchant.getMobile_num());
-                newOtp.setOpcode(DbConstants.MERCHANT_OP_NEW_DEVICE_LOGIN);
-                newOtp = mBackendOps.generateOtp(newOtp);
-                if(newOtp == null) {
-                    //return BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, mBackendOps.mLastOpStatus, false);
-                } else {
-                    //return BackendResponseCodes.BE_ERROR_OTP_GENERATED;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
-                }
-            }
-
-        } else {
-            // second run - as rcvd otp
-            // update device only if OTP matches
-            AllOtp fetchedOtp = mBackendOps.fetchOtp(loginId);
-            if( fetchedOtp == null ||
-                    !mBackendOps.validateOtp(fetchedOtp, rcvdOtp) ) {
-                //return BackendResponseCodes.BE_ERROR_WRONG_OTP;
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP value", false);
-            }
-        }
-
-        // If here, means either 'device matched' or 'new device and otp matched'
-        // Update device Info in merchant object
-        merchant.setTempDevId(deviceInfo);
-        user.setProperty("merchant",merchant);
-        if( mBackendOps.updateUser(user)==null ) {
-            //return BackendResponseCodes.BE_ERROR_GENERAL;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-
-        //Backendless.Logging.flush();
-        //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-    }
-
-
     public void changePassword(String userId, String oldPasswd, String newPasswd, String mobileNum) {
         initCommon();
         mLogger.debug("In changePassword: "+userId+": "+mobileNum);
+
+        mLogger.debug("Before: "+InvocationContext.asString());
+        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
         // we are anyways gonna login next, so dont need this
         //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
         // Login to verify the old password
         // Note: afterLogin event handler will not get called - so 'trusted device' check will not happen
+        // As event handlers are not called - for API calls made from server code.
         // In normal situation, this is not an issue - as user can call 'change password' only after login
         // However, in hacked situation, 'trusted device' check wont happen - ignoring this for now.
         BackendlessUser user = mBackendOps.loginUser(userId,oldPasswd);
@@ -340,6 +370,9 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
         Merchants merchant = (Merchants) user.getProperty("merchant");
+
+        mLogger.debug("After: "+InvocationContext.asString());
+        mLogger.debug("After: "+HeadersManager.getInstance().getHeaders().toString());
 
         // check admin status
         String status = CommonUtils.checkMerchantStatus(merchant);
@@ -368,130 +401,6 @@ public class MerchantServices implements IBackendlessService {
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
-    public void resetMerchantPwd(String userId, String deviceId, String brandName) {
-        initCommon();
-        mLogger.debug("In resetMerchantPwd: "+userId+": "+deviceId);
-
-        // not required, as supposed to be called by user without logging in (forget password case)
-        // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
-        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
-
-        // fetch user with the given id with related merchant object
-        BackendlessUser user = mBackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT);
-        if(user==null) {
-            //return mBackendOps.mLastOpStatus;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-        Merchants merchant = (Merchants) user.getProperty("merchant");
-
-        // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if(status != null) {
-            //return status;
-            CommonUtils.throwException(mLogger,status, "Merchant account not active", false);
-        }
-
-        // Check if from trusted device
-        // don't check for first time after merchant is registered
-        if(merchant.getAdmin_status() != DbConstants.USER_STATUS_NEW_REGISTERED) {
-            boolean matched = false;
-            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-            if(trustedDevices != null &&
-                    (deviceId != null && !deviceId.isEmpty())) {
-                for (MerchantDevice device : trustedDevices) {
-                    if(device.getDevice_id().equals(deviceId)) {
-                        matched = true;
-                        break;
-                    }
-                }
-            }
-            if(!matched) {
-                //return BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE;
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "This is not trusted device", false);
-            }
-        }
-
-        // check for 'extra verification'
-        String name = merchant.getName();
-        if(name==null || !name.equalsIgnoreCase(brandName)) {
-
-            if( CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET) ) {
-
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                        "Merchant wrong 'password reset' attempt limit reached"+merchant.getAuto_id(), false);
-            } else {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                        "Merchant password reset verification failed"+merchant.getAuto_id(), false);
-            }
-        }
-
-        if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
-            String error = handlePasswdResetImmediate(user, merchant);
-            if( error != null) {
-                mLogger.error("Failed to process merchant reset password operation: "+merchant.getAuto_id()+", "+error);
-                //return error;
-                CommonUtils.throwException(mLogger,error, "Error in handlePasswdResetImmediate", false);
-            } else {
-                mLogger.debug("Processed passwd reset op for: "+merchant.getAuto_id());
-            }
-        } else {
-            // create row in MerchantOps table
-            if( mBackendOps.addMerchantOp(DbConstants.MERCHANT_OP_RESET_PASSWD, merchant) == null )
-            {
-                //return mBackendOps.mLastOpStatus;
-                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            } else {
-                mLogger.debug("Processed passwd reset op for: "+merchant.getAuto_id());
-                //return BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED;
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "Merchant reset scheduled", true);
-            }
-        }
-
-        //Backendless.Logging.flush();
-        //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-    }
-
-    public void sendMerchantId(String mobileNum) {
-        initCommon();
-        mLogger.debug("In sendMerchantId: "+mobileNum);
-
-        // not required, as supposed to be called by user without logging in (forget password case)
-        // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
-        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
-
-        // fetch user with the registered mobile number
-        Merchants merchant = mBackendOps.getMerchantByMobile(mobileNum);
-        if(merchant==null) {
-            //return mBackendOps.mLastOpStatus;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-
-        // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if(status != null) {
-            //return status;
-            CommonUtils.throwException(mLogger,status, "Merchant account not active", false);
-        }
-
-        // Not checking for trusted device
-
-        // check for 'extra verification'
-        String mobile = merchant.getMobile_num();
-        if(mobile==null || !mobile.equalsIgnoreCase(mobileNum)) {
-
-            // to keep it simple - not imposing any maximum limit on retries, unlike 'forgot password'
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                    "Merchant forgot user id verification failed: "+mobileNum, false);
-        }
-
-        // send merchant id by SMS
-        String smsText = buildUserIdSMS(merchant.getAuto_id());
-        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
-        {
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,
-                    "Merchant forgot user id send SMS failed: "+mobileNum, false);
-        }
-    }
 
     /*
      * Private helper methods
@@ -530,38 +439,6 @@ public class MerchantServices implements IBackendlessService {
         customer.setTxn_pin(pin);
 
         return customer;
-    }
-
-    private String handlePasswdResetImmediate(BackendlessUser user, Merchants merchant) {
-
-        // generate password
-        String passwd = CommonUtils.generateMerchantPassword();
-        mLogger.debug("Merchant Password: "+passwd);
-
-        // update user account for the password
-        user.setPassword(passwd);
-        // delete any row, if exists, of earlier wrong attempts
-        /*
-        WrongAttempts attempt = mBackendOps.fetchWrongAttempts(merchant.getAuto_id(), DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
-        if(attempt!=null) {
-            mBackendOps.deleteWrongAttempt(attempt);
-        }*/
-
-        user = mBackendOps.updateUser(user);
-        if(user==null) {
-            return mBackendOps.mLastOpStatus;
-        }
-        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id());
-
-        // Send SMS through HTTP
-        String smsText = buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
-        {
-            return BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
-        }
-        mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
-
-        return null;
     }
 
     private Cashback handleCashbackCreate(String merchantId, String merchantCbTable, Customers customer) {
@@ -695,11 +572,8 @@ public class MerchantServices implements IBackendlessService {
         return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
     }
 
-    private String buildFirstPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_FIRST_PASSWD,userId,password);
+    private String buildMobileChangeSMS(String userId, String mobile_num) {
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE_MERCHANT, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
     }
 
-    private String buildUserIdSMS(String userId) {
-        return String.format(SmsConstants.SMS_MERCHANT_ID,userId);
-    }
 }

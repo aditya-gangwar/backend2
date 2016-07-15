@@ -19,7 +19,7 @@ public class Transaction1TableEventHandler extends com.backendless.servercode.ex
     public void beforeCreate( RunnerContext context, Transaction transaction) throws Exception
     {
         TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-        txnEventHelper.handleBeforeCreate(transaction, "Cashback1");
+        txnEventHelper.handleBeforeCreate(context, transaction, "Cashback1");
     }
 
   @Async
@@ -27,6 +27,6 @@ public class Transaction1TableEventHandler extends com.backendless.servercode.ex
   public void afterCreate( RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result ) throws Exception
   {
       TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-      txnEventHelper.handleAfterCreate(transaction, result);
+      txnEventHelper.handleAfterCreate(context, transaction, result);
   }
 }
