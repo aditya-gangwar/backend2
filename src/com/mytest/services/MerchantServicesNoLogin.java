@@ -11,14 +11,11 @@ import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
-import com.mytest.utilities.Base61;
 import com.mytest.utilities.CommonUtils;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * Created by adgangwa on 14-07-2016.
@@ -279,7 +276,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     private String handlePasswdResetImmediate(BackendlessUser user, Merchants merchant) {
 
         // generate password
-        String passwd = CommonUtils.generateMerchantPassword();
+        String passwd = CommonUtils.generateTempPassword();
         mLogger.debug("Merchant Password: "+passwd);
 
         // update user account for the password

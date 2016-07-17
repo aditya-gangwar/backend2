@@ -4,7 +4,6 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
-import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
@@ -12,7 +11,6 @@ import com.mytest.constants.DbConstants;
 import com.mytest.constants.GlobalSettingsConstants;
 import com.mytest.database.MerchantOps;
 import com.mytest.database.Merchants;
-import com.mytest.database.WrongAttempts;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
@@ -101,7 +99,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         }
 
         // generate password
-        String passwd = CommonUtils.generateMerchantPassword();
+        String passwd = CommonUtils.generateTempPassword();
         mLogger.debug("Merchant Password: "+passwd);
 
         // update user account for the password

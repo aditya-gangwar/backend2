@@ -30,4 +30,6 @@ public class BackendConstants {
     public static String PASSWORD_RESET_USER_ID = "00";
     public static String PASSWORD_RESET_USER_PWD = "aditya123";
 
+    public static String ROLE_MERCHANT = "Merchant";
+    public static String ROLE_CUSTOMER = "Customer";
 }

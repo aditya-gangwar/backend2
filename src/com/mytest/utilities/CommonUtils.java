@@ -30,7 +30,7 @@ public class CommonUtils {
         return halfVisibleUserid.toString();
     }
 
-    public static String generateMerchantPassword() {
+    public static String generateTempPassword() {
         // random alphanumeric string
         Random random = new Random();
         char[] id = new char[BackendConstants.PASSWORD_LEN];
@@ -155,6 +155,17 @@ public class CommonUtils {
         return null;
     }
 
+    public static String checkAgentStatus(Agents agent) {
+        switch (agent.getAdmin_status()) {
+            case DbConstants.USER_STATUS_DISABLED:
+                return BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+
+            case DbConstants.USER_STATUS_LOCKED:
+                 return BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+        }
+        return null;
+    }
+
     public static String getCardStatusForUse(CustomerCards card) {
         switch(card.getStatus()) {
 
@@ -195,7 +206,7 @@ public class CommonUtils {
     // returns true if max attempt limit reached
     public static boolean handleCustomerWrongAttempt(BackendOps backendOps, Customers customer, String attemptType) {
         // fetch or create related wrong attempt row
-        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(customer.getMobile_num(), attemptType);
+        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(customer.getMobile_num(), attemptType, DbConstants.USER_TYPE_CUSTOMER);
         if(attempt != null) {
             // Lock account, if max wrong attempt limit reached
             if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.CUSTOMER_WRONG_ATTEMPT_LIMIT) {
@@ -207,7 +218,7 @@ public class CommonUtils {
                     //TODO: generate alarm
                 }
                 // Generate SMS to inform the same
-                String smsText = getAccLockSmsText(customer.getMobile_num(), GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS, attemptType);
+                String smsText = getAccLockSmsText(customer.getMobile_num(), GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS, attemptType, DbConstants.USER_TYPE_CUSTOMER);
                 if(smsText != null) {
                     if( !SmsHelper.sendSMS(smsText, customer.getMobile_num()) )
                     {
@@ -231,7 +242,7 @@ public class CommonUtils {
     // returns true if max attempt limit reached
     public static boolean handleMerchantWrongAttempt(BackendOps backendOps, Merchants merchant, String attemptType) {
         // fetch or create related wrong attempt row
-        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(merchant.getAuto_id(), attemptType);
+        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(merchant.getAuto_id(), attemptType, DbConstants.USER_TYPE_MERCHANT);
         if(attempt != null) {
             // Lock account, if max wrong attempt limit reached
             if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
@@ -243,9 +254,45 @@ public class CommonUtils {
                     //TODO: generate alarm
                 }
                 // Generate SMS to inform the same
-                String smsText = getAccLockSmsText(merchant.getAuto_id(), GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS, attemptType);
+                String smsText = getAccLockSmsText(merchant.getAuto_id(), GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS, attemptType, DbConstants.USER_TYPE_MERCHANT);
                 if(smsText != null) {
                     if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
+                    {
+                        //TODO: generate alarm
+                    }
+                }
+                return true;
+            }
+            // increase attempt count
+            attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
+            if( backendOps.saveWrongAttempt(attempt) == null ) {
+                //TODO: generate alarm
+            }
+        } else {
+            //TODO: generate alarm
+        }
+
+        return false;
+    }
+
+    // returns true if max attempt limit reached
+    public static boolean handleAgentWrongAttempt(BackendOps backendOps, Agents agent, String attemptType) {
+        // fetch or create related wrong attempt row
+        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(agent.getMobile_num(), attemptType, DbConstants.USER_TYPE_AGENT);
+        if(attempt != null) {
+            // Lock account, if max wrong attempt limit reached
+            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
+                // lock customer account
+                agent.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
+                agent.setStatus_reason(getAccLockedReason(attemptType));
+                //agent.setStatus_update_time(new Date());
+                if( backendOps.updateAgent(agent)==null ) {
+                    //TODO: generate alarm
+                }
+                // Generate SMS to inform the same
+                String smsText = getAccLockSmsText(agent.getMobile_num(), 0, attemptType, DbConstants.USER_TYPE_AGENT);
+                if(smsText != null) {
+                    if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
                     {
                         //TODO: generate alarm
                     }
@@ -276,9 +323,12 @@ public class CommonUtils {
         return 100;
     }
 
-    private static String getAccLockSmsText(String userId, int hours, String wrongattemptType) {
+    private static String getAccLockSmsText(String userId, int hours, String wrongattemptType, int userType) {
         switch(wrongattemptType) {
             case DbConstants.ATTEMPT_TYPE_PASSWORD_RESET:
+                if(userType==DbConstants.USER_TYPE_AGENT) {
+                    return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT, userId);
+                }
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET, userId, hours);
             case DbConstants.ATTEMPT_TYPE_USER_LOGIN:
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, userId, hours);

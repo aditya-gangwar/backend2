@@ -12,6 +12,7 @@ public class DbConstants {
     // Users table - 'user_type' column values
     public static final int USER_TYPE_MERCHANT = 0;
     public static final int USER_TYPE_CUSTOMER = 1;
+    public static final int USER_TYPE_AGENT = 2;
 
     // Merchant table - 'admin_status' column values
     public static final int USER_STATUS_NEW_REGISTERED = 1;
@@ -20,12 +21,15 @@ public class DbConstants {
     public static final int USER_STATUS_DISABLED = 3;
     // Locked means temporary - and will be automatically unlocked after defined duration
     public static final int USER_STATUS_LOCKED = 4;
+    // Error during registration - to be manually deleted
+    public static final int USER_STATUS_REG_ERROR = 5;
     // status code to text description
     public static String userStatusDesc[] = {
             "",
             "User is active",
             "User account is disabled",
-            "User temporarily locked"
+            "User temporarily locked",
+            "User is not registered"
     };
 
 
@@ -37,6 +41,7 @@ public class DbConstants {
     public static final int LOCKED_WRONG_PASSWORD_LIMIT_RCHD = 5;
     public static final int LOCKED_WRONG_PIN_LIMIT_RCHD = 6;
     public static final int LOCKED_WRONG_PASSWORD_RESET_ATTEMPT_LIMIT_RCHD = 7;
+    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 8;
 
     // Map int status values to corresponding descriptions
     public static String statusReasonDescriptions[] = {
@@ -47,7 +52,8 @@ public class DbConstants {
             "Disabled on user request.",
             "Locked as limit for wrong password attempts reached.",
             "Locked as limit for wrong PIN attempts reached.",
-            "Locked as limit for wrong 'password reset' attempts reached."
+            "Locked as limit for wrong 'password reset' attempts reached.",
+            ""
     };
 
     // CustomerCards table - 'status' column values

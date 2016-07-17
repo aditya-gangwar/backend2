@@ -2,6 +2,7 @@ package com.mytest.events.persistence_service;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.AbstractContext;
@@ -36,119 +37,132 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     public void beforeCreate(RunnerContext context, CustomerOps customerops) throws Exception
     {
         initCommon();
-        mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate: "+context.getUserRoles());
-        mLogger.debug(context.toString());
+        try {
+            mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate: " + context.getUserRoles());
+            //mLogger.debug(context.toString());
+            HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken());
 
-        /*
-        Backendless.Logging.flush();
-        throw new BackendlessException( "123", "testing");*/
+            /*
+            Backendless.Logging.flush();
+            throw new BackendlessException( "123", "testing");*/
 
-        String otp = customerops.getOtp();
-        if(otp==null || otp.isEmpty()) {
-            // First run, generate OTP if all fine
-            String errorMsg = "";
+            String otp = customerops.getOtp();
+            if (otp == null || otp.isEmpty()) {
+                // First run, generate OTP if all fine
+                String errorMsg = "";
 
-            // Fetch customer
-            String mobileNum = customerops.getMobile_num();
-            Customers customer = mBackendOps.getCustomer(mobileNum, true);
-            if(customer==null) {
-                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            }
-
-            // check if customer is enabled
-            String status = CommonUtils.checkCustomerStatus(customer);
-            if( status != null) {
-                CommonUtils.throwException(mLogger,status, "Customer account is not active", false);
-            }
-
-            // Don't verify QR card# for 'new card' operation
-            String custOp = customerops.getOp_code();
-            if( !custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
-                    !customer.getMembership_card().getCard_id().equals(customerops.getQr_card()) ) {
-
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card", false);
-            }
-
-            // Don't verify PIN for 'reset PIN' operation
-            String pin = customerops.getPin();
-            if( !custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
-                    !customer.getTxn_pin().equals(pin) ) {
-
-                if( CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN) ) {
-
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                            "Wrong PIN attempt limit reached: "+customer.getMobile_num(), false);
-                } else {
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: "+customer.getMobile_num(), false);
+                // Fetch customer
+                String mobileNum = customerops.getMobile_num();
+                Customers customer = mBackendOps.getCustomer(mobileNum, true);
+                if (customer == null) {
+                    CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
                 }
-            }
 
-            // Generate OTP and send SMS
-            AllOtp newOtp = new AllOtp();
-            newOtp.setUser_id(mobileNum);
-            if(custOp.equals(DbConstants.CUSTOMER_OP_CHANGE_MOBILE)) {
-                newOtp.setMobile_num(customerops.getExtra_op_params());
+                // check if customer is enabled
+                String status = CommonUtils.checkCustomerStatus(customer);
+                if (status != null) {
+                    CommonUtils.throwException(mLogger, status, "Customer account is not active", false);
+                }
+
+                // Don't verify QR card# for 'new card' operation
+                String custOp = customerops.getOp_code();
+                if (!custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
+                        !customer.getMembership_card().getCard_id().equals(customerops.getQr_card())) {
+
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card", false);
+                }
+
+                // Don't verify PIN for 'reset PIN' operation
+                String pin = customerops.getPin();
+                if (!custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
+                        !customer.getTxn_pin().equals(pin)) {
+
+                    if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
+
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                "Wrong PIN attempt limit reached: " + customer.getMobile_num(), false);
+                    } else {
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num(), false);
+                    }
+                }
+
+                // Generate OTP and send SMS
+                AllOtp newOtp = new AllOtp();
+                newOtp.setUser_id(mobileNum);
+                if (custOp.equals(DbConstants.CUSTOMER_OP_CHANGE_MOBILE)) {
+                    newOtp.setMobile_num(customerops.getExtra_op_params());
+                } else {
+                    newOtp.setMobile_num(mobileNum);
+                }
+
+                newOtp.setOpcode(custOp);
+                newOtp = mBackendOps.generateOtp(newOtp);
+                if (newOtp == null) {
+                    // failed to generate otp
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, "OTP generate failed", false);
+                }
+
+                // OTP generated successfully - return exception to indicate so
+                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
+
             } else {
-                newOtp.setMobile_num(mobileNum);
+                // Second run, as OTP available
+                AllOtp fetchedOtp = mBackendOps.fetchOtp(customerops.getMobile_num());
+                if (fetchedOtp == null ||
+                        !mBackendOps.validateOtp(fetchedOtp, otp)) {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_OTP, "", false);
+                }
+                // remove PIN and OTP from the object
+                customerops.setPin(null);
+                customerops.setOtp(null);
+                customerops.setOp_status(DbConstants.CUSTOMER_OP_STATUS_OTP_MATCHED);
+
+                mLogger.debug("OTP matched for given customer operation: " + customerops.getMobile_num() + ", " + customerops.getOp_code());
             }
-
-            newOtp.setOpcode(custOp);
-            newOtp = mBackendOps.generateOtp(newOtp);
-            if(newOtp == null) {
-                // failed to generate otp
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, "OTP generate failed", false);
-            }
-
-            // OTP generated successfully - return exception to indicate so
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
-
-        } else {
-            // Second run, as OTP available
-            AllOtp fetchedOtp = mBackendOps.fetchOtp(customerops.getMobile_num());
-            if( fetchedOtp == null ||
-                    !mBackendOps.validateOtp(fetchedOtp, otp) ) {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "", false);
-            }
-            // remove PIN and OTP from the object
-            customerops.setPin(null);
-            customerops.setOtp(null);
-            customerops.setOp_status(DbConstants.CUSTOMER_OP_STATUS_OTP_MATCHED);
-
-            mLogger.debug("OTP matched for given customer operation: "+customerops.getMobile_num()+", "+customerops.getOp_code());
+            //Backendless.Logging.flush();
+        } catch (Exception e) {
+            mLogger.error("Exception in CustomerOpsTableEventHandler:beforeCreate: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
-
-        //Backendless.Logging.flush();
     }
 
     @Override
     public void afterCreate( RunnerContext context, CustomerOps customerops, ExecutionResult<CustomerOps> result ) throws Exception
     {
         initCommon();
-        mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+((AbstractContext)context).toString());
-        mLogger.debug(context.toString());
+        try {
+            mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+((AbstractContext)context).toString());
+            //mLogger.debug(context.toString());
+            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
-        // not required, as operation invoked by merchant
-        // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
-        //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+            // not required, as operation invoked by merchant
+            // this will ensure that backend operations are executed, as logged-in user who called this api using generated SDK
+            //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
-        String errorCode = null;
-        String opcode = customerops.getOp_code();
-        switch(opcode) {
-            case DbConstants.CUSTOMER_OP_NEW_CARD:
-                errorCode = changeCustomerCardOrMobile(customerops, true);
-                break;
-            case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
-                errorCode = changeCustomerCardOrMobile(customerops, false);
-                break;
-            case DbConstants.CUSTOMER_OP_RESET_PIN:
-                errorCode = resetCustomerPin(customerops.getMobile_num());
-                break;
+            String errorCode = null;
+            String opcode = customerops.getOp_code();
+            switch(opcode) {
+                case DbConstants.CUSTOMER_OP_NEW_CARD:
+                    errorCode = changeCustomerCardOrMobile(customerops, true);
+                    break;
+                case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
+                    errorCode = changeCustomerCardOrMobile(customerops, false);
+                    break;
+                case DbConstants.CUSTOMER_OP_RESET_PIN:
+                    errorCode = resetCustomerPin(customerops.getMobile_num());
+                    break;
+            }
+
+            if(errorCode != null) {
+                CommonUtils.throwException(mLogger,errorCode, "", false);
+            }
+            //Backendless.Logging.flush();
+        } catch (Exception e) {
+            mLogger.error("Exception in CustomerOpsTableEventHandler:afterCreate: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
-
-        if(errorCode != null) {
-            CommonUtils.throwException(mLogger,errorCode, "", false);
-        }
-        //Backendless.Logging.flush();
     }
 
     /*
@@ -286,7 +300,9 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_REMOVED);
             oldCard.setStatus_reason(custOp.getExtra_op_params());
             oldCard.setStatus_update_time(new Date());
-            mBackendOps.saveQrCard(oldCard);
+            if(mBackendOps.saveCustomerCard(oldCard)==null) {
+                //TODO: raise alarm for manual correction later
+            }
         }
 
         // Send message to customer informing the same - ignore sent status

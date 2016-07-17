@@ -34,6 +34,7 @@ public class SmsConstants {
     public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
     public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family !! Your Merchant ID for login is %s. Happy Customers to you.";
 
     public static String SMS_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
 
@@ -44,5 +45,8 @@ public class SmsConstants {
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong password attempts.";
     public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong PIN attempts.";
     public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'password reset' attempts.";
+
+    public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
+
 
 }

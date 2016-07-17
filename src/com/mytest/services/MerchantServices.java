@@ -186,6 +186,32 @@ public class MerchantServices implements IBackendlessService {
         }
         customer = (Customers) customerUser.getProperty("customer");
 
+        // assign 'Customer' role
+        if(!mBackendOps.assignRole(customerMobile, BackendConstants.ROLE_CUSTOMER)) {
+            String errorCode = mBackendOps.mLastOpStatus;
+            String errorMsg = mBackendOps.mLastOpErrorMsg;
+
+            // TODO: add as 'Major' alarm - user to be removed later manually
+
+            // rollback to not-usable state
+            customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
+            customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+            customer.setMembership_card(null);
+            customerUser.setProperty("customer",customer);
+            if(mBackendOps.updateUser(customerUser)==null) {
+                //TODO: raise critical alarm
+            }
+
+            // free up the card for next allocation
+            card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+            customer.setMembership_card(card);
+            if(mBackendOps.saveCustomerCard(card)==null) {
+                //TODO: raise alarm for manual correction later
+            }
+
+            CommonUtils.throwException(mLogger,errorCode,errorMsg,false);
+        }
+
         // Send sms to the customer with PIN
         String pin = customer.getTxn_pin();
         String smsText = String.format(SmsConstants.SMS_FIRST_PIN, customerMobile, pin);
@@ -200,7 +226,6 @@ public class MerchantServices implements IBackendlessService {
         if(mBackendOps.saveCashback(cashback) == null) {
             //TODO: add as major alarm
             CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED, "", false);
-            //throw new BackendlessException( "", mBackendOps.mLastOpStatus );
         }
 
         // Add 'customer details' in the cashback object to be returned

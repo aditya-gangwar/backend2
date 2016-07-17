@@ -1,6 +1,7 @@
 package com.mytest.events.persistence_service;
 
 import com.backendless.Backendless;
+import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
@@ -37,93 +38,109 @@ public class TxnTableEventHelper {
 
     public void handleBeforeCreate(RunnerContext context, Transaction transaction, String cbTable) throws Exception {
         initCommon();
-        mLogger.debug("In Transaction handleBeforeCreate");
+        try {
+            mLogger.debug("In Transaction handleBeforeCreate");
+            //mLogger.debug("Context: "+ context.toString());
 
-        String merchantId = transaction.getMerchant_id();
-        String customerId = transaction.getCustomer_id();
+            //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
+            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            //mLogger.debug("After: "+ HeadersManager.getInstance().getHeaders().toString());
 
-        // Fetch customer
-        Customers customer = mBackendOps.getCustomer(customerId, true);
-        if(customer==null) {
-            //TODO: add in alarms
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
 
-        // check if customer is enabled
-        String status = CommonUtils.checkCustomerStatus(customer);
-        if( status != null) {
-            CommonUtils.throwException(mLogger,status, "Customer account is not active", false);
-        }
+            String merchantId = transaction.getMerchant_id();
+            String customerId = transaction.getCustomer_id();
 
-        // check that card is not blocked
-        String cardStatus = CommonUtils.getCardStatusForUse(customer.getMembership_card());
-        if(cardStatus != null) {
-            CommonUtils.throwException(mLogger,status, "Invalid customer card", false);
-        }
+            // Fetch customer
+            Customers customer = mBackendOps.getCustomer(customerId, true);
+            if (customer == null) {
+                //TODO: add in alarms
+                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
 
-        // verify PIN
-        if( transaction.getCpin() != null ) {
+            // check if customer is enabled
+            String status = CommonUtils.checkCustomerStatus(customer);
+            if (status != null) {
+                CommonUtils.throwException(mLogger, status, "Customer account is not active", false);
+            }
 
-            if(!transaction.getCpin().equals(customer.getTxn_pin()) ) {
+            // check that card is not blocked
+            String cardStatus = CommonUtils.getCardStatusForUse(customer.getMembership_card());
+            if (cardStatus != null) {
+                CommonUtils.throwException(mLogger, status, "Invalid customer card", false);
+            }
 
-                if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
+            // verify PIN
+            if (transaction.getCpin() != null) {
+                if (!transaction.getCpin().equals(customer.getTxn_pin())) {
 
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                            "Wrong PIN attempt limit reached: " + customerId, false);
-                } else {
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
+                    if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
+
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                "Wrong PIN attempt limit reached: " + customerId, false);
+                    } else {
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
+                    }
                 }
             }
-        }
 
-        // Fetch cashback record
-        String whereClause = "rowid = '"+customerId+merchantId+"'";
-        Cashback cashback = null;
-        ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, cbTable);
-        if(data!=null) {
-            cashback = data.get(0);
+            // Fetch cashback record
+            String whereClause = "rowid = '" + customerId + merchantId + "'";
+            Cashback cashback = null;
+            ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, cbTable);
+            if (data != null) {
+                cashback = data.get(0);
 
-            // update amounts in cashback oject
-            cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
-            cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
-            // check for cash account limit
-            if( (cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT ) {
-                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId, false);
+                // update amounts in cashback oject
+                cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
+                cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
+                // check for cash account limit
+                if ((cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT) {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId, false);
+                }
+
+                cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
+                cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
+                cashback.setTotal_billed(cashback.getTotal_billed() + transaction.getTotal_billed());
+                cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
+
+                // add missing transaction fields
+                transaction.setCust_private_id(cashback.getCust_private_id());
+                transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
+                transaction.setCreate_time(new Date());
+                // following are uses to adding cashback object to txn:
+                // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
+                // 2) updated cashback object will be automatically returned,
+                // along with updated transaction object to calling app,
+                // which can thus use it to display updated balance - instead of fetching cashback again.
+                // 3) cashback object in transaction will be used in afterCreate() of txn table too - to get updated balance
+                transaction.setCashback(cashback);
+
+            } else {
+                //TODO: add in alarms
+                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
             }
-
-            cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
-            cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
-            cashback.setTotal_billed(cashback.getTotal_billed() + transaction.getTotal_billed());
-            cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
-
-            // add missing transaction fields
-            transaction.setCust_private_id(cashback.getCust_private_id());
-            transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
-            transaction.setCreate_time(new Date());
-            // following are uses to adding cashback object to txn:
-            // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
-            // 2) updated cashback object will be automatically returned,
-            // along with updated transaction object to calling app,
-            // which can thus use it to display updated balance - instead of fetching cashback again.
-            // 3) cashback object in transaction will be used in afterCreate() of txn table too - to get updated balance
-            transaction.setCashback(cashback);
-
-        } else {
-            //TODO: add in alarms
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            //Backendless.Logging.flush();
+        } catch (Exception e) {
+            mLogger.error("Exception in TxnEventHelper:handleBeforeCreate: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
-        //Backendless.Logging.flush();
     }
 
     public void handleAfterCreate(RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result) throws Exception {
         initCommon();
-        mLogger.debug("In Transaction handleAfterCreate");
-
-        // If transaction creation successful send SMS to customer
-        if(result.getException()==null) {
-            buildAndSendTxnSMS(transaction);
+        try {
+            mLogger.debug("In Transaction handleAfterCreate");
+            // If transaction creation successful send SMS to customer
+            if(result.getException()==null) {
+                buildAndSendTxnSMS(transaction);
+            }
+            //Backendless.Logging.flush();
+        } catch (Exception e) {
+            mLogger.error("Exception in TxnEventHelper:handleAfterCreate: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
-        //Backendless.Logging.flush();
     }
 
     /*

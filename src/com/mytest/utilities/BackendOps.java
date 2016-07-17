@@ -56,6 +56,20 @@ public class BackendOps {
         return null;
     }
 
+    public boolean assignRole(String userId, String role) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+
+        try {
+            Backendless.UserService.assignRole(userId, role);
+            return true;
+        } catch (BackendlessException e) {
+            mLastOpErrorMsg = "Exception in loginUser: " + e.toString();
+            mLastOpStatus = e.getCode();
+        }
+        return false;
+    }
+
     public BackendlessUser loginUser(String userId, String password) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
@@ -64,7 +78,6 @@ public class BackendOps {
             return Backendless.UserService.login(userId, password, false);
         } catch (BackendlessException e) {
             mLastOpErrorMsg = "Exception in loginUser: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
             mLastOpStatus = e.getCode();
         }
         return null;
@@ -116,7 +129,10 @@ public class BackendOps {
             } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
                 queryOptions.addRelated( "merchant");
                 queryOptions.addRelated("merchant.trusted_devices");
+            } else if(userType == DbConstants.USER_TYPE_AGENT) {
+                queryOptions.addRelated( "agent");
             }
+
             query.setQueryOptions( queryOptions );
             BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
             if( user.getTotalObjects() == 0) {
@@ -343,7 +359,7 @@ public class BackendOps {
         return null;
     }
 
-    public CustomerCards saveQrCard(CustomerCards card) {
+    public CustomerCards saveCustomerCard(CustomerCards card) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
         try
@@ -368,10 +384,7 @@ public class BackendOps {
             Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
             BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
-
-            // TODO: check if putting index on cust_private_id improves performance
-            // or using rowid_qr in where clause improves performance
+            //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
             dataQuery.setWhereClause(whereClause);
 
             /*
@@ -681,7 +694,7 @@ public class BackendOps {
      * WrongAttempts operations
      */
     // returns 'null' if not found and new created
-    public WrongAttempts fetchOrCreateWrongAttempt(String userId, String type) {
+    public WrongAttempts fetchOrCreateWrongAttempt(String userId, String type, int userType) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
         WrongAttempts attempt = fetchWrongAttempts(userId, type);
@@ -691,6 +704,7 @@ public class BackendOps {
             newAttempt.setUser_id(userId);
             newAttempt.setAttempt_type(type);
             newAttempt.setAttempt_cnt(1);
+            newAttempt.setUser_type(userType);
             return saveWrongAttempt(newAttempt);
         }
         return attempt;
@@ -814,6 +828,22 @@ public class BackendOps {
 
         return transactions;
     }
+
+    /*
+     * Agent operations
+     */
+    public Agents updateAgent(Agents agent) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+        try {
+            return Backendless.Persistence.save(agent);
+        } catch(BackendlessException e) {
+            mLastOpErrorMsg = "Exception in updateAgent: " + e.toString();
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
 
 
     /*
