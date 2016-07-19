@@ -121,17 +121,49 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
                         }
                     }
+                } else if (userType == DbConstants.USER_TYPE_AGENT) {
+                    Agents agent = mBackendOps.getAgent(userId);
+                    if (agent == null) {
+                        mBackendOps.logoutUser();
+                        CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+                    }
+
+                    // check admin status
+                    String status = CommonUtils.checkAgentStatus(agent);
+                    if (status != null) {
+                        mBackendOps.logoutUser();
+                        CommonUtils.throwException(mLogger, status, "Agent account is inactive", false);
+                    }
                 }
+
             } else {
                 // login failed - increase count if failed due to wrong password
                 if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
-                    // fetch merchant
-                    Merchants merchant = mBackendOps.getMerchant(login, false);
-                    if(merchant!=null &&
-                            CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_USER_LOGIN) ) {
-                        // override exception type
-                        CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                                "Merchant wrong password attempt limit reached: "+merchant.getAuto_id(), false);
+                    switch(CommonUtils.getUserType(login)) {
+                        case DbConstants.USER_TYPE_MERCHANT:
+                            // fetch merchant
+                            Merchants merchant = mBackendOps.getMerchant(login, false);
+                            if(merchant!=null &&
+                                    CommonUtils.handleMerchantWrongAttempt(mBackendOps, merchant, DbConstants.ATTEMPT_TYPE_USER_LOGIN) ) {
+                                // override exception type
+                                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                        "Merchant wrong password attempt limit reached: "+login, false);
+                            }
+                            break;
+
+                        case DbConstants.USER_TYPE_AGENT:
+                            // fetch agent
+                            Agents agent = mBackendOps.getAgent(login);
+                            if(agent!=null &&
+                                    CommonUtils.handleAgentWrongAttempt(mBackendOps, agent, DbConstants.ATTEMPT_TYPE_USER_LOGIN) ) {
+                                // override exception type
+                                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                        "Merchant wrong password attempt limit reached: "+login, false);
+                            }
+                            break;
+
+                        default:
+                            //TODO: raise major alarm
                     }
                 }
             }
@@ -140,7 +172,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 mBackendOps.logoutUser();
             }
             mLogger.error("Exception in afterLogin: "+e.toString());
-            Backendless.Logging.flush();
+            //Backendless.Logging.flush();
             throw e;
         }
     }

@@ -26,13 +26,18 @@ public class CommonConstants {
     /*
      * Size, Length and Limits
      */
+    public static final int MERCHANT_ID_LEN = 6;
+    public static final int AGENT_ID_LEN = 8;
+
+    // DOB in format 'DDMMYYYY'
+    public static final int DOB_SECRET_LEN = 8; //mobile number
+
     public static final int PIN_OTP_LEN = 5;
     public static final int TRANSACTION_ID_LEN = 10;
-    public static int MAX_DEVICES_PER_MERCHANT = 3;
-    public static int MERCHANT_ID_LEN = 6;
-    public static int MOBILE_NUM_LENGTH = 10;
-    public static int dbQueryMaxPageSize = 100;
-    public static int CUSTOMER_QRCODE_LENGTH = 7;
+    public static final int MAX_DEVICES_PER_MERCHANT = 3;
+    public static final int MOBILE_NUM_LENGTH = 10;
+    public static final int dbQueryMaxPageSize = 100;
+    public static final int CUSTOMER_QRCODE_LENGTH = 7;
 
     /*
      * Backend path constants

@@ -371,4 +371,15 @@ public class CommonUtils {
         throw new BackendlessException(fault);
         //throw new BackendlessException( errorCode, errorMsg);
     }
+
+    public static int getUserType(String userdId) {
+        switch(userdId.length()) {
+            case CommonConstants.MERCHANT_ID_LEN:
+                return DbConstants.USER_TYPE_MERCHANT;
+            case CommonConstants.AGENT_ID_LEN:
+                return DbConstants.USER_TYPE_AGENT;
+            default:
+                return -1;
+        }
+    }
 }

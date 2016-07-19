@@ -10,6 +10,7 @@ import com.backendless.persistence.BackendlessDataQuery;
 public class Agents
 {
   private java.util.Date updated;
+  private String id;
   private String mobile_num;
   private Integer status_reason;
   private String objectId;
@@ -22,6 +23,14 @@ public class Agents
   public java.util.Date getUpdated()
   {
     return updated;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
   }
 
   public String getMobile_num()
