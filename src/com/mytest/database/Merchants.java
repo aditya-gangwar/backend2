@@ -2,9 +2,7 @@ package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
-import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
-import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
 
 public class Merchants
@@ -31,6 +29,22 @@ public class Merchants
   private java.util.List<MerchantDevice> trusted_devices;
   private BusinessCategories buss_category;
   private Address address;
+  private Integer cl_debit_limit_for_pin;
+  private Integer cb_debit_limit_for_pin;
+  private Integer cl_credit_limit_for_pin;
+
+  public Integer getCl_debit_limit_for_pin() {
+    return cl_debit_limit_for_pin;
+  }
+
+  public Integer getCb_debit_limit_for_pin() {
+    return cb_debit_limit_for_pin;
+  }
+
+  public Integer getCl_credit_limit_for_pin() {
+    return cl_credit_limit_for_pin;
+  }
+
   public String getName()
   {
     return name;

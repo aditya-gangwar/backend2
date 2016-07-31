@@ -7,6 +7,7 @@ import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.constants.*;
 import com.mytest.database.Customers;
+import com.mytest.database.Merchants;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.database.Cashback;
@@ -46,9 +47,15 @@ public class TxnTableEventHelper {
             HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
             //mLogger.debug("After: "+ HeadersManager.getInstance().getHeaders().toString());
 
-
             String merchantId = transaction.getMerchant_id();
             String customerId = transaction.getCustomer_id();
+
+            // Fetch merchant
+            Merchants merchant = mBackendOps.getMerchant(merchantId, false);
+            if(merchant == null) {
+                //TODO: add in alarms
+                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
 
             // Fetch customer
             Customers customer = mBackendOps.getCustomer(customerId, true);
@@ -70,16 +77,20 @@ public class TxnTableEventHelper {
             }
 
             // verify PIN
-            if (transaction.getCpin() != null) {
-                if (!transaction.getCpin().equals(customer.getTxn_pin())) {
+            if(CommonUtils.customerPinRequired(merchant, transaction)) {
+                if (transaction.getCpin() != null) {
+                    if (!transaction.getCpin().equals(customer.getTxn_pin())) {
 
-                    if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
+                        if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
 
-                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                                "Wrong PIN attempt limit reached: " + customerId, false);
-                    } else {
-                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
+                            CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                                    "Wrong PIN attempt limit reached: " + customerId, false);
+                        } else {
+                            CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
+                        }
                     }
+                } else {
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId, false);
                 }
             }
 

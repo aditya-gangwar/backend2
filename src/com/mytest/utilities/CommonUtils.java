@@ -348,6 +348,7 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
         Backendless.Data.mapTableToClass("WrongAttempts", WrongAttempts.class);
         Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
+        Backendless.Data.mapTableToClass("Agents", Agents.class);
 
         Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
@@ -367,7 +368,7 @@ public class CommonUtils {
         errorMsg = "ZZ"+errorCode;
         BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
 
-        //Backendless.Logging.flush();
+        Backendless.Logging.flush();
         throw new BackendlessException(fault);
         //throw new BackendlessException( errorCode, errorMsg);
     }
@@ -382,4 +383,16 @@ public class CommonUtils {
                 return -1;
         }
     }
+
+    public static boolean customerPinRequired(Merchants merchant, Transaction txn) {
+        int cl_credit_threshold = merchant.getCl_credit_limit_for_pin()==null ? GlobalSettingsConstants.CL_CREDIT_LIMIT_FOR_PIN : merchant.getCl_credit_limit_for_pin();
+        int cl_debit_threshold = merchant.getCl_debit_limit_for_pin()==null ? GlobalSettingsConstants.CL_DEBIT_LIMIT_FOR_PIN : merchant.getCl_debit_limit_for_pin();
+        int cb_debit_threshold = merchant.getCb_debit_limit_for_pin()==null ? GlobalSettingsConstants.CB_DEBIT_LIMIT_FOR_PIN : merchant.getCb_debit_limit_for_pin();
+
+        return (txn.getCl_credit() > cl_credit_threshold
+                || txn.getCl_debit() > cl_debit_threshold
+                || txn.getCb_debit() > cb_debit_threshold );
+    }
+
+
 }

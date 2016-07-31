@@ -44,9 +44,11 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             mLogger.debug("In GenericUserEventHandler: afterLogin");
 
             //mLogger.debug("Before: "+ InvocationContext.asString());
-            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
-            //mLogger.debug(context.toString());
-            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug(context.toString());
+            if(context.getUserToken() != null) {
+                HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            }
 
             if(result.getException()==null) {
                 String userId = (String) result.getResult().get("user_id");
@@ -114,6 +116,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         // so it is not required to update this outside this if block
                         if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
                             merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+                            merchant.setStatus_reason(DbConstants.USER_STATUS_ACTIVE);
+                            merchant.setStatus_update_time(new Date());
+                            merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
                         }
                         Merchants merchant2 = mBackendOps.updateMerchant(merchant);
                         if(merchant2==null) {
@@ -172,7 +177,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 mBackendOps.logoutUser();
             }
             mLogger.error("Exception in afterLogin: "+e.toString());
-            //Backendless.Logging.flush();
+            Backendless.Logging.flush();
             throw e;
         }
     }
@@ -183,7 +188,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         initCommon();
         try {
             mLogger.debug("In GenericUserEventHandler: beforeRegister");
-            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug(context.toString());
+            // Print roles
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());
 
             // If merchant, generate login id and password
             // If customer, generate private id and PIN

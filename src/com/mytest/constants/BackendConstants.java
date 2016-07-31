@@ -27,9 +27,10 @@ public class BackendConstants {
     public static int LOG_POLICY_NUM_MSGS = 1;
     public static int LOG_POLICY_FREQ_SECS = 0;
 
-    public static String PASSWORD_RESET_USER_ID = "00";
-    public static String PASSWORD_RESET_USER_PWD = "aditya123";
+    //public static String PASSWORD_RESET_USER_ID = "00";
+    //public static String PASSWORD_RESET_USER_PWD = "aditya123";
 
     public static String ROLE_MERCHANT = "Merchant";
     public static String ROLE_CUSTOMER = "Customer";
+    public static String ROLE_AGENT = "Agent";
 }

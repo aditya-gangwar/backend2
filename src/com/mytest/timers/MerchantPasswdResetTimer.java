@@ -63,11 +63,12 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             mLogger.info("Locked password reset ops: "+lockedOps.size());
 
             // login with user which is allowed to update 'Users' table
+            /*
             BackendlessUser user2 = mBackendOps.loginUser(BackendConstants.PASSWORD_RESET_USER_ID,BackendConstants.PASSWORD_RESET_USER_PWD);
             if(user2==null) {
                 //return mBackendOps.mLastOpStatus;
                 CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            }
+            }*/
 
             // process locked objects
             for (int k = 0; k < ops.size(); k++) {

@@ -64,7 +64,7 @@ public class BackendOps {
             Backendless.UserService.assignRole(userId, role);
             return true;
         } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in loginUser: " + e.toString();
+            mLastOpErrorMsg = "Exception in assignRole: " + e.toString();
             mLastOpStatus = e.getCode();
         }
         return false;
@@ -151,6 +151,32 @@ public class BackendOps {
         return null;
     }
 
+    public BackendlessUser fetchUserByObjectId(String objectId, int userType) {
+        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        mLastOpErrorMsg = "";
+
+        try {
+            BackendlessUser user = Backendless.UserService.findById(objectId);
+
+            if(userType == DbConstants.USER_TYPE_MERCHANT) {
+                Merchants merchant = (Merchants) user.getProperty("merchant");
+                if (merchant == null) {
+                    // load merchant object
+                    ArrayList<String> relationProps = new ArrayList<>();
+                    relationProps.add("merchant");
+                    Backendless.Data.of(BackendlessUser.class).loadRelations(user, relationProps);
+
+                    return user;
+                }
+            }
+        } catch (BackendlessException e) {
+            mLastOpErrorMsg = "Exception in fetchUserByObjectId: " + e.toString();
+            mLastOpStatus = e.getCode();
+        }
+        return null;
+    }
+
+    /*
     public BackendlessUser getCurrentMerchantUser() {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
@@ -171,18 +197,18 @@ public class BackendOps {
             mLastOpStatus = e.getCode();
         }
         return null;
-    }
+    }*/
 
     /*
      * Merchant operations
      */
-    private Merchants loadMerchant(BackendlessUser user) {
+    public Merchants loadMerchant(BackendlessUser user) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
 
         ArrayList<String> relationProps = new ArrayList<>();
         relationProps.add("merchant");
-        relationProps.add("merchant.trusted_devices");
+        //relationProps.add("merchant.trusted_devices");
         try {
             Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
             return (Merchants)user.getProperty("merchant");
@@ -720,7 +746,7 @@ public class BackendOps {
             WrongAttempts newAttempt = new WrongAttempts();
             newAttempt.setUser_id(userId);
             newAttempt.setAttempt_type(type);
-            newAttempt.setAttempt_cnt(1);
+            newAttempt.setAttempt_cnt(0);
             newAttempt.setUser_type(userType);
             return saveWrongAttempt(newAttempt);
         }
@@ -873,7 +899,7 @@ public class BackendOps {
         return null;
     }
 
-    private Merchants loadAgent(BackendlessUser user) {
+    public Agents loadAgent(BackendlessUser user) {
         mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
         mLastOpErrorMsg = "";
 
@@ -881,7 +907,7 @@ public class BackendOps {
         relationProps.add("agent");
         try {
             Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
-            return (Merchants)user.getProperty("agent");
+            return (Agents)user.getProperty("agent");
         } catch (BackendlessException e) {
             mLastOpErrorMsg = "Exception in loadAgent: " + e.toString();
             mLastOpStatus = e.getCode();

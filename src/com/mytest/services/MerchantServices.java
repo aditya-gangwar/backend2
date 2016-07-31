@@ -37,8 +37,13 @@ public class MerchantServices implements IBackendlessService {
         //HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
 
         // Fetch merchant
+        /*
         BackendlessUser user = mBackendOps.getCurrentMerchantUser();
         if(user == null) {
+            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+        }*/
+        BackendlessUser user = mBackendOps.fetchUserByObjectId(InvocationContext.getUserId(), DbConstants.USER_TYPE_MERCHANT);
+        if(user==null) {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
         Merchants merchant = (Merchants) user.getProperty("merchant");
@@ -112,26 +117,42 @@ public class MerchantServices implements IBackendlessService {
 
     public void updateSettings(String cbRate, boolean addClEnabled, String email) {
         initCommon();
-        mLogger.debug("In updateSettings: "+cbRate+": "+addClEnabled);
+        try {
+            mLogger.debug("In updateSettings: "+cbRate+": "+addClEnabled+": "+email);
+            mLogger.debug("Before context: "+InvocationContext.asString());
+            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("Current user id: "+Backendless.UserService.loggedInUser());
+            //Backendless.Logging.flush();
 
-        BackendlessUser user = mBackendOps.getCurrentMerchantUser();
-        if(user == null) {
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-        Merchants merchant = (Merchants) user.getProperty("merchant");
+            /*
+            BackendlessUser user = mBackendOps.getCurrentMerchantUser();
+            if(user == null) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }*/
+            BackendlessUser user = mBackendOps.fetchUserByObjectId(InvocationContext.getUserId(), DbConstants.USER_TYPE_MERCHANT);
+            if(user==null) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
+            Merchants merchant = (Merchants) user.getProperty("merchant");
 
-        // check if merchant is enabled
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if( status != null) {
-            CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
-        }
+            // check if merchant is enabled
+            String status = CommonUtils.checkMerchantStatus(merchant);
+            if( status != null) {
+                CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
+            }
 
-        // update settings
-        merchant.setCb_rate(cbRate);
-        merchant.setCl_add_enable(addClEnabled);
-        merchant.setEmail(email);
-        if( mBackendOps.updateMerchant(merchant)==null ) {
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            // update settings
+            merchant.setCb_rate(cbRate);
+            merchant.setCl_add_enable(addClEnabled);
+            merchant.setEmail(email);
+            if( mBackendOps.updateMerchant(merchant)==null ) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
+
+        } catch (Exception e) {
+            mLogger.error("Exception in updateSettings: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
     }
 
@@ -374,6 +395,8 @@ public class MerchantServices implements IBackendlessService {
         return stats;
     }
 
+
+    /*
     public void changePassword(String userId, String oldPasswd, String newPasswd, String mobileNum) {
         initCommon();
         mLogger.debug("In changePassword: "+userId+": "+mobileNum);
@@ -424,7 +447,7 @@ public class MerchantServices implements IBackendlessService {
 
         //Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-    }
+    }*/
 
 
     /*

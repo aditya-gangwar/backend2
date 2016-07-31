@@ -31,6 +31,7 @@ public class SmsConstants {
     public static String SMS_FIRST_PASSWD = "Dear Merchant - Welcome to MyCash family !! Your User ID is %s, and your first password is '%s'. PLZ CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD = "MyCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_FIRST_PIN = "Dear Customer - Welcome to MyCash family !! Your User ID is %s, and your first PIN is '%s'. PLS DO NOT SHARE WITH ANYONE.";
+    public static String SMS_REG_AGENT = "Dear Agent - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
     public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
     public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";

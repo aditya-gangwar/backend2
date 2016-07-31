@@ -26,12 +26,12 @@ public class DbConstants {
     // status code to text description
     public static String userStatusDesc[] = {
             "",
-            "User is active",
-            "User account is disabled",
-            "User temporarily locked",
-            "User is not registered"
+            "New Registered",
+            "Active",
+            "Disabled",
+            "Locked",
+            "Not Registered"
     };
-
 
     // Merchant table - 'status_reason' column values
     public static final int ENABLED_NEW_USER = 1;

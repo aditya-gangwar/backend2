@@ -9,6 +9,13 @@ import java.util.Locale;
 public class CommonConstants {
 
     /*
+     * To use int as boolean
+     */
+    public static final int BOOLEAN_VALUE_FALSE = 0;
+    public static final int BOOLEAN_VALUE_TRUE = 2;
+    public static final int BOOLEAN_VALUE_INVALID = -1;
+
+    /*
      * Date formats
      */
     public static final Locale DATE_LOCALE = Locale.ENGLISH;

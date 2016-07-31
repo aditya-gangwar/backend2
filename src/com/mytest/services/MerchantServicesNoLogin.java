@@ -117,7 +117,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
 
-        //Backendless.Logging.flush();
+        Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
@@ -167,6 +167,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                         break;
                     }
                 }
+            } else {
+                // this scenario should never encountered
+                //TODO: raise alarm
             }
             if(!matched) {
                 //return BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE;
@@ -216,7 +219,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             }
         }
 
-        //Backendless.Logging.flush();
+        Backendless.Logging.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 

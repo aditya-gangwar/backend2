@@ -31,4 +31,11 @@ public class GlobalSettingsConstants {
 
     // Corresponding 'cash_account_max_limit' in GlobalSettings table
     public static int CUSTOMER_CASH_MAX_LIMIT = 500;
+
+    // Corresponding 'cl_credit_limit_for_pin' in GlobalSettings table
+    public static int CL_CREDIT_LIMIT_FOR_PIN = 0;
+    // Corresponding 'cl_debit_limit_for_pin' in GlobalSettings table
+    public static int CL_DEBIT_LIMIT_FOR_PIN = 0;
+    // Corresponding 'cb_debit_limit_for_pin' in GlobalSettings table
+    public static int CB_DEBIT_LIMIT_FOR_PIN = 0;
 }
