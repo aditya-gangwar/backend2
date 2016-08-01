@@ -46,9 +46,11 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             //mLogger.debug("Before: "+ InvocationContext.asString());
             mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
             mLogger.debug(context.toString());
+
+            /*
             if(context.getUserToken() != null) {
                 HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
-            }
+            }*/
 
             if(result.getException()==null) {
                 String userId = (String) result.getResult().get("user_id");
@@ -65,7 +67,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String status = CommonUtils.checkMerchantStatus(merchant);
                     if(status != null) {
                         mBackendOps.logoutUser();
-                        CommonUtils.throwException(mLogger,status, "Merchant account is inactive", false);
+                        CommonUtils.throwException(mLogger,status, "Merchant account is not active", false);
                     }
 
                     // Check if 'device id' not set
@@ -76,56 +78,94 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Login attempt from untrusted device", false);
                     }
 
-                    // Add to 'trusted list', if not already there
-                    // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
+                    // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<otp>
                     String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
                     String deviceId = csvFields[0];
+                    String rcvdOtp = csvFields[4];
 
-                    // Match device id
+                    // check if this device is in trusted list
                     boolean matched = false;
                     List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-                    if(trustedDevices != null) {
+                    int deviceCnt = 0;
+                    if (trustedDevices != null) {
+                        deviceCnt = trustedDevices.size();
                         for (MerchantDevice device : trustedDevices) {
-                            if(device.getDevice_id().equals(deviceId)) {
+                            if (device.getDevice_id().equals(deviceId)) {
                                 matched = true;
-                                device.setLast_login(new Date());
                                 break;
                             }
                         }
-                    } else {
-                        trustedDevices = new ArrayList<>();
                     }
-                    // Add new device in the trusted list
+
+                    // If not matched, check for OTP
                     if(!matched) {
-                        // New device - add as trusted device
-                        MerchantDevice device = new MerchantDevice();
-                        device.setMerchant_id(merchant.getAuto_id());
-                        device.setDevice_id(csvFields[0]);
-                        device.setManufacturer(csvFields[1]);
-                        device.setModel(csvFields[2]);
-                        device.setOs_type("Android");
-                        device.setOs_version(csvFields[3]);
-                        device.setLast_login(new Date());
+                        if (rcvdOtp == null || rcvdOtp.isEmpty()) {
+                            // First run of un-trusted device - generate OTP
 
-                        trustedDevices.add(device);
+                            // Check for max devices allowed per user
+                            if (deviceCnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
+                                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached", false);
+                            }
+                            // Generate OTP
+                            AllOtp newOtp = new AllOtp();
+                            newOtp.setUser_id(userId);
+                            newOtp.setMobile_num(merchant.getMobile_num());
+                            newOtp.setOpcode(DbConstants.MERCHANT_OP_NEW_DEVICE_LOGIN);
+                            newOtp = mBackendOps.generateOtp(newOtp);
+                            if (newOtp == null) {
+                                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, mBackendOps.mLastOpStatus, false);
+                            } else {
+                                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
+                            }
 
-                        // Update merchant
-                        merchant.setTempDevId(null);
-                        merchant.setTrusted_devices(trustedDevices);
-                        // when USER_STATUS_NEW_REGISTERED, the device will also be new
-                        // so it is not required to update this outside this if block
-                        if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
-                            merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-                            merchant.setStatus_reason(DbConstants.USER_STATUS_ACTIVE);
-                            merchant.setStatus_update_time(new Date());
-                            merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
-                        }
-                        Merchants merchant2 = mBackendOps.updateMerchant(merchant);
-                        if(merchant2==null) {
-                            mBackendOps.logoutUser();
-                            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+                        } else {
+                            // OTP available - validate the same
+                            AllOtp fetchedOtp = mBackendOps.fetchOtp(userId);
+                            if (fetchedOtp == null ||
+                                    !mBackendOps.validateOtp(fetchedOtp, rcvdOtp)) {
+                                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP value", false);
+                            }
+
+                            // OTP is valid - add this device to trusted list
+                            // Trusted device may be null - create new if so
+                            if(trustedDevices == null) {
+                                trustedDevices = new ArrayList<>();
+                            }
+
+                            // New device - add as trusted device
+                            MerchantDevice device = new MerchantDevice();
+                            device.setMerchant_id(merchant.getAuto_id());
+                            device.setDevice_id(deviceId);
+                            device.setManufacturer(csvFields[1]);
+                            device.setModel(csvFields[2]);
+                            device.setOs_type("Android");
+                            device.setOs_version(csvFields[3]);
+                            //device.setLast_login(new Date());
+
+                            trustedDevices.add(device);
+
+                            // Update merchant
+                            merchant.setTrusted_devices(trustedDevices);
+                            // when USER_STATUS_NEW_REGISTERED, the device will also be new
+                            // so it is not required to update this outside this if block
+                            if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
+                                merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+                                merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+                                merchant.setStatus_update_time(new Date());
+                                merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
+                            }
                         }
                     }
+
+                    // update merchant in both 'matched' and 'not-matched' cases
+                    // TODO: optimize this to not 'update merchant' in 'matched' scenarios
+                    merchant.setTempDevId(null);
+                    Merchants merchant2 = mBackendOps.updateMerchant(merchant);
+                    if(merchant2==null) {
+                        mBackendOps.logoutUser();
+                        CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+                    }
+
                 } else if (userType == DbConstants.USER_TYPE_AGENT) {
                     Agents agent = mBackendOps.getAgent(userId);
                     if (agent == null) {

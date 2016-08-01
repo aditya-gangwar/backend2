@@ -31,94 +31,121 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
         initCommon();
 
-        if(deviceInfo==null || deviceInfo.isEmpty()) {
-            //return BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA;
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid input data: deviceInfo", false);
-        }
+        try {
+            if (deviceInfo == null || deviceInfo.isEmpty()) {
+                CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid input data: deviceInfo", false);
+            }
 
-        mLogger.debug("In setDeviceForLogin: "+loginId+": "+deviceInfo);
-        mLogger.debug(InvocationContext.asString());
-        mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceInfo);
+            //mLogger.debug(InvocationContext.asString());
+            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
-        // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
-        String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
-        String deviceId = csvFields[0];
+            /*
+            BackendlessUser user = mBackendOps.fetchUser(loginId, DbConstants.USER_TYPE_MERCHANT);
+            if (user == null) {
+                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
+            Merchants merchant = (Merchants) user.getProperty("merchant");
+            */
+            Merchants merchant = mBackendOps.getMerchant(loginId, false);
+            if(merchant==null) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
 
-        BackendlessUser user = mBackendOps.fetchUser(loginId, DbConstants.USER_TYPE_MERCHANT);
-        if(user==null) {
-            //return BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-        Merchants merchant = (Merchants) user.getProperty("merchant");
+            // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
+            // add otp at the end
+            if (rcvdOtp == null || rcvdOtp.isEmpty()) {
+                deviceInfo = deviceInfo+",";
+            } else {
+                deviceInfo = deviceInfo+","+rcvdOtp;
+            }
+            mLogger.debug("Updated DeviceInfo: "+deviceInfo);
 
-        // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if(status != null) {
-            //return status;
-            CommonUtils.throwException(mLogger,status, "Merchant status not active", false);
-        }
+            // Update device Info in merchant object
+            merchant.setTempDevId(deviceInfo);
+            if( mBackendOps.updateMerchant(merchant) == null ) {
+                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+            }
 
-        boolean matched = false;
-        if(rcvdOtp==null || rcvdOtp.isEmpty()) {
-            // first run - as did not rcv OTP
+            /*
+            // check admin status
+            String status = CommonUtils.checkMerchantStatus(merchant);
+            if (status != null) {
+                CommonUtils.throwException(mLogger, status, "Merchant status not active", false);
+            }
 
-            // check if given device id matches trusted list
-            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-            int cnt = 0;
-            if(trustedDevices != null) {
-                cnt = trustedDevices.size();
-                for (MerchantDevice device : trustedDevices) {
-                    if(device.getDevice_id().equals(deviceId)) {
-                        matched = true;
-                        break;
+            // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>
+            String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
+            String deviceId = csvFields[0];
+
+            boolean matched = false;
+            if (rcvdOtp == null || rcvdOtp.isEmpty()) {
+                // first run - as did not rcv OTP
+
+                // check if given device id matches trusted list
+                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                int cnt = 0;
+                if (trustedDevices != null) {
+                    cnt = trustedDevices.size();
+                    for (MerchantDevice device : trustedDevices) {
+                        if (device.getDevice_id().equals(deviceId)) {
+                            matched = true;
+                            break;
+                        }
                     }
                 }
+
+                // generate OTP if device not matched
+                if (!matched) {
+                    // Check for max devices allowed per user
+                    if (cnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
+                        //return BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD;
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached", false);
+                    }
+                    // First login for this - generate OTP
+                    AllOtp newOtp = new AllOtp();
+                    newOtp.setUser_id(loginId);
+                    newOtp.setMobile_num(merchant.getMobile_num());
+                    newOtp.setOpcode(DbConstants.MERCHANT_OP_NEW_DEVICE_LOGIN);
+                    newOtp = mBackendOps.generateOtp(newOtp);
+                    if (newOtp == null) {
+                        //return BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED;
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, mBackendOps.mLastOpStatus, false);
+                    } else {
+                        //return BackendResponseCodes.BE_ERROR_OTP_GENERATED;
+                        CommonUtils.throwException(mLogger, BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
+                    }
+                }
+
+            } else {
+                // second run - as rcvd otp
+                // update device only if OTP matches
+                AllOtp fetchedOtp = mBackendOps.fetchOtp(loginId);
+                if (fetchedOtp == null ||
+                        !mBackendOps.validateOtp(fetchedOtp, rcvdOtp)) {
+                    //return BackendResponseCodes.BE_ERROR_WRONG_OTP;
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP value", false);
+                }
             }
 
-            // generate OTP if device not matched
-            if( !matched ) {
-                // Check for max devices allowed per user
-                if(cnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
-                    //return BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached", false);
-                }
-                // First login for this - generate OTP
-                AllOtp newOtp = new AllOtp();
-                newOtp.setUser_id(loginId);
-                newOtp.setMobile_num(merchant.getMobile_num());
-                newOtp.setOpcode(DbConstants.MERCHANT_OP_NEW_DEVICE_LOGIN);
-                newOtp = mBackendOps.generateOtp(newOtp);
-                if(newOtp == null) {
-                    //return BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, mBackendOps.mLastOpStatus, false);
-                } else {
-                    //return BackendResponseCodes.BE_ERROR_OTP_GENERATED;
-                    CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
-                }
+            // If here, means either 'device matched' or 'new device and otp matched'
+            // Update device Info in merchant object
+            merchant.setTempDevId(deviceInfo);
+            user.setProperty("merchant", merchant);
+            if (mBackendOps.updateUser(user) == null) {
+                //return BackendResponseCodes.BE_ERROR_GENERAL;
+                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
             }
+            */
 
-        } else {
-            // second run - as rcvd otp
-            // update device only if OTP matches
-            AllOtp fetchedOtp = mBackendOps.fetchOtp(loginId);
-            if( fetchedOtp == null ||
-                    !mBackendOps.validateOtp(fetchedOtp, rcvdOtp) ) {
-                //return BackendResponseCodes.BE_ERROR_WRONG_OTP;
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP value", false);
-            }
+            //Backendless.Logging.flush();
+
+        } catch (Exception e) {
+            mLogger.error("Exception in updateSettings: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
 
-        // If here, means either 'device matched' or 'new device and otp matched'
-        // Update device Info in merchant object
-        merchant.setTempDevId(deviceInfo);
-        user.setProperty("merchant",merchant);
-        if( mBackendOps.updateUser(user)==null ) {
-            //return BackendResponseCodes.BE_ERROR_GENERAL;
-            CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-        }
-
-        Backendless.Logging.flush();
-        //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
 
     public void resetMerchantPwd(String userId, String deviceId, String brandName) {
