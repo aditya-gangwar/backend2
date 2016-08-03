@@ -23,6 +23,16 @@ public class Customers
   private String name;
   private String private_id;
   private CustomerCards membership_card;
+  private String cardId;
+
+  public String getCardId() {
+    return cardId;
+  }
+
+  public void setCardId(String cardId) {
+    this.cardId = cardId;
+  }
+
   public java.util.Date getStatus_update_time()
   {
     return status_update_time;

@@ -4,13 +4,11 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.exceptions.BackendlessFault;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
-import com.mytest.constants.BackendResponseCodes;
-import com.mytest.constants.CommonConstants;
-import com.mytest.constants.DbConstants;
-import com.mytest.constants.GlobalSettingsConstants;
+import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -25,535 +23,324 @@ import java.util.List;
  */
 public class BackendOps {
 
-    public String mLastOpStatus;
-    public String mLastOpErrorMsg;
-    private Logger mLogger;
-
+    //public String mLastOpStatus;
+    //public String mLastOpErrorMsg;
+    //private Logger mLogger;
+    /*
     public BackendOps(Logger logger) {
         mLogger = logger;
-    }
+    }*/
 
     /*
      * BackendlessUser operations
      */
-    public BackendlessUser registerUser(BackendlessUser user) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.UserService.register(user);
-        }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "User register failed: "+e.toString();
-            ////mLogger.error(mLastOpErrorMsg);
-            // Handle backend error codes
-            mLastOpStatus = e.getCode();
-            if (mLastOpStatus.equals(BackendResponseCodes.BL_ERROR_REGISTER_DUPLICATE)) {
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_DUPLICATE_USER;
-            }
-        }
-        return null;
+    public static BackendlessUser registerUser(BackendlessUser user) {
+        return Backendless.UserService.register(user);
     }
 
-    public boolean assignRole(String userId, String role) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
-        try {
-            Backendless.UserService.assignRole(userId, role);
-            return true;
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in assignRole: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return false;
+    public static void assignRole(String userId, String role) {
+        Backendless.UserService.assignRole(userId, role);
     }
 
-    public BackendlessUser loginUser(String userId, String password) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
-        try {
-            return Backendless.UserService.login(userId, password, false);
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in loginUser: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static BackendlessUser loginUser(String userId, String password) {
+        return Backendless.UserService.login(userId, password, false);
     }
 
-    public boolean logoutUser() {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
-        try {
-            Backendless.UserService.logout();
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in logoutUser: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
-            return false;
-        }
-        return true;
+    public static void logoutUser() {
+        Backendless.UserService.logout();
     }
 
-    public BackendlessUser updateUser(BackendlessUser user) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
-        // Save merchant object
-        try {
-            return Backendless.UserService.update( user );
-        } catch(BackendlessException e) {
-            mLastOpErrorMsg = "Exception in updateUser: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static BackendlessUser updateUser(BackendlessUser user) {
+        return Backendless.UserService.update( user );
     }
 
-    public BackendlessUser fetchUser(String userid, int userType) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static BackendlessUser fetchUser(String userid, int userType) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("user_id = '"+userid+"'");
 
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            query.setWhereClause("user_id = '"+userid+"'");
+        QueryOptions queryOptions = new QueryOptions();
+        if(userType == DbConstants.USER_TYPE_CUSTOMER) {
+            queryOptions.addRelated( "customer");
+            queryOptions.addRelated( "customer.membership_card");
 
-            QueryOptions queryOptions = new QueryOptions();
-            if(userType == DbConstants.USER_TYPE_CUSTOMER) {
-                queryOptions.addRelated( "customer");
-                queryOptions.addRelated( "customer.membership_card");
-
-            } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
-                queryOptions.addRelated( "merchant");
-                queryOptions.addRelated("merchant.trusted_devices");
-            } else if(userType == DbConstants.USER_TYPE_AGENT) {
-                queryOptions.addRelated( "agent");
-            }
-
-            query.setQueryOptions( queryOptions );
-            BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
-            if( user.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No user found: "+userid;
-                //mLogger.warn(mLastOpErrorMsg);
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            } else {
-                return user.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchUser: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
+        } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
+            queryOptions.addRelated( "merchant");
+            queryOptions.addRelated("merchant.trusted_devices");
+        } else if(userType == DbConstants.USER_TYPE_AGENT) {
+            queryOptions.addRelated( "agent");
         }
-        return null;
+
+        query.setQueryOptions( queryOptions );
+        BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            String errorMsg = "No user found: "+userid;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            return user.getData().get(0);
+        }
     }
 
-    public BackendlessUser fetchUserByObjectId(String objectId, int userType) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
 
-        try {
-            BackendlessUser user = Backendless.UserService.findById(objectId);
 
-            if(userType == DbConstants.USER_TYPE_MERCHANT) {
-                Merchants merchant = (Merchants) user.getProperty("merchant");
-                if (merchant == null) {
-                    // load merchant object
-                    ArrayList<String> relationProps = new ArrayList<>();
-                    relationProps.add("merchant");
-                    Backendless.Data.of(BackendlessUser.class).loadRelations(user, relationProps);
-
-                    return user;
-                }
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchUserByObjectId: " + e.toString();
-            mLastOpStatus = e.getCode();
+    public static BackendlessUser fetchUserByObjectId(String objectId, int userType) {
+        //BackendlessUser user = Backendless.UserService.findById(objectId);
+        ArrayList<String> relationProps = new ArrayList<>();
+        if(userType == DbConstants.USER_TYPE_MERCHANT) {
+            relationProps.add("merchant");
         }
-        return null;
-    }
+        BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
 
-    /*
-    public BackendlessUser getCurrentMerchantUser() {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+        //TODO: remove below
+        Merchants merchant = (Merchants) user.getProperty("merchant");
+        if (merchant == null) {
+            //mLogger.error("Merchant object in null");
+            String errorMsg = "Merchant object in null";
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        }
+        return user;
 
-        try {
-            BackendlessUser user = Backendless.UserService.CurrentUser();
+        /*
+        if(userType == DbConstants.USER_TYPE_MERCHANT) {
             Merchants merchant = (Merchants) user.getProperty("merchant");
-            if(merchant == null) {
+            if (merchant == null) {
                 // load merchant object
                 ArrayList<String> relationProps = new ArrayList<>();
                 relationProps.add("merchant");
-                Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
+                Backendless.Data.of(BackendlessUser.class).loadRelations(user, relationProps);
 
                 return user;
             }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getCurrentMerchantUser: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
-    }*/
+        }*/
+    }
 
     /*
      * Merchant operations
      */
-    public Merchants loadMerchant(BackendlessUser user) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
+    public static void loadMerchant(BackendlessUser user) {
         ArrayList<String> relationProps = new ArrayList<>();
         relationProps.add("merchant");
         //relationProps.add("merchant.trusted_devices");
-        try {
-            Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
-            return (Merchants)user.getProperty("merchant");
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in loadMerchant: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+        Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
     }
 
-    public Merchants getMerchant(String userId, boolean fetchTrustedDevices) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static Merchants getMerchant(String userId, boolean fetchTrustedDevices) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("auto_id = '"+userId+"'");
 
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            query.setWhereClause("auto_id = '"+userId+"'");
-
-            if(fetchTrustedDevices) {
-                QueryOptions queryOptions = new QueryOptions();
-                queryOptions.addRelated("trusted_devices");
-                query.setQueryOptions(queryOptions);
-            }
-
-            BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
-            if( user.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No merchant found: "+userId;
-                //mLogger.warn(mLastOpErrorMsg);
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            } else {
-                return user.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getMerchant: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
+        if(fetchTrustedDevices) {
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.addRelated("trusted_devices");
+            query.setQueryOptions(queryOptions);
         }
 
-        return null;
-    }
-
-    public Merchants getMerchantByMobile(String mobileNum) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            query.setWhereClause("mobile_num = '"+mobileNum+"'");
-
-            BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
-            if( user.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No merchant found by mobile num: "+mobileNum;
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            } else {
-                return user.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getMerchant: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
+        BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            String errorMsg = "No Merchant found: "+userId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            return user.getData().get(0);
         }
-
-        return null;
     }
 
-    public ArrayList<Merchants> fetchMerchants(String whereClause) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static Merchants getMerchantByMobile(String mobileNum) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("mobile_num = '"+mobileNum+"'");
 
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            // fetch all merchants, not yet archived
-            query.setPageSize(CommonConstants.dbQueryMaxPageSize);
-            query.setWhereClause(whereClause);
+        BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            String errorMsg = "No Merchant found: "+mobileNum;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            return user.getData().get(0);
+        }
+    }
 
-            BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
-            int cnt = users.getTotalObjects();
-            if( cnt == 0) {
-                // No unprocessed merchant left with this prefix
-                mLogger.info("No merchant available for where clause: "+whereClause);
-            } else {
-                ArrayList<Merchants> objects = new ArrayList<>();
-                while (users.getCurrentPage().size() > 0)
+    public static ArrayList<Merchants> fetchMerchants(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        // fetch all merchants, not yet archived
+        query.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
+        int cnt = users.getTotalObjects();
+        if( cnt == 0) {
+            // No unprocessed merchant left with this prefix
+            String errorMsg = "No Merchant found";
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            ArrayList<Merchants> objects = new ArrayList<>();
+            while (users.getCurrentPage().size() > 0)
+            {
+                int size  = users.getCurrentPage().size();
+                System.out.println( "Loaded " + size + " merchants in the current page" );
+
+                Iterator<Merchants> iterator = users.getCurrentPage().iterator();
+                while( iterator.hasNext() )
                 {
-                    int size  = users.getCurrentPage().size();
-                    System.out.println( "Loaded " + size + " merchants in the current page" );
-
-                    Iterator<Merchants> iterator = users.getCurrentPage().iterator();
-                    while( iterator.hasNext() )
-                    {
-                        objects.add(iterator.next());
-                    }
-                    users = users.nextPage();
+                    objects.add(iterator.next());
                 }
-                return objects;
+                users = users.nextPage();
             }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchMerchants: " + e.toString();
-            mLastOpStatus = e.getCode();
+            return objects;
         }
-        return null;
     }
 
-    public Merchants updateMerchant(Merchants merchant) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try {
-            return Backendless.Persistence.save(merchant);
-        } catch(BackendlessException e) {
-            mLastOpErrorMsg = "Exception in updateMerchant: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static Merchants updateMerchant(Merchants merchant) {
+        return Backendless.Persistence.save(merchant);
     }
 
     /*
      * Customer operations
      */
-    public Customers getCustomer(String custId, boolean mobileAsId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            if(mobileAsId) {
+    public static Customers getCustomer(String custId, int idType) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        switch(idType) {
+            case BackendConstants.CUSTOMER_ID_MOBILE:
                 query.setWhereClause("mobile_num = '"+custId+"'");
-            } else {
-                query.setWhereClause("membership_card.card_id = '"+custId+"'");
-            }
-
-            QueryOptions queryOptions = new QueryOptions();
-            queryOptions.addRelated("membership_card");
-            query.setQueryOptions(queryOptions);
-
-            BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
-            if( user.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No customer found: "+custId;
-                //mLogger.warn(mLastOpErrorMsg);
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            } else {
-                //mLogger.debug("Found customer: "+custId);
-                return user.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getCustomer: " + e.toString();
-            mLastOpStatus = e.getCode();
+                break;
+            case BackendConstants.CUSTOMER_ID_CARD:
+                query.setWhereClause("cardId = '"+custId+"'");
+                break;
+            case BackendConstants.CUSTOMER_ID_PRIVATE_ID:
+                query.setWhereClause("private_id = '"+custId+"'");
+                break;
         }
 
-        return null;
+        QueryOptions queryOptions = new QueryOptions();
+        queryOptions.addRelated("membership_card");
+        query.setQueryOptions(queryOptions);
+
+        BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            String errorMsg = "No user found: "+custId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            if(user.getData().get(0).getMembership_card()==null) {
+                String errorMsg = "No customer card found: "+custId;
+                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD,errorMsg);
+                throw new BackendlessException(fault);
+            }
+            return user.getData().get(0);
+        }
     }
 
-    public Customers updateCustomer(Customers customer) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try {
-            return Backendless.Persistence.save(customer);
-        } catch(BackendlessException e) {
-            mLastOpErrorMsg = "Exception in updateCustomer: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static Customers updateCustomer(Customers customer) {
+        return Backendless.Persistence.save(customer);
     }
 
     /*
      * Customer card operations
      */
-    public CustomerCards getCustomerCard(String cardId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("card_id = '" + cardId + "'");
+    public static CustomerCards getCustomerCard(String cardId) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause("card_id = '" + cardId + "'");
 
-            BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
-            if( collection.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No customer card found: "+cardId;
-                //mLogger.warn(mLastOpErrorMsg);
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_CARD;
-            } else {
-                //mLogger.debug("Fetched customer card: "+cardId);
-                return collection.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getCustomerCard: " + e.toString();
-            mLastOpStatus = e.getCode();
+        BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
+        if( collection.getTotalObjects() == 0) {
+            String errorMsg = "No membership card found: "+cardId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            return collection.getData().get(0);
         }
-
-        return null;
     }
 
-    public CustomerCards saveCustomerCard(CustomerCards card) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            Backendless.Persistence.save( card );
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in saveQrCard: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static CustomerCards saveCustomerCard(CustomerCards card) {
+        return Backendless.Persistence.save( card );
     }
 
     /*
      * Cashback operations
      */
-    public ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        // fetch cashback objects from DB
-        try {
-            Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
+    public static ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable) {
+        Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
-            dataQuery.setWhereClause(whereClause);
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        dataQuery.setWhereClause(whereClause);
 
-            /*
-            if(fetchCustomer) {
-                QueryOptions queryOptions = new QueryOptions();
-                queryOptions.addRelated("customer");
-                queryOptions.addRelated("customer.membership_card");
-                dataQuery.setQueryOptions(queryOptions);
-            }*/
+        BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
 
-            BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
-
-            int cnt = collection.getTotalObjects();
-            if(cnt > 0) {
-                ArrayList<Cashback> objects = new ArrayList<>();
-                while (collection.getCurrentPage().size() > 0)
+        int cnt = collection.getTotalObjects();
+        if(cnt > 0) {
+            ArrayList<Cashback> objects = new ArrayList<>();
+            while (collection.getCurrentPage().size() > 0)
+            {
+                Iterator<Cashback> iterator = collection.getCurrentPage().iterator();
+                while( iterator.hasNext() )
                 {
-                    int size  = collection.getCurrentPage().size();
-                    System.out.println( "Loaded " + size + " cashback rows in the current page" );
-
-                    Iterator<Cashback> iterator = collection.getCurrentPage().iterator();
-                    while( iterator.hasNext() )
-                    {
-                        objects.add(iterator.next());
-                    }
-                    collection = collection.nextPage();
+                    objects.add(iterator.next());
                 }
-                return objects;
-            } else {
-                mLastOpErrorMsg = "No cashback object found: "+whereClause;
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
+                collection = collection.nextPage();
             }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchCashback: " + e.toString();
-            mLastOpStatus = e.getCode();
+            return objects;
+        } else {
+            String errorMsg = "No cashback found: "+whereClause;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-
-        return null;
     }
 
-    public Cashback saveCashback(Cashback cb) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.Persistence.save( cb );
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in saveCashback: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static Cashback saveCashback(Cashback cb) {
+        return Backendless.Persistence.save( cb );
     }
-
 
     /*
      * OTP operations
      */
-    public AllOtp generateOtp(AllOtp otp) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static AllOtp generateOtp(AllOtp otp) {
         // check if any OTP object already available for this user_id
         // if yes, update the same for new OTP, op and time.
         // If no, create new object
         // Send SMS with OTP
-        try
-        {
-            AllOtp newOtp = null;
-            AllOtp oldOtp = fetchOtp(otp.getUser_id());
-            if(oldOtp !=  null) {
-                // update oldOtp
-                oldOtp.setOtp_value(CommonUtils.generateOTP());
-                oldOtp.setOpcode(otp.getOpcode());
-                oldOtp.setMobile_num(otp.getMobile_num());
-                newOtp = Backendless.Persistence.save( oldOtp );
-            } else {
-                otp.setOtp_value(CommonUtils.generateOTP());
-                newOtp = Backendless.Persistence.save( otp );
-            }
-
-            // Send SMS through HTTP
-            String smsText = String.format(SmsConstants.SMS_OTP,
-                    newOtp.getOpcode(),
-                    CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
-                    newOtp.getOtp_value(),
-                    GlobalSettingsConstants.OTP_VALID_MINS);
-
-            if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
-            {
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
-                mLastOpErrorMsg = "In generateOtp: Failed to send SMS";
-            } else {
-                //mLogger.debug("OTP generated and SMS sent successfully "+newOtp.getMobile_num());
-                return newOtp;
-            }
+        AllOtp newOtp = null;
+        AllOtp oldOtp = fetchOtp(otp.getUser_id());
+        if(oldOtp !=  null) {
+            // update oldOtp
+            oldOtp.setOtp_value(CommonUtils.generateOTP());
+            oldOtp.setOpcode(otp.getOpcode());
+            oldOtp.setMobile_num(otp.getMobile_num());
+            newOtp = Backendless.Persistence.save( oldOtp );
+        } else {
+            otp.setOtp_value(CommonUtils.generateOTP());
+            newOtp = Backendless.Persistence.save( otp );
         }
-        catch( BackendlessException e )
+
+        // Send SMS through HTTP
+        String smsText = String.format(SmsConstants.SMS_OTP,
+                newOtp.getOpcode(),
+                CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
+                newOtp.getOtp_value(),
+                GlobalSettingsConstants.OTP_VALID_MINS);
+
+        if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
         {
-            mLastOpErrorMsg = "Exception in generateOtp: " + e.toString();
-            mLastOpStatus = e.getCode();
+            String errorMsg = "In generateOtp: Failed to send SMS";
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,errorMsg);
+            throw new BackendlessException(fault);
         }
-        return null;
+
+        return newOtp;
     }
 
-    public boolean deleteOtp(AllOtp otp) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            Backendless.Persistence.of( AllOtp.class ).remove( otp );
-            return true;
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in deleteOtp: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return false;
+    public static void deleteOtp(AllOtp otp) {
+        Backendless.Persistence.of( AllOtp.class ).remove( otp );
     }
 
-    public boolean validateOtp(AllOtp otp, String rcvdOtp) {
+    public static boolean validateOtp(AllOtp otp, String rcvdOtp) {
         Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
         if ( ((currTime.getTime() - otpTime.getTime()) < (GlobalSettingsConstants.OTP_VALID_MINS*60*1000)) &&
                 rcvdOtp.equals(otp.getOtp_value()) ) {
             // active otp available and matched
+            // delete as can be used only once
             deleteOtp(otp);
             return true;
         } else {
@@ -561,186 +348,117 @@ public class BackendOps {
         }
     }
 
-    public AllOtp fetchOtp(String userId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("user_id = '" + userId + "'");
+    public static AllOtp fetchOtp(String userId) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause("user_id = '" + userId + "'");
 
-            BackendlessCollection<AllOtp> collection = Backendless.Data.of(AllOtp.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                return collection.getData().get(0);
-            } else {
-                mLastOpErrorMsg = "Iin fetchOtp: No data found" + userId;
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
+        BackendlessCollection<AllOtp> collection = Backendless.Data.of(AllOtp.class).find(dataQuery);
+        if( collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            String errorMsg = "In fetchOtp: No data found" + userId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in fetchOtp: " + e.toString();
-            //mLogger.error(mLastOpErrorMsg);
-            mLastOpStatus = e.getCode();
-        }
-        return null;
     }
-
-    /*
-     * Global settings operations
-     */
-    /*
-    public GlobalSettings fetchGlobalSettings() {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        try {
-            return Backendless.Persistence.of( GlobalSettings.class).findLast();
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchGlobalSettings: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
-    }*/
 
     /*
      * Counters operations
      */
-    public Double fetchCounterValue(String name) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("name = '" + name + "'");
+    public static Double fetchCounterValue(String name) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause("name = '" + name + "'");
 
-            BackendlessCollection<Counters> collection = Backendless.Data.of(Counters.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                Counters counter = collection.getData().get(0);
+        BackendlessCollection<Counters> collection = Backendless.Data.of(Counters.class).find(dataQuery);
+        if( collection.getTotalObjects() > 0) {
+            Counters counter = collection.getData().get(0);
 
-                // increment counter - very important to do
-                counter.setValue(counter.getValue()+1);
-                counter = Backendless.Persistence.save( counter );
-                return counter.getValue();
-            } else {
-                mLastOpErrorMsg = "In fetchCounter: No data found" + name;
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
+            // increment counter - very important to do
+            counter.setValue(counter.getValue()+1);
+            counter = Backendless.Persistence.save( counter );
+            return counter.getValue();
+        } else {
+            String errorMsg = "In fetchCounter: No data found" + name;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in fetchCounter: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
     }
 
     /*
      * Trusted Devices operations
      */
-    public MerchantDevice fetchDevice(String deviceId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("device_id = '" + deviceId + "'");
+    public static MerchantDevice fetchDevice(String deviceId) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause("device_id = '" + deviceId + "'");
 
-            BackendlessCollection<MerchantDevice> collection = Backendless.Data.of(MerchantDevice.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                return collection.getData().get(0);
-            } else {
-                mLastOpErrorMsg = "In fetchDevice: No data found" + deviceId;
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
+        BackendlessCollection<MerchantDevice> collection = Backendless.Data.of(MerchantDevice.class).find(dataQuery);
+        if( collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            String errorMsg = "In fetchDevice: No data found" + deviceId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in fetchDevice: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
     }
 
     /*
      * Merchant operations
      */
-    public MerchantOps addMerchantOp(MerchantOps op) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.Persistence.save( op );
-        }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in addMerchantOp: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static MerchantOps addMerchantOp(MerchantOps op) {
+        return Backendless.Persistence.save( op );
     }
 
-    public ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
         // fetch cashback objects from DB
-        try {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
-            // TODO: check if putting index on cust_private_id improves performance
-            // or using rowid_qr in where clause improves performance
-            dataQuery.setWhereClause(whereClause);
+        // TODO: check if putting index on cust_private_id improves performance
+        // or using rowid_qr in where clause improves performance
+        dataQuery.setWhereClause(whereClause);
 
-            BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
+        BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
 
-            int cnt = collection.getTotalObjects();
-            if(cnt > 0) {
-                ArrayList<MerchantOps> objects = new ArrayList<>();
-                while (collection.getCurrentPage().size() > 0)
+        int cnt = collection.getTotalObjects();
+        if(cnt > 0) {
+            ArrayList<MerchantOps> objects = new ArrayList<>();
+            while (collection.getCurrentPage().size() > 0)
+            {
+                int size  = collection.getCurrentPage().size();
+
+                Iterator<MerchantOps> iterator = collection.getCurrentPage().iterator();
+                while( iterator.hasNext() )
                 {
-                    int size  = collection.getCurrentPage().size();
-
-                    Iterator<MerchantOps> iterator = collection.getCurrentPage().iterator();
-                    while( iterator.hasNext() )
-                    {
-                        objects.add(iterator.next());
-                    }
-                    collection = collection.nextPage();
+                    objects.add(iterator.next());
                 }
-                return objects;
-            } else {
-                mLogger.debug("No merchantop object found: "+whereClause);
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
+                collection = collection.nextPage();
             }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in fetchMerchantOps: " + e.toString();
-            mLastOpStatus = e.getCode();
+            return objects;
+        } else {
+            String errorMsg = "No merchantop object found: "+whereClause;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-
-        return null;
     }
 
-    public MerchantOps saveMerchantOp(MerchantOps op) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.Persistence.save( op );
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in saveMerchantOp: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static MerchantOps saveMerchantOp(MerchantOps op) {
+        return Backendless.Persistence.save( op );
     }
 
     /*
      * WrongAttempts operations
      */
     // returns 'null' if not found and new created
-    public WrongAttempts fetchOrCreateWrongAttempt(String userId, String type, int userType) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        WrongAttempts attempt = fetchWrongAttempts(userId, type);
+    /*
+    public static WrongAttempts fetchOrCreateWrongAttempt(String userId, String type, int userType) {
+        WrongAttempts attempt = null;
+        try {
+            attempt = fetchWrongAttempts(userId, type);
+        } catch(BackendlessException e) {
+            if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
+                throw e;
+            }
+        }
         if(attempt==null) {
             // create row
             WrongAttempts newAttempt = new WrongAttempts();
@@ -751,122 +469,73 @@ public class BackendOps {
             return saveWrongAttempt(newAttempt);
         }
         return attempt;
+    }*/
+
+    public static WrongAttempts fetchWrongAttempts(String userId, String type) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause("user_id = '" + userId + "'" + "AND attempt_type = '" + type + "'");
+
+        BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
+        if( collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            String errorMsg = "No WrongAttempts object found: "+userId+type;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
+        }
     }
 
-    public WrongAttempts fetchWrongAttempts(String userId, String type) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setWhereClause("user_id = '" + userId + "'" + "AND attempt_type = '" + type + "'");
-
-            BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                return collection.getData().get(0);
-            } else {
-                mLogger.debug("No WrongAttempts object found: "+userId+type);
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
-        }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in fetchDevice: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
-    }
-
-    public WrongAttempts saveWrongAttempt(WrongAttempts attempt) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.Persistence.save( attempt );
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in saveWrongAttempt: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static WrongAttempts saveWrongAttempt(WrongAttempts attempt) {
+        return Backendless.Persistence.save( attempt );
     }
 
     /*
      * MerchantStats operations
      */
-    public MerchantStats fetchMerchantStats(String merchantId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
-            dataQuery.setWhereClause("merchant_id = '" + merchantId + "'");
+    public static MerchantStats fetchMerchantStats(String merchantId) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause("merchant_id = '" + merchantId + "'");
 
-            BackendlessCollection<MerchantStats> collection = Backendless.Data.of(MerchantStats.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                return collection.getData().get(0);
-            } else {
-                mLogger.debug("No MerchantStats object found: "+merchantId);
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
+        BackendlessCollection<MerchantStats> collection = Backendless.Data.of(MerchantStats.class).find(dataQuery);
+        if( collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            String errorMsg = "No MerchantStats object found: "+merchantId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
         }
-        catch( BackendlessException e )
-        {
-            mLastOpErrorMsg = "Exception in fetchMerchantStats: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
     }
 
-    public MerchantStats saveMerchantStats(MerchantStats stats) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try
-        {
-            return Backendless.Persistence.save( stats );
-        }
-        catch( BackendlessException e ) {
-            mLastOpErrorMsg = "Exception in saveMerchantStats: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static MerchantStats saveMerchantStats(MerchantStats stats) {
+        return Backendless.Persistence.save( stats );
     }
-
 
     /*
      * Transaction operations
      */
-    public List<Transaction> fetchTransactions(String whereClause) {
-        mLogger.debug("In fetchTransactions: "+whereClause);
-        // init values
-        List<Transaction> transactions = null;
-
+    public static List<Transaction> fetchTransactions(String whereClause) {
         // fetch txns object from DB
-        try {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            // sorted by create time
-            QueryOptions queryOptions = new QueryOptions("create_time");
-            dataQuery.setQueryOptions(queryOptions);
-            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
-            dataQuery.setWhereClause(whereClause);
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        // sorted by create time
+        QueryOptions queryOptions = new QueryOptions("create_time");
+        dataQuery.setQueryOptions(queryOptions);
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
 
-            BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
+        BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
 
-            int size = collection.getTotalObjects();
-            mLogger.debug("Total txns from DB: " + size+", "+collection.getData().size());
-            transactions = collection.getData();
-            mLogger.debug("First page size: "+transactions.size());
+        int size = collection.getTotalObjects();
+        if(size <= 0) {
+            String errorMsg = "No transactions found: "+whereClause;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            throw new BackendlessException(fault);
+        }
 
-            while(collection.getCurrentPage().size() > 0) {
-                collection = collection.nextPage();
-                mLogger.debug("nextPage size: "+collection.getData().size()+", "+collection.getTotalObjects());
-                transactions.addAll(collection.getData());
-            }
-        } catch (BackendlessException e) {
-            mLogger.error("Failed to fetch transactions: "+e.toString());
-            mLastOpStatus = e.getCode();
-            return null;
+        List<Transaction> transactions = collection.getData();
+        while(collection.getCurrentPage().size() > 0) {
+            collection = collection.nextPage();
+            transactions.addAll(collection.getData());
         }
 
         return transactions;
@@ -875,82 +544,29 @@ public class BackendOps {
     /*
      * Agent operations
      */
-    public Agents getAgent(String userId) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
+    public static Agents getAgent(String userId) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("id = '"+userId+"'");
 
-        try {
-            BackendlessDataQuery query = new BackendlessDataQuery();
-            query.setWhereClause("id = '"+userId+"'");
-
-            BackendlessCollection<Agents> user = Backendless.Data.of( Agents.class ).find(query);
-            if( user.getTotalObjects() == 0) {
-                // no data found
-                mLastOpErrorMsg = "No agent found: "+userId;
-                mLastOpStatus = BackendResponseCodes.BE_ERROR_NO_SUCH_USER;
-            } else {
-                return user.getData().get(0);
-            }
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in getAgent: " + e.toString();
-            mLastOpStatus = e.getCode();
+        BackendlessCollection<Agents> user = Backendless.Data.of( Agents.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            // no data found
+            String errorMsg = "No agent found: "+userId;
+            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
+            throw new BackendlessException(fault);
+        } else {
+            return user.getData().get(0);
         }
-
-        return null;
     }
 
-    public Agents loadAgent(BackendlessUser user) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-
+    public static void loadAgent(BackendlessUser user) {
         ArrayList<String> relationProps = new ArrayList<>();
         relationProps.add("agent");
-        try {
-            Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
-            return (Agents)user.getProperty("agent");
-        } catch (BackendlessException e) {
-            mLastOpErrorMsg = "Exception in loadAgent: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+
+        Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
     }
 
-    public Agents updateAgent(Agents agent) {
-        mLastOpStatus = BackendResponseCodes.BE_RESPONSE_NO_ERROR;
-        mLastOpErrorMsg = "";
-        try {
-            return Backendless.Persistence.save(agent);
-        } catch(BackendlessException e) {
-            mLastOpErrorMsg = "Exception in updateAgent: " + e.toString();
-            mLastOpStatus = e.getCode();
-        }
-        return null;
+    public static Agents updateAgent(Agents agent) {
+        return Backendless.Persistence.save(agent);
     }
-
-
-
-    /*
-    public List<MerchantDevice> fetchTrustedDevices(String merchantId) {
-        mLogger.debug("In fetchTrustedDevices: "+merchantId);
-
-        // fetch txns object from DB
-        try {
-            BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-            dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
-            dataQuery.setWhereClause("merchant_id = '" + merchantId + "'");
-
-            BackendlessCollection<MerchantDevice> collection = Backendless.Data.of(MerchantDevice.class).find(dataQuery);
-            if( collection.getTotalObjects() > 0) {
-                return collection.getData();
-            } else {
-                mLogger.debug("No Merchant devices found: "+merchantId);
-                mLastOpStatus = BackendResponseCodes.BL_ERROR_NO_DATA_FOUND;
-            }
-        } catch (BackendlessException e) {
-            mLogger.error("Failed to fetch trusted devices: "+e.toString());
-            mLastOpStatus = e.getCode();
-        }
-
-        return null;
-    }*/
 }

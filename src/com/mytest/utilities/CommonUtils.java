@@ -10,7 +10,9 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +20,8 @@ import java.util.concurrent.TimeUnit;
  * Created by adgangwa on 22-05-2016.
  */
 public class CommonUtils {
+
+    private static SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
 
     public static String getHalfVisibleId(String userId) {
         // build half visible userid : XXXXX91535
@@ -97,10 +101,15 @@ public class CommonUtils {
         return CommonConstants.TRANSACTION_ID_PREFIX + new String(id);
     }
 
-    public static String checkMerchantStatus(Merchants merchant) {
+    public static void checkMerchantStatus(Merchants merchant) {
+        String errorCode = null;
+        String errorMsg = null;
+
         switch (merchant.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                return BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorMsg = "Account is not active";
+                break;
 
             case DbConstants.USER_STATUS_LOCKED:
                 // Check if temporary blocked duration is over
@@ -112,24 +121,34 @@ public class CommonUtils {
                     long allowedDuration = GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS * 60 * 60 * 1000;
 
                     if (timeDiff > allowedDuration) {
-                        // reset blocked time to null and update the status
-                        // do not persist now in DB - will be done, if and when called in afterCreate()
-                        // where customer object is any way saved - against the given customer operation
-                        merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-                        merchant.setStatus_update_time(new Date());
+                        try {
+                            setMerchantStatus(merchant, DbConstants.USER_STATUS_ACTIVE, DbConstants.ENABLED_ACTIVE);
+                        } catch (Exception e) {
+                            // Failed to auto unlock the account
+                            // Ignore for now - and let the operation proceed - but raise alarm for manual correction
+                            // TODO: Raise alarm for manual correction
+                        }
                     } else {
-                        return BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorCode = BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorMsg = "Account is locked";
                     }
                 }
                 break;
         }
-        return null;
+
+        if(errorCode != null) {
+            throw new BackendlessException(errorCode, CommonConstants.PREFIX_ERROR_CODE_AS_MSG+errorCode);
+        }
     }
 
-    public static String checkCustomerStatus(Customers customer) {
+    public static void checkCustomerStatus(Customers customer) {
+        String errorCode = null;
+        String errorMsg = null;
         switch(customer.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                return BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorMsg = "Account is not active";
+                break;
 
             case DbConstants.USER_STATUS_LOCKED:
                 // Check if temporary blocked duration is over
@@ -141,37 +160,38 @@ public class CommonUtils {
                     long allowedDuration = GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS * 60 * 60 * 1000;
 
                     if (timeDiff > allowedDuration) {
-                        // reset blocked time to null and update the status
-                        // do not persist now in DB - will be done, if and when called in afterCreate()
-                        // where customer object is any way saved - against the given customer operation
-                        customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-                        customer.setStatus_update_time(new Date());
+                        try {
+                            setCustomerStatus(customer, DbConstants.USER_STATUS_ACTIVE, DbConstants.ENABLED_ACTIVE);
+                        } catch (Exception e) {
+                            // Failed to auto unlock the account
+                            // Ignore for now - and let the operation proceed - but raise alarm for manual correction
+                            // TODO: Raise alarm for manual correction
+                        }
                     } else {
-                        return BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorCode = BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorMsg = "Account is locked";
                     }
                 }
                 break;
         }
-        return null;
+        if(errorCode != null) {
+            throw new BackendlessException(errorCode, CommonConstants.PREFIX_ERROR_CODE_AS_MSG+errorCode);
+        }
     }
 
-    public static String checkAgentStatus(Agents agent) {
+    public static void checkAgentStatus(Agents agent) {
         switch (agent.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                return BackendResponseCodes.BE_ERROR_ACC_DISABLED;
-
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_DISABLED
+                        , CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_ACC_DISABLED);
             case DbConstants.USER_STATUS_LOCKED:
-                 return BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_LOCKED
+                        , CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_ACC_LOCKED);
         }
-        return null;
     }
 
-    public static String getCardStatusForUse(CustomerCards card) {
+    public static void getCardStatusForUse(CustomerCards card) {
         switch(card.getStatus()) {
-
-            case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
-                return null;
-
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;*/
@@ -179,163 +199,102 @@ public class CommonUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                return BackendResponseCodes.BE_ERROR_WRONG_CARD;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_CARD);
         }
-        return BackendResponseCodes.BE_ERROR_WRONG_CARD;
     }
 
-    public static String getCardStatusForAllocation(CustomerCards card) {
+    public static void getCardStatusForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
-            case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
-                return null;
-
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
-                return BackendResponseCodes.BE_ERROR_CARD_INUSE;
-
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_CARD_INUSE,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_CARD_INUSE);
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;*/
 
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                return BackendResponseCodes.BE_ERROR_WRONG_CARD;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_CARD);
         }
-        return BackendResponseCodes.BE_ERROR_WRONG_CARD;
     }
 
-    // returns true if max attempt limit reached
-    public static boolean handleCustomerWrongAttempt(BackendOps backendOps, Customers customer, String attemptType) {
-        // fetch or create related wrong attempt row
-        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(customer.getMobile_num(), attemptType, DbConstants.USER_TYPE_CUSTOMER);
-        if(attempt != null) {
-            // Lock account, if max wrong attempt limit reached
-            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.CUSTOMER_WRONG_ATTEMPT_LIMIT) {
-                // lock customer account
-                customer.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
-                customer.setStatus_reason(getAccLockedReason(attemptType));
-                customer.setStatus_update_time(new Date());
-                if( backendOps.updateCustomer(customer)==null ) {
-                    //TODO: generate alarm
-                }
-                // Generate SMS to inform the same
-                String smsText = getAccLockSmsText(customer.getMobile_num(), GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS, attemptType, DbConstants.USER_TYPE_CUSTOMER);
-                if(smsText != null) {
-                    if( !SmsHelper.sendSMS(smsText, customer.getMobile_num()) )
-                    {
-                        //TODO: generate alarm
-                    }
-                }
-                return true;
-            }
-            // increase attempt count
-            attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
-            if( backendOps.saveWrongAttempt(attempt) == null ) {
-                //TODO: generate alarm
-            }
-        } else {
-            //TODO: generate alarm
+    public static void handleWrongAttempt(Object userObject, int userType, String attemptType) {
+        // find user id based on user type
+        String userId = null;
+        switch(userType) {
+            case DbConstants.USER_TYPE_MERCHANT:
+                userId = ((Merchants) userObject).getAuto_id();
+                break;
+            case DbConstants.USER_TYPE_CUSTOMER:
+                userId = ((Customers) userObject).getMobile_num();
+                break;
+            case DbConstants.USER_TYPE_AGENT:
+                userId = ((Agents) userObject).getId();
+                break;
         }
 
-        return false;
-    }
+        // check if related wrong attempt row already exists
+        WrongAttempts attempt = null;
+        try {
+            attempt = BackendOps.fetchWrongAttempts(userId, attemptType);
+        } catch(BackendlessException e) {
+            if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
+                // ignore exception - as we anyways be raising exception
+                // TODO: raise minor alarm however
+                // raise 'verification failed' exception
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+            }
+        }
 
-    // returns true if max attempt limit reached
-    public static boolean handleMerchantWrongAttempt(BackendOps backendOps, Merchants merchant, String attemptType) {
-        // fetch or create related wrong attempt row
-        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(merchant.getAuto_id(), attemptType, DbConstants.USER_TYPE_MERCHANT);
         if(attempt != null) {
-            // Lock account, if max wrong attempt limit reached
+            // related attempt row already available
+            // lock customer account - if 'max attempts per day' crossed
             if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
-                // lock customer account
-                merchant.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
-                merchant.setStatus_reason(getAccLockedReason(attemptType));
-                merchant.setStatus_update_time(new Date());
-                if( backendOps.updateMerchant(merchant)==null ) {
-                    //TODO: generate alarm
-                }
-                // Generate SMS to inform the same
-                String smsText = getAccLockSmsText(merchant.getAuto_id(), GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS, attemptType, DbConstants.USER_TYPE_MERCHANT);
-                if(smsText != null) {
-                    if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
-                    {
-                        //TODO: generate alarm
+                // lock merchant account
+                try {
+                    switch(userType) {
+                        case DbConstants.USER_TYPE_MERCHANT:
+                            setMerchantStatus((Merchants)userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            break;
+                        case DbConstants.USER_TYPE_CUSTOMER:
+                            setCustomerStatus((Customers) userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            break;
+                        case DbConstants.USER_TYPE_AGENT:
+                            setAgentStatus((Agents) userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            break;
                     }
+                } catch (Exception e) {
+                    // ignore the failure to lock the alarm
+                    // TODO: raise alarm
                 }
-                return true;
-            }
-            // increase attempt count
-            attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
-            if( backendOps.saveWrongAttempt(attempt) == null ) {
-                //TODO: generate alarm
+                // throw max attempt limit reached exception
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD);
             }
         } else {
-            //TODO: generate alarm
+            // related attempt row not available - create the same
+            attempt = new WrongAttempts();
+            attempt.setUser_id(userId);
+            attempt.setAttempt_type(attemptType);
+            attempt.setAttempt_cnt(0);
+            attempt.setUser_type(userType);
         }
 
-        return false;
-    }
-
-    // returns true if max attempt limit reached
-    public static boolean handleAgentWrongAttempt(BackendOps backendOps, Agents agent, String attemptType) {
-        // fetch or create related wrong attempt row
-        WrongAttempts attempt = backendOps.fetchOrCreateWrongAttempt(agent.getMobile_num(), attemptType, DbConstants.USER_TYPE_AGENT);
-        if(attempt != null) {
-            // Lock account, if max wrong attempt limit reached
-            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
-                // lock customer account
-                agent.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
-                agent.setStatus_reason(getAccLockedReason(attemptType));
-                //agent.setStatus_update_time(new Date());
-                if( backendOps.updateAgent(agent)==null ) {
-                    //TODO: generate alarm
-                }
-                // Generate SMS to inform the same
-                String smsText = getAccLockSmsText(agent.getMobile_num(), 0, attemptType, DbConstants.USER_TYPE_AGENT);
-                if(smsText != null) {
-                    if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
-                    {
-                        //TODO: generate alarm
-                    }
-                }
-                return true;
-            }
-            // increase attempt count
-            attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
-            if( backendOps.saveWrongAttempt(attempt) == null ) {
-                //TODO: generate alarm
-            }
-        } else {
-            //TODO: generate alarm
+        // increment the cnt and save the object
+        attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
+        try {
+            BackendOps.saveWrongAttempt(attempt);
+        } catch(Exception e) {
+            // ignore exception - as we anyways be raising exception
+            // TODO: raise minor alarm however
         }
 
-        return false;
-    }
-
-    private static int getAccLockedReason(String wrongattemptType) {
-        switch(wrongattemptType) {
-            case DbConstants.ATTEMPT_TYPE_PASSWORD_RESET:
-                return DbConstants.LOCKED_WRONG_PASSWORD_RESET_ATTEMPT_LIMIT_RCHD;
-            case DbConstants.ATTEMPT_TYPE_USER_LOGIN:
-                return DbConstants.LOCKED_WRONG_PASSWORD_LIMIT_RCHD;
-            case DbConstants.ATTEMPT_TYPE_USER_PIN:
-                return DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD;
-        }
-        return 100;
-    }
-
-    private static String getAccLockSmsText(String userId, int hours, String wrongattemptType, int userType) {
-        switch(wrongattemptType) {
-            case DbConstants.ATTEMPT_TYPE_PASSWORD_RESET:
-                if(userType==DbConstants.USER_TYPE_AGENT) {
-                    return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT, userId);
-                }
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET, userId, hours);
-            case DbConstants.ATTEMPT_TYPE_USER_LOGIN:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, userId, hours);
-            case DbConstants.ATTEMPT_TYPE_USER_PIN:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, userId, hours);
-        }
-        return null;
+        // raise 'verification failed' exception
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
     }
 
     public static void initTableToClassMappings() {
@@ -357,6 +316,7 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
     }
 
+    /*
     public static void throwException(Logger logger, String errorCode, String errorMsg, boolean isNormalResponse) {
         if(isNormalResponse) {
             logger.info("Sending response as exception: "+errorCode+", "+errorMsg);
@@ -365,12 +325,18 @@ public class CommonUtils {
         }
 
         // to be removed once issue is fixed on backendless side
-        errorMsg = "ZZ"+errorCode;
+        errorMsg = CommonConstants.PREFIX_ERROR_CODE_AS_MSG + errorCode;
         BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
-
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         throw new BackendlessException(fault);
-        //throw new BackendlessException( errorCode, errorMsg);
+    }*/
+
+    public static void throwException(String errorCode, String errorMsg) {
+        // to be removed once issue is fixed on backendless side
+        errorMsg = CommonConstants.PREFIX_ERROR_CODE_AS_MSG + errorCode;
+        BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
+        //Backendless.Logging.flush();
+        throw new BackendlessException(fault);
     }
 
     public static int getUserType(String userdId) {
@@ -394,5 +360,208 @@ public class CommonUtils {
                 || txn.getCb_debit() > cb_debit_threshold );
     }
 
+    public static boolean isTrustedDevice(String deviceId, Merchants merchant) {
+        List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+        if (trustedDevices != null &&
+                (deviceId != null && !deviceId.isEmpty())) {
+            for (MerchantDevice device : trustedDevices) {
+                if (device.getDevice_id().equals(deviceId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean customerIdMobile(String id) {
+        return id.length()==CommonConstants.MOBILE_NUM_LENGTH;
+    }
+
+    public static void setMerchantStatus(Merchants merchant, int status, int reason) {
+        // update merchant account
+        merchant.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[merchant.getAdmin_status()]
+                + ", and status time was "+mSdfDateWithTime.format(merchant.getStatus_update_time()));
+        merchant.setAdmin_status(status);
+        merchant.setStatus_reason(reason);
+        merchant.setStatus_update_time(new Date());
+        BackendOps.updateMerchant(merchant);
+
+        // Generate SMS to inform the same
+        String smsText = getAccStatusSmsText(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, reason);
+        if(smsText != null) {
+            if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
+            {
+                // ignore failure to send SMS
+                //TODO: generate alarm
+            }
+        }
+    }
+
+    public static void setCustomerStatus(Customers customer, int status, int reason) {
+        // update merchant account
+        customer.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[customer.getAdmin_status()]
+                + ", and status time was "+mSdfDateWithTime.format(customer.getStatus_update_time()));
+        customer.setAdmin_status(status);
+        customer.setStatus_reason(reason);
+        customer.setStatus_update_time(new Date());
+        BackendOps.updateCustomer(customer);
+
+        // Generate SMS to inform the same
+        String smsText = getAccStatusSmsText(customer.getMobile_num(), DbConstants.USER_TYPE_CUSTOMER, reason);
+        if(smsText != null) {
+            if( !SmsHelper.sendSMS(smsText, customer.getMobile_num()) )
+            {
+                // ignore failure to send SMS
+                //TODO: generate alarm
+            }
+        }
+    }
+
+    public static void setAgentStatus(Agents agent, int status, int reason) {
+        // update merchant account
+        agent.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[agent.getAdmin_status()]);
+        agent.setAdmin_status(status);
+        agent.setStatus_reason(reason);
+        BackendOps.updateAgent(agent);
+
+        // Generate SMS to inform the same
+        String smsText = getAccStatusSmsText(agent.getMobile_num(), DbConstants.USER_TYPE_AGENT, reason);
+        if(smsText != null) {
+            if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
+            {
+                // ignore failure to send SMS
+                //TODO: generate alarm
+            }
+        }
+    }
+
+    private static String getAccStatusSmsText(String userId, int userType, int statusReason) {
+        int hours = (userType==DbConstants.USER_TYPE_MERCHANT)
+                ? GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS
+                : GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS;
+
+        switch(statusReason) {
+            case DbConstants.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, userId, hours);
+            case DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD:
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, userId, hours);
+            case DbConstants.LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD:
+                if(userType==DbConstants.USER_TYPE_AGENT) {
+                    return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT, userId);
+                }
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET, userId, hours);
+            case DbConstants.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD:
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_FORGOT_USERID, userId, hours);
+            default:
+                // TODO: Raise alarm
+                return null;
+        }
+    }
 
 }
+
+
+    /*
+    public static boolean handleCustomerWrongAttempt(Customers customer, String attemptType) {
+        // check if related wrong attempt row already exists
+        WrongAttempts attempt = null;
+        try {
+            attempt = BackendOps.fetchWrongAttempts(customer.getMobile_num(), attemptType);
+        } catch(BackendlessException e) {
+            if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
+                // ignore exception - as we anyways be raising exception
+                // TODO: raise minor alarm however
+                // raise 'verification failed' exception
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+            }
+        }
+
+        if(attempt != null) {
+            // related attempt row already available
+            // lock customer account - if 'max attempts per day' crossed
+            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
+                // lock merchant account
+                try {
+                    setCustomerStatus(customer, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                } catch (Exception e) {
+                    // ignore the failure to lock the alarm
+                    // TODO: raise alarm
+                }
+                // throw max attempt limit reached exception
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD);
+            }
+        } else {
+            // related attempt row not available - create the same
+            attempt = new WrongAttempts();
+            attempt.setUser_id(customer.getMobile_num());
+            attempt.setAttempt_type(attemptType);
+            attempt.setAttempt_cnt(0);
+            attempt.setUser_type(DbConstants.USER_TYPE_MERCHANT);
+        }
+
+        // increment the cnt and save the object
+        attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
+        try {
+            BackendOps.saveWrongAttempt(attempt);
+        } catch(Exception e) {
+            // ignore exception - as we anyways be raising exception
+            // TODO: raise minor alarm however
+        }
+
+        // raise 'verification failed' exception
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+    }
+
+    // returns true if max attempt limit reached
+    public static boolean handleAgentWrongAttempt(Agents agent, String attemptType) {
+        // fetch or create related wrong attempt row
+        WrongAttempts attempt = BackendOps.fetchOrCreateWrongAttempt(agent.getMobile_num(), attemptType, DbConstants.USER_TYPE_AGENT);
+        if(attempt != null) {
+            // Lock account, if max wrong attempt limit reached
+            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
+                // lock customer account
+                agent.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
+                agent.setStatus_reason(getAccLockedReason(attemptType));
+                //agent.setStatus_update_time(new Date());
+                if( BackendOps.updateAgent(agent)==null ) {
+                    //TODO: generate alarm
+                }
+                // Generate SMS to inform the same
+                String smsText = getAccLockSmsText(agent.getMobile_num(), 0, attemptType, DbConstants.USER_TYPE_AGENT);
+                if(smsText != null) {
+                    if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
+                    {
+                        //TODO: generate alarm
+                    }
+                }
+                return true;
+            }
+            // increase attempt count
+            attempt.setAttempt_cnt(attempt.getAttempt_cnt()+1);
+            if( BackendOps.saveWrongAttempt(attempt) == null ) {
+                //TODO: generate alarm
+            }
+        } else {
+            //TODO: generate alarm
+        }
+
+        return false;
+    }
+
+    private static int getAccLockedReason(String wrongattemptType) {
+        switch(wrongattemptType) {
+            case DbConstants.ATTEMPT_TYPE_PASSWORD_RESET:
+                return DbConstants.LOCKED_WRONG_PASSWORD_RESET_ATTEMPT_LIMIT_RCHD;
+            case DbConstants.ATTEMPT_TYPE_USER_LOGIN:
+                return DbConstants.LOCKED_WRONG_PASSWORD_LIMIT_RCHD;
+            case DbConstants.ATTEMPT_TYPE_USER_PIN:
+                return DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD;
+            case DbConstants.ATTEMPT_TYPE_FORGOT_USERID:
+                return DbConstants.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD;
+        }
+        return 100;
+    }*/
+

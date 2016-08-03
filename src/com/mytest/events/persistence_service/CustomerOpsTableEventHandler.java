@@ -283,6 +283,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED);
             newCard.setStatus_update_time(new Date());
             customer.setMembership_card(newCard);
+            customer.setCardId(newCard.getCard_id());
         } else {
             user.setProperty("user_id", newMobile);
             customer.setMobile_num(newMobile);

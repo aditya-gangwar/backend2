@@ -9,6 +9,13 @@ import java.util.Locale;
 public class CommonConstants {
 
     /*
+     * Due to some issue in backendless - the errorCode is not correctly transmitted to app
+     * from the Backend API - on raising an exception.
+     * So, the errorCode is passed in 'errorMsg' field of the Backendless exception.
+     * This prefix is added to the message to signal the same.
+     */
+    public static final String PREFIX_ERROR_CODE_AS_MSG = "ZZ_";
+    /*
      * To use int as boolean
      */
     public static final int BOOLEAN_VALUE_FALSE = 0;

@@ -78,10 +78,23 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Login attempt from untrusted device", false);
                     }
 
-                    // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<otp>
+                    // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<time>,<otp>
                     String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
                     String deviceId = csvFields[0];
-                    String rcvdOtp = csvFields[4];
+                    long entryTime = Long.parseLong(csvFields[4]);
+                    String rcvdOtp = csvFields[5];
+
+                    // 'deviceInfo' is valid only if from last DEVICE_INFO_VALID_SECS
+                    // This logic helps us to avoid resetting 'tempDevId' to NULL on each login call
+                    long timeDiff = System.currentTimeMillis() - entryTime;
+                    if( timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS*1000) ) {
+                        // deviceInfo is old than 5 mins = 300 secs
+                        // most probably from last login call - setDeviceInfo not called before this login
+                        // can indicate sabotage
+                        // TODO : Raise critical alarm
+                        mBackendOps.logoutUser();
+                        CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Login attempt from untrusted device", false);
+                    }
 
                     // check if this device is in trusted list
                     boolean matched = false;
@@ -154,17 +167,17 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                 merchant.setStatus_update_time(new Date());
                                 merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
                             }
+
+                            merchant.setTempDevId(null);
+                            Merchants merchant2 = mBackendOps.updateMerchant(merchant);
+                            if(merchant2==null) {
+                                mBackendOps.logoutUser();
+                                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+                            }
                         }
                     }
 
-                    // update merchant in both 'matched' and 'not-matched' cases
-                    // TODO: optimize this to not 'update merchant' in 'matched' scenarios
-                    merchant.setTempDevId(null);
-                    Merchants merchant2 = mBackendOps.updateMerchant(merchant);
-                    if(merchant2==null) {
-                        mBackendOps.logoutUser();
-                        CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-                    }
+                    // all fine - nothing more to do
 
                 } else if (userType == DbConstants.USER_TYPE_AGENT) {
                     Agents agent = mBackendOps.getAgent(userId);

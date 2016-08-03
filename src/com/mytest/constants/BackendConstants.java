@@ -14,23 +14,31 @@ public class BackendConstants {
     public static final int CUSTOMER_PRIVATE_ID_LEN = 4;
 
     // used in generating temporary passwords
-    public final static char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
-    public final static char[] pinAndOtpChars = "0123456789".toCharArray();
+    public static final char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+    public static final char[] pinAndOtpChars = "0123456789".toCharArray();
     // used in generating random transaction ids, passwords and PINs
-    public final static char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+    public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
 
-    public static int SEND_TXN_SMS_MIN_AMOUNT = 10;
-    public static String APP_ID = "09667F8B-98A7-E6B9-FFEB-B2B6EE831A00";
-    public static String SECRET_KEY = "95971CBD-BADD-C61D-FF32-559664AE4F00";
+    public static final int SEND_TXN_SMS_MIN_AMOUNT = 10;
+    public static final String APP_ID = "09667F8B-98A7-E6B9-FFEB-B2B6EE831A00";
+    public static final String SECRET_KEY = "95971CBD-BADD-C61D-FF32-559664AE4F00";
 
-    public static int LOG_POLICY_NUM_MSGS = 1;
-    public static int LOG_POLICY_FREQ_SECS = 0;
+    public static final int LOG_POLICY_NUM_MSGS = 1;
+    public static final int LOG_POLICY_FREQ_SECS = 0;
 
     //public static String PASSWORD_RESET_USER_ID = "00";
     //public static String PASSWORD_RESET_USER_PWD = "aditya123";
 
-    public static String ROLE_MERCHANT = "Merchant";
-    public static String ROLE_CUSTOMER = "Customer";
-    public static String ROLE_AGENT = "Agent";
+    public static final String ROLE_MERCHANT = "Merchant";
+    public static final String ROLE_CUSTOMER = "Customer";
+    public static final String ROLE_AGENT = "Agent";
+
+    public static final int DEVICE_INFO_VALID_SECS = 300;
+
+    // Customer id type to fetch record
+    public static final int CUSTOMER_ID_MOBILE = 0;
+    public static final int CUSTOMER_ID_CARD = 1;
+    public static final int CUSTOMER_ID_PRIVATE_ID = 2;
+
 }

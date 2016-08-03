@@ -1,5 +1,9 @@
 package com.mytest.constants;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by adgangwa on 07-05-2016.
  */
@@ -40,19 +44,20 @@ public class DbConstants {
     public static final int DISABLED_ON_USER_REQUEST = 4;
     public static final int LOCKED_WRONG_PASSWORD_LIMIT_RCHD = 5;
     public static final int LOCKED_WRONG_PIN_LIMIT_RCHD = 6;
-    public static final int LOCKED_WRONG_PASSWORD_RESET_ATTEMPT_LIMIT_RCHD = 7;
-    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 8;
+    public static final int LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD = 7;
+    public static final int LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD = 8;
+    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 9;
 
     // Map int status values to corresponding descriptions
     public static String statusReasonDescriptions[] = {
             "",
             "User is new registered",
             "User is active",
-            "Disabled automatically by system for security purpose. Will be re-activated after verification.",
-            "Disabled on user request.",
-            "Locked as limit for wrong password attempts reached.",
-            "Locked as limit for wrong PIN attempts reached.",
-            "Locked as limit for wrong 'password reset' attempts reached.",
+            "By system for security purpose. Will be re-activated after verification.",
+            "On user request.",
+            "Wrong password attempts limit reached.",
+            "Wrong PIN attempts limit reached.",
+            "Wrong 'password reset' attempts limit reached.",
             ""
     };
 
@@ -64,31 +69,28 @@ public class DbConstants {
     public static final int CUSTOMER_CARD_STATUS_REMOVED = 3;
     // Map int status values to corresponding descriptions
     public static String cardStatusDescriptions[] = {
-            "Invalid customer card",
-            "",
-            "",
-            "Invalid Card",
+            "Invalid",
+            "Invalid",
+            "Invalid",
+            "Invalid"
     };
 
 
     // CustomerOps table - 'opcode' column values
-    public static final String CUSTOMER_OP_NEW_CARD = "New Card";
-    public static final String CUSTOMER_OP_RESET_PIN = "Reset PIN";
-    public static final String CUSTOMER_OP_CHANGE_MOBILE = "Change Mobile";
-
+    public static final String CUSTOMER_OP_NEW_CARD = "NEW CARD";
+    public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
+    public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
     // CustomerOps table - 'status' column values
     public static final String CUSTOMER_OP_STATUS_OTP_GENERATED = "statusOtpGenerated";
     public static final String CUSTOMER_OP_STATUS_OTP_MATCHED = "OTP Matched";
 
-    // MerchantOps table - 'status' column values
-    public static final String MERCHANT_OP_STATUS_PENDING = "pending";
-    public static final String MERCHANT_OP_STATUS_OTP_GENERATED = "pending_otp_generated";
-    public static final String MERCHANT_OP_STATUS_OTP_MATCHED = "OTP Matched";
-    public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
-    public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
     // MerchantOps table - 'opcode' column values
     public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
     public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
+    // MerchantOps table - 'status' column values
+    public static final String MERCHANT_OP_STATUS_PENDING = "pending";
+    public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
+    public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
 
     // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
     public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";
@@ -98,16 +100,32 @@ public class DbConstants {
     public static final String MERCHANT_ID_COUNTER = "merchant_id";
 
     // WrongAttempts table - 'attempt_type' column values
-    public static final String ATTEMPT_TYPE_FORGOT_ID = "forgotId";
+    public static final String ATTEMPT_TYPE_FORGOT_USERID = "forgotUserId";
     public static final String ATTEMPT_TYPE_PASSWORD_RESET = "passwordReset";
     public static final String ATTEMPT_TYPE_USER_LOGIN = "userLogin";
     public static final String ATTEMPT_TYPE_USER_PIN = "userPin";
+
+    // Map from backend error codes to local error codes
+    public static final Map<String, Integer> attemptTypeToAccLockedReason;
+    static {
+        Map<String, Integer> aMap = new HashMap<>(10);
+
+        // my own backend response codes
+        aMap.put(ATTEMPT_TYPE_FORGOT_USERID, LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_PASSWORD_RESET, LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_USER_LOGIN, LOCKED_WRONG_PASSWORD_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_USER_PIN, LOCKED_WRONG_PIN_LIMIT_RCHD);
+
+        attemptTypeToAccLockedReason = Collections.unmodifiableMap(aMap);
+    }
+
 
     // GlobalSettings table - should be exactly same as 'names' in DB
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_MINS = "merchant_passwd_reset_mins";
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_REQUEST_GAP = "merchant_passwd_reset_request_gap_mins";
     public static final String SETTINGS_MERCHANT_WRONG_ATTEMPTS = "merchant_wrong_attempts";
     public static final String SETTINGS_MERCHANT_ACCOUNT_BLOCK_HRS = "merchant_account_block_hrs";
+    public static final String SETTINGS_DASHBOARD_NO_REFRESH_HRS = "dashboard_no_refresh_hours";
 
     public static final String SETTINGS_CL_CREDIT_LIMIT_FOR_PIN = "cl_credit_limit_for_pin";
     public static final String SETTINGS_CL_DEBIT_LIMIT_FOR_PIN = "cl_debit_limit_for_pin";
@@ -119,6 +137,7 @@ public class DbConstants {
 
     public static final String SETTINGS_CUSTOMER_ACCOUNT_BLOCK_HRS = "customer_account_block_hrs";
     public static final String SETTINGS_CUSTOMER_WRONG_ATTEMPTS = "customer_wrong_attempts";
+    public static final String SETTINGS_CUSTOMER_CASH_LIMIT = "cash_account_max_limit";
     public static final String SETTINGS_OTP_VALID_MINS = "otp_valid_mins";
     public static final String SETTINGS_SERVICE_DISABLED_UNTIL = "service_disabled_until";
     public static final String SETTINGS_TXN_IMAGE_CAPTURE_MODE = "txn_image_capture_mode";
