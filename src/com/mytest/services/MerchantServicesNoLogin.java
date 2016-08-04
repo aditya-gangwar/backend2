@@ -34,8 +34,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         try {
             if (deviceInfo == null || deviceInfo.isEmpty()) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "");
             }
 
             mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceInfo);
@@ -77,8 +76,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check if any request already pending
             try {
                 BackendOps.fetchMerchantOps(buildPwdResetWhereClause(userId));
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
             } catch (BackendlessException e) {
                 if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
                     throw e;
@@ -98,15 +96,15 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // don't check for first time after merchant is registered
             if (merchant.getAdmin_status() != DbConstants.USER_STATUS_NEW_REGISTERED) {
                 if (!CommonUtils.isTrustedDevice(deviceId, merchant)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE,
-                            CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE);
+                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
                 }
             }
 
             // check for 'extra verification'
             String name = merchant.getName();
             if (name == null || !name.equalsIgnoreCase(brandName)) {
-                CommonUtils.handleMerchantWrongAttempt(merchant, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
+                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             // For new registered merchant - send the password immediately
@@ -123,8 +121,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
                 BackendOps.addMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED);
+                throw CommonUtils.getException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "");
             }
 
         } catch (Exception e) {
@@ -149,14 +146,14 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
-                CommonUtils.handleMerchantWrongAttempt(merchant, DbConstants.ATTEMPT_TYPE_FORGOT_USERID);
+                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstants.ATTEMPT_TYPE_FORGOT_USERID);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             // send merchant id by SMS
             String smsText = buildUserIdSMS(merchant.getAuto_id());
             if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num())) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
             }
         } catch (Exception e) {
             mLogger.error("Exception in sendMerchantId: "+e.toString());
@@ -188,8 +185,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         String smsText = buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
         {
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,
-                    CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
         }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }

@@ -25,7 +25,6 @@ import java.util.TimeZone;
 public class MerchantServices implements IBackendlessService {
 
     private Logger mLogger;
-    //private BackendOps mBackendOps;
 
     /*
      * Public methods: Backend REST APIs
@@ -48,8 +47,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // Validate based on given current number
                 if (!merchant.getMobile_num().equals(currentMobile)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                            CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
                 }
 
                 // Generate OTP to verify new mobile number
@@ -57,20 +55,14 @@ public class MerchantServices implements IBackendlessService {
                 newOtp.setUser_id(merchant.getAuto_id());
                 newOtp.setMobile_num(newMobile);
                 newOtp.setOpcode(DbConstants.MERCHANT_OP_CHANGE_MOBILE);
-                newOtp = BackendOps.generateOtp(newOtp);
+                BackendOps.generateOtp(newOtp);
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_RESPONSE_OTP_GENERATED);
-
+                throw CommonUtils.getException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
             } else {
                 // Second run, as OTP available
-                AllOtp fetchedOtp = BackendOps.fetchOtp(merchant.getAuto_id());
-                if (!BackendOps.validateOtp(fetchedOtp, otp)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_OTP,
-                            CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_OTP);
-                }
+                BackendOps.validateOtp(merchant.getAuto_id(), otp);
                 mLogger.debug("OTP matched for given merchant operation: " + merchant.getAuto_id());
 
                 // Update with new mobile number
@@ -185,6 +177,7 @@ public class MerchantServices implements IBackendlessService {
                 // assign custom role to it
                 BackendOps.assignRole(customerMobile, BackendConstants.ROLE_CUSTOMER);
             } catch(Exception e) {
+                // TODO: add as 'Major' alarm - user to be removed later manually
                 // rollback to not-usable state
                 customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
                 customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
@@ -228,8 +221,7 @@ public class MerchantServices implements IBackendlessService {
                 return cashback;
 
             } catch(Exception e) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED, "");
             }
 
             //Backendless.Logging.flush();

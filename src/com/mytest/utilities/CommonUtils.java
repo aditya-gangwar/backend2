@@ -137,7 +137,7 @@ public class CommonUtils {
         }
 
         if(errorCode != null) {
-            throw new BackendlessException(errorCode, CommonConstants.PREFIX_ERROR_CODE_AS_MSG+errorCode);
+            throw CommonUtils.getException(errorCode, errorMsg);
         }
     }
 
@@ -175,18 +175,16 @@ public class CommonUtils {
                 break;
         }
         if(errorCode != null) {
-            throw new BackendlessException(errorCode, CommonConstants.PREFIX_ERROR_CODE_AS_MSG+errorCode);
+            throw CommonUtils.getException(errorCode, errorMsg);
         }
     }
 
     public static void checkAgentStatus(Agents agent) {
         switch (agent.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_DISABLED
-                        , CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_ACC_DISABLED);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_ACC_DISABLED, "");
             case DbConstants.USER_STATUS_LOCKED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_LOCKED
-                        , CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_ACC_LOCKED);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_ACC_LOCKED, "");
         }
     }
 
@@ -199,24 +197,21 @@ public class CommonUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_CARD);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
         }
     }
 
     public static void getCardStatusForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_CARD_INUSE,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_CARD_INUSE);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_CARD_INUSE, "");
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;*/
 
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_WRONG_CARD);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
         }
     }
 
@@ -240,12 +235,9 @@ public class CommonUtils {
         try {
             attempt = BackendOps.fetchWrongAttempts(userId, attemptType);
         } catch(BackendlessException e) {
+            // ignore exception, when data not found
             if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                // ignore exception - as we anyways be raising exception
-                // TODO: raise minor alarm however
-                // raise 'verification failed' exception
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+                throw e;
             }
         }
 
@@ -267,12 +259,11 @@ public class CommonUtils {
                             break;
                     }
                 } catch (Exception e) {
-                    // ignore the failure to lock the alarm
+                    // ignore the failure to lock the account
                     // TODO: raise alarm
                 }
                 // throw max attempt limit reached exception
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD, "");
             }
         } else {
             // related attempt row not available - create the same
@@ -288,13 +279,9 @@ public class CommonUtils {
         try {
             BackendOps.saveWrongAttempt(attempt);
         } catch(Exception e) {
-            // ignore exception - as we anyways be raising exception
-            // TODO: raise minor alarm however
+            // ignore exception
+            // TODO: raise alarm however
         }
-
-        // raise 'verification failed' exception
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
     }
 
     public static void initTableToClassMappings() {
@@ -331,12 +318,10 @@ public class CommonUtils {
         throw new BackendlessException(fault);
     }*/
 
-    public static void throwException(String errorCode, String errorMsg) {
+    public static BackendlessException getException(String errorCode, String errorMsg) {
         // to be removed once issue is fixed on backendless side
         errorMsg = CommonConstants.PREFIX_ERROR_CODE_AS_MSG + errorCode;
-        BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
-        //Backendless.Logging.flush();
-        throw new BackendlessException(fault);
+        return new BackendlessException(errorCode, errorMsg);
     }
 
     public static int getUserType(String userdId) {
@@ -377,6 +362,8 @@ public class CommonUtils {
         return id.length()==CommonConstants.MOBILE_NUM_LENGTH;
     }
 
+    // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
+    // like from 'USER_STATUS_NEW_REGISTERED' -> 'USER_STATUS_ACTIVE'
     public static void setMerchantStatus(Merchants merchant, int status, int reason) {
         // update merchant account
         merchant.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[merchant.getAdmin_status()]

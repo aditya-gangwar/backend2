@@ -74,8 +74,7 @@ public class BackendOps {
         BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+userid;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -96,8 +95,7 @@ public class BackendOps {
         if (merchant == null) {
             //mLogger.error("Merchant object in null");
             String errorMsg = "Merchant object in null";
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         }
         return user;
 
@@ -138,8 +136,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+userId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -152,8 +149,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+mobileNum;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -169,16 +165,13 @@ public class BackendOps {
         int cnt = users.getTotalObjects();
         if( cnt == 0) {
             // No unprocessed merchant left with this prefix
-            String errorMsg = "No Merchant found";
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            String errorMsg = "No Merchant found: "+whereClause;
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             ArrayList<Merchants> objects = new ArrayList<>();
             while (users.getCurrentPage().size() > 0)
             {
-                int size  = users.getCurrentPage().size();
-                System.out.println( "Loaded " + size + " merchants in the current page" );
-
+                //int size  = users.getCurrentPage().size();
                 Iterator<Merchants> iterator = users.getCurrentPage().iterator();
                 while( iterator.hasNext() )
                 {
@@ -218,13 +211,11 @@ public class BackendOps {
         BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+custId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             if(user.getData().get(0).getMembership_card()==null) {
-                String errorMsg = "No customer card found: "+custId;
-                BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD,errorMsg);
-                throw new BackendlessException(fault);
+                String errorMsg = "No customer card set for user: "+custId;
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
             }
             return user.getData().get(0);
         }
@@ -244,8 +235,7 @@ public class BackendOps {
         BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
         if( collection.getTotalObjects() == 0) {
             String errorMsg = "No membership card found: "+cardId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
         } else {
             return collection.getData().get(0);
         }
@@ -294,46 +284,57 @@ public class BackendOps {
     /*
      * OTP operations
      */
-    public static AllOtp generateOtp(AllOtp otp) {
+    public static void generateOtp(AllOtp otp) {
         // check if any OTP object already available for this user_id
         // if yes, update the same for new OTP, op and time.
         // If no, create new object
         // Send SMS with OTP
-        AllOtp newOtp = null;
-        AllOtp oldOtp = fetchOtp(otp.getUser_id());
-        if(oldOtp !=  null) {
-            // update oldOtp
-            oldOtp.setOtp_value(CommonUtils.generateOTP());
-            oldOtp.setOpcode(otp.getOpcode());
-            oldOtp.setMobile_num(otp.getMobile_num());
-            newOtp = Backendless.Persistence.save( oldOtp );
-        } else {
-            otp.setOtp_value(CommonUtils.generateOTP());
-            newOtp = Backendless.Persistence.save( otp );
+        try {
+            AllOtp newOtp = null;
+            AllOtp oldOtp = fetchOtp(otp.getUser_id());
+            if (oldOtp != null) {
+                // update oldOtp
+                oldOtp.setOtp_value(CommonUtils.generateOTP());
+                oldOtp.setOpcode(otp.getOpcode());
+                oldOtp.setMobile_num(otp.getMobile_num());
+                newOtp = Backendless.Persistence.save(oldOtp);
+            } else {
+                otp.setOtp_value(CommonUtils.generateOTP());
+                newOtp = Backendless.Persistence.save(otp);
+            }
+
+            // Send SMS through HTTP
+            String smsText = String.format(SmsConstants.SMS_OTP,
+                    newOtp.getOpcode(),
+                    CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
+                    newOtp.getOtp_value(),
+                    GlobalSettingsConstants.OTP_VALID_MINS);
+
+            if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num())) {
+                String errorMsg = "In generateOtp: Failed to send SMS";
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = "Exception in generateOtp: "+e.toString();
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
         }
-
-        // Send SMS through HTTP
-        String smsText = String.format(SmsConstants.SMS_OTP,
-                newOtp.getOpcode(),
-                CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
-                newOtp.getOtp_value(),
-                GlobalSettingsConstants.OTP_VALID_MINS);
-
-        if( !SmsHelper.sendSMS(smsText, newOtp.getMobile_num()) )
-        {
-            String errorMsg = "In generateOtp: Failed to send SMS";
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED,errorMsg);
-            throw new BackendlessException(fault);
-        }
-
-        return newOtp;
     }
 
     public static void deleteOtp(AllOtp otp) {
         Backendless.Persistence.of( AllOtp.class ).remove( otp );
     }
 
-    public static boolean validateOtp(AllOtp otp, String rcvdOtp) {
+    public static void validateOtp(String userId, String rcvdOtp) {
+        AllOtp otp = null;
+        try {
+            otp = BackendOps.fetchOtp(userId);
+        } catch(BackendlessException e) {
+            if(e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
+            }
+            throw e;
+        }
+
         Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
@@ -341,10 +342,14 @@ public class BackendOps {
                 rcvdOtp.equals(otp.getOtp_value()) ) {
             // active otp available and matched
             // delete as can be used only once
-            deleteOtp(otp);
-            return true;
+            try {
+                deleteOtp(otp);
+            } catch(Exception e) {
+                // error in delete is not considered as OTP not matching - ignore
+                // TODO: raise alarm
+            }
         } else {
-            return false;
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
         }
     }
 
@@ -552,8 +557,7 @@ public class BackendOps {
         if( user.getTotalObjects() == 0) {
             // no data found
             String errorMsg = "No agent found: "+userId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BE_ERROR_NO_SUCH_USER,errorMsg);
-            throw new BackendlessException(fault);
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
         } else {
             return user.getData().get(0);
         }
