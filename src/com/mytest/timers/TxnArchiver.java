@@ -24,7 +24,6 @@ public class TxnArchiver
     private static final int CSV_RECORD_MAX_CHARS = 250;
 
     private Logger mLogger;
-    private BackendOps mBackendOps;
 
     private List<Transaction> mLastFetchTransactions;
     private Merchants mLastFetchMerchant;
@@ -59,19 +58,17 @@ public class TxnArchiver
     {
         long startTime = System.currentTimeMillis();
         mLogger = logger;
-        mBackendOps = new BackendOps(mLogger);
-
         mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix);
 
-        mSdfDateWithTime.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-        mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        mSdfDateWithTime.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
+        mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
         mSdfOnlyDateBackendGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
 
         // Fetch next not processed merchant
         mLastFetchMerchant = null;
         //mLastFetchMerchant = fetchNextMerchant();
-        ArrayList<Merchants> merchants = mBackendOps.fetchMerchants(buildMerchantWhereClause());
+        ArrayList<Merchants> merchants = BackendOps.fetchMerchants(buildMerchantWhereClause());
         if(merchants != null) {
             int merchantCnt = merchants.size();
             for (int k = 0; k < merchantCnt; k++) {
@@ -90,10 +87,10 @@ public class TxnArchiver
         mLogger.debug("Fetched merchant id: "+merchantId);
 
         String txnTableName = mLastFetchMerchant.getTxn_table();
-        Backendless.Data.mapTableToClass(txnTableName, Transaction.class);
+        //Backendless.Data.mapTableToClass(txnTableName, Transaction.class);
 
         mLastFetchTransactions = null;
-        mLastFetchTransactions = mBackendOps.fetchTransactions(buildTxnWhereClause(merchantId));
+        mLastFetchTransactions = BackendOps.fetchTransactions(buildTxnWhereClause(merchantId));
         if(mLastFetchTransactions != null) {
             mLogger.debug("Fetched "+mLastFetchTransactions.size()+" transactions for "+merchantId);
             if(mLastFetchTransactions.size() > 0) {
@@ -106,19 +103,27 @@ public class TxnArchiver
                 if( createCsvFiles(merchantId) ) {
                     int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
                     if(recordsUpdated == -1) {
+                        //TODO: raise alarm
                         // rollback
                         deleteCsvFiles();
                     } else if(recordsUpdated != mLastFetchTransactions.size()) {
+                        //TODO: raise alarm
                         mLogger.error( "Count of txns updated for status does not match.");
                         // rollback
-                        updateTxnArchiveStatus(txnTableName,merchantId,false);
+                        if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
+                            //TODO: raise critical alarm
+                            mLogger.error( "Txn archive timer: rollback 1 failed.");
+                        }
                         deleteCsvFiles();
                     } else {
                         if(updateMerchantArchiveTime()) {
                             mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
                         } else {
                             // rollback
-                            updateTxnArchiveStatus(txnTableName,merchantId,false);
+                            if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
+                                //TODO: raise critical alarm
+                                mLogger.error( "Txn archive timer: rollback 2 failed.");
+                            }
                             deleteCsvFiles();
                         }
                     }
@@ -196,13 +201,14 @@ public class TxnArchiver
         // update archive date in merchant record
         // set to current time
         mLastFetchMerchant.setLast_txn_archive(mToday);
-        if( mBackendOps.updateMerchant(mLastFetchMerchant)==null ) {
+        if( BackendOps.updateMerchant(mLastFetchMerchant)==null ) {
             return false;
         }
         return true;
     }
 
     private boolean createCsvFiles(String merchantId) {
+        mCsvFiles.clear();
         // one file for each day i.e. each entry in mCsvDataMap
         for (Map.Entry<String, StringBuilder> entry : mCsvDataMap.entrySet()) {
             String txnDate = entry.getKey();
@@ -216,6 +222,7 @@ public class TxnArchiver
                 mLogger.debug("Txn CSV file uploaded: " + fileUrl);
                 mCsvFiles.put(txnDate,filepath);
             } catch (Exception e) {
+                //TODO: raise alarm
                 mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
                 // For multiple days, single failure will be considered failure for all days
                 return false;
@@ -255,12 +262,13 @@ public class TxnArchiver
     private void buildCsvString() {
         int size = mLastFetchTransactions.size();
 
+        mCsvDataMap.clear();
         for(int i=0; i<size; i++) {
             Transaction txn = mLastFetchTransactions.get(i);
             Date txnDate = txn.getCreate_time();
-
             // get 'date' for this transaction - in the filename format - to be used as key in map
             String txnDateStr = mSdfOnlyDateFilename.format(txnDate);
+
             StringBuilder sb = mCsvDataMap.get(txnDateStr);
             if(sb==null) {
                 mLogger.debug("buildCsvString, new day : "+txnDateStr);
@@ -294,29 +302,6 @@ public class TxnArchiver
         }
     }
 
-    /*private Merchants fetchNextMerchant() {
-        BackendlessDataQuery query = new BackendlessDataQuery();
-        // fetch only 1 record sorted by 'created'
-        QueryOptions queryOptions = new QueryOptions("created");
-        query.setQueryOptions(queryOptions);
-        query.setPageSize(CommonConstants.dbQueryMaxPageSize);
-
-        query.setWhereClause(buildMerchantWhereClause());
-
-        BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
-        int cnt = users.getTotalObjects();
-        if( cnt == 0) {
-            // No unprocessed merchant left with this prefix
-            mLogger.debug("No merchant available for archive: "+mMerchantIdSuffix);
-        } else {
-            // just return the first merchant
-            // in the next timer run, this merchant will not be processed
-            // as it will have the archive time set to now
-            return users.getData().get(0);
-        }
-        return null;
-    }*/
-
     private String buildMerchantWhereClause() {
         StringBuilder whereClause = new StringBuilder();
         //TODO: use mMerchantIdSuffix in production
@@ -326,7 +311,7 @@ public class TxnArchiver
         //String today = mSdfOnlyDateBackend.format(mToday);
         // merchants with last_txn_archive time before today midnight
         DateUtil todayMidnight = new DateUtil();
-        todayMidnight.toTZ("Asia/Kolkata");
+        todayMidnight.toTZ(BackendConstants.TIMEZONE);
         todayMidnight.toMidnight();
 
         whereClause.append(" AND (last_txn_archive < '").append(todayMidnight.getTime().getTime()).append("'").append(" OR last_txn_archive is null)");
@@ -342,13 +327,14 @@ public class TxnArchiver
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
         DateUtil todayMidnight = new DateUtil();
-        todayMidnight.toTZ("Asia/Kolkata");
+        todayMidnight.toTZ(BackendConstants.TIMEZONE);
         todayMidnight.toMidnight();
 
         // all txns older than today 00:00 hrs - the timer runs 1 AM each day
         whereClause.append(" AND create_time < '").append(todayMidnight.getTime().getTime()).append("'");
         whereClause.append(" AND archived=").append("false");
 
+        mLogger.debug("Txn where clause: " + whereClause.toString());
         return whereClause.toString();
     }
 

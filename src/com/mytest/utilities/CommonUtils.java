@@ -188,7 +188,7 @@ public class CommonUtils {
         }
     }
 
-    public static void getCardStatusForUse(CustomerCards card) {
+    public static void checkCardForUse(CustomerCards card) {
         switch(card.getStatus()) {
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
@@ -201,7 +201,7 @@ public class CommonUtils {
         }
     }
 
-    public static void getCardStatusForAllocation(CustomerCards card) {
+    public static void checkCardForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
                 throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_CARD_INUSE, "");
@@ -282,25 +282,6 @@ public class CommonUtils {
             // ignore exception
             // TODO: raise alarm however
         }
-    }
-
-    public static void initTableToClassMappings() {
-        Backendless.Data.mapTableToClass("CustomerCards", CustomerCards.class);
-        Backendless.Data.mapTableToClass("Customers", Customers.class);
-        Backendless.Data.mapTableToClass("Merchants", Merchants.class);
-        Backendless.Data.mapTableToClass("CustomerOps", CustomerOps.class);
-        Backendless.Data.mapTableToClass("AllOtp", AllOtp.class);
-        Backendless.Data.mapTableToClass("Counters", Counters.class);
-        Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
-        Backendless.Data.mapTableToClass("WrongAttempts", WrongAttempts.class);
-        Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
-        Backendless.Data.mapTableToClass("Agents", Agents.class);
-
-        Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
-        Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
-
-        Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
-        Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
     }
 
     /*
@@ -444,6 +425,26 @@ public class CommonUtils {
                 return null;
         }
     }
+
+    public static void initTableToClassMappings() {
+        Backendless.Data.mapTableToClass("CustomerCards", CustomerCards.class);
+        Backendless.Data.mapTableToClass("Customers", Customers.class);
+        Backendless.Data.mapTableToClass("Merchants", Merchants.class);
+        Backendless.Data.mapTableToClass("CustomerOps", CustomerOps.class);
+        Backendless.Data.mapTableToClass("AllOtp", AllOtp.class);
+        Backendless.Data.mapTableToClass("Counters", Counters.class);
+        Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
+        Backendless.Data.mapTableToClass("WrongAttempts", WrongAttempts.class);
+        Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
+        Backendless.Data.mapTableToClass("Agents", Agents.class);
+
+        Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
+
+        Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
+    }
+
 
 }
 

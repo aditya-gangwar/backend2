@@ -1,9 +1,11 @@
 package com.mytest.events.persistence_service;
 
 import com.backendless.Backendless;
+import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
+import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.constants.*;
 import com.mytest.database.Customers;
@@ -26,7 +28,6 @@ import java.util.TimeZone;
  */
 public class TxnTableEventHelper {
     private Logger mLogger;
-    private BackendOps mBackendOps;
 
     private int cl_debit;
     private int cl_credit;
@@ -41,63 +42,40 @@ public class TxnTableEventHelper {
         initCommon();
         try {
             mLogger.debug("In Transaction handleBeforeCreate");
-            //mLogger.debug("Context: "+ context.toString());
-
-            //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
             HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
-            //mLogger.debug("After: "+ HeadersManager.getInstance().getHeaders().toString());
-
-            String merchantId = transaction.getMerchant_id();
-            String customerId = transaction.getCustomer_id();
 
             // Fetch merchant
-            Merchants merchant = mBackendOps.getMerchant(merchantId, false);
-            if(merchant == null) {
-                //TODO: add in alarms
-                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            }
+            BackendlessUser user = BackendOps.fetchUserByObjectId(context.getUserId(), DbConstants.USER_TYPE_MERCHANT);
+            Merchants merchant = (Merchants) user.getProperty("merchant");
+            // check if merchant is enabled
+            CommonUtils.checkMerchantStatus(merchant);
+            String merchantId = merchant.getAuto_id();
 
             // Fetch customer
-            Customers customer = mBackendOps.getCustomer(customerId, true);
-            if (customer == null) {
-                //TODO: add in alarms
-                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            }
-
+            String customerId = transaction.getCustomer_id();
+            Customers customer = BackendOps.getCustomer(customerId, BackendConstants.CUSTOMER_ID_MOBILE);
             // check if customer is enabled
-            String status = CommonUtils.checkCustomerStatus(customer);
-            if (status != null) {
-                CommonUtils.throwException(mLogger, status, "Customer account is not active", false);
-            }
-
+            CommonUtils.checkCustomerStatus(customer);
             // check that card is not blocked
-            String cardStatus = CommonUtils.getCardStatusForUse(customer.getMembership_card());
-            if (cardStatus != null) {
-                CommonUtils.throwException(mLogger, status, "Invalid customer card", false);
-            }
+            // TODO: check this if this is really required - if not, avoid fetching card object also
+            CommonUtils.checkCardForUse(customer.getMembership_card());
 
             // verify PIN
             if(CommonUtils.customerPinRequired(merchant, transaction)) {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
-
-                        if (CommonUtils.handleCustomerWrongAttempt(mBackendOps, customer, DbConstants.ATTEMPT_TYPE_USER_PIN)) {
-
-                            CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                                    "Wrong PIN attempt limit reached: " + customerId, false);
-                        } else {
-                            CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId, false);
-                        }
+                        CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstants.ATTEMPT_TYPE_USER_PIN);
+                        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
                     }
                 } else {
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId, false);
+                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId);
                 }
             }
 
             // Fetch cashback record
             String whereClause = "rowid = '" + customerId + merchantId + "'";
             Cashback cashback = null;
-            ArrayList<Cashback> data = mBackendOps.fetchCashback(whereClause, cbTable);
+            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, cbTable);
             if (data != null) {
                 cashback = data.get(0);
 
@@ -106,18 +84,21 @@ public class TxnTableEventHelper {
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
                 if ((cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT) {
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId, false);
+                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId);
                 }
-
                 cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
                 cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
                 cashback.setTotal_billed(cashback.getTotal_billed() + transaction.getTotal_billed());
                 cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
 
-                // add missing transaction fields
+                // add/update transaction fields
+                transaction.setMerchant_id(merchantId);
+                transaction.setMerchant_name(merchant.getName());
                 transaction.setCust_private_id(cashback.getCust_private_id());
                 transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
                 transaction.setCreate_time(new Date());
+                transaction.setArchived(false);
+                transaction.setCpin(null);
                 // following are uses to adding cashback object to txn:
                 // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
                 // 2) updated cashback object will be automatically returned,
@@ -128,9 +109,9 @@ public class TxnTableEventHelper {
 
             } else {
                 //TODO: add in alarms
-                CommonUtils.throwException(mLogger, mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
+                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "Txn commit: No cashback object found: "+merchantId+","+customerId);
             }
-            //Backendless.Logging.flush();
+
         } catch (Exception e) {
             mLogger.error("Exception in TxnEventHelper:handleBeforeCreate: "+e.toString());
             Backendless.Logging.flush();
@@ -146,7 +127,6 @@ public class TxnTableEventHelper {
             if(result.getException()==null) {
                 buildAndSendTxnSMS(transaction);
             }
-            //Backendless.Logging.flush();
         } catch (Exception e) {
             mLogger.error("Exception in TxnEventHelper:handleAfterCreate: "+e.toString());
             Backendless.Logging.flush();
@@ -161,7 +141,6 @@ public class TxnTableEventHelper {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.events.TxnTableEventHelper");
-        mBackendOps = new BackendOps(mLogger);
     }
 
     private void buildAndSendTxnSMS(Transaction transaction) throws Exception
@@ -178,7 +157,7 @@ public class TxnTableEventHelper {
         // Send SMS only in cases of 'redeem > INR 10' and 'add cash in account'
         if( cl_debit > BackendConstants.SEND_TXN_SMS_MIN_AMOUNT
                 || cl_credit > BackendConstants.SEND_TXN_SMS_MIN_AMOUNT
-            //|| cb_debit > AppConstants.SEND_TXN_SMS_MIN_AMOUNT
+            //|| cb_debit > BackendConstants.SEND_TXN_SMS_MIN_AMOUNT
                 ) {
             Cashback cashback = transaction.getCashback();
             if(cashback==null) {
@@ -189,7 +168,7 @@ public class TxnTableEventHelper {
                 cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 
                 SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-                sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+                sdf.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
                 txnDate = sdf.format(transaction.getCreate_time());
 
                 // Build SMS

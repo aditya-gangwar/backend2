@@ -81,7 +81,6 @@ public class DbConstants {
     public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
     public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
     // CustomerOps table - 'status' column values
-    public static final String CUSTOMER_OP_STATUS_OTP_GENERATED = "statusOtpGenerated";
     public static final String CUSTOMER_OP_STATUS_OTP_MATCHED = "OTP Matched";
 
     // MerchantOps table - 'opcode' column values

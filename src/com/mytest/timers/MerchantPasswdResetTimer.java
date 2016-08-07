@@ -32,72 +32,64 @@ import java.util.Date;
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private Logger mLogger;
-    private BackendOps mBackendOps;
 
     @Override
     public void execute( String appVersionId ) throws Exception
     {
         // Init logger
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.events.MerchantPasswdResetTimer");
-        mBackendOps = new BackendOps(mLogger);
+        initCommon();
 
-        mLogger.debug("In MerchantPasswdResetTimer execute");
-        mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
+        try {
+            mLogger.debug("In MerchantPasswdResetTimer execute");
+            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
-        // Fetch all 'pending' merchant password reset operations
-        ArrayList<MerchantOps> ops = mBackendOps.fetchMerchantOps(buildWhereClause());
-        if(ops!=null) {
-            mLogger.info("Fetched password reset ops: "+ops.size());
-            // first lock all to be processed objects
-            // this is to avoid any chances of clash with the next run of this timer
-            ArrayList<MerchantOps> lockedOps = new ArrayList<>();
-            for (int i = 0; i < ops.size(); i++) {
-                ops.get(i).setOp_status(DbConstants.MERCHANT_OP_STATUS_LOCKED);
-                if(mBackendOps.saveMerchantOp(ops.get(i))!=null) {
-                    mLogger.debug("Locked passwd reset op for: "+ops.get(i).getMerchant_id());
-                    lockedOps.add(ops.get(i));
+            // Fetch all 'pending' merchant password reset operations
+            ArrayList<MerchantOps> ops = BackendOps.fetchMerchantOps(buildWhereClause());
+            if (ops != null) {
+                mLogger.info("Fetched password reset ops: " + ops.size());
+                // first lock all to be processed objects
+                // this is to avoid any chances of clash with the next run of this timer
+                ArrayList<MerchantOps> lockedOps = new ArrayList<>();
+                for (int i = 0; i < ops.size(); i++) {
+                    ops.get(i).setOp_status(DbConstants.MERCHANT_OP_STATUS_LOCKED);
+                    try {
+                        BackendOps.saveMerchantOp(ops.get(i));
+                        mLogger.debug("Locked passwd reset op for: " + ops.get(i).getMerchant_id());
+                        lockedOps.add(ops.get(i));
+                    } catch(Exception e) {
+                        // ignore exception
+                        mLogger.error("Exception while locking merchant passwd reset record: "+e.toString());
+                    }
+                }
+
+                // process locked objects
+                mLogger.info("Locked password reset ops: " + lockedOps.size());
+                for (int k = 0; k < ops.size(); k++) {
+                    handlePasswdReset(lockedOps.get(k));
+                    mLogger.debug("Processed passwd reset op for: " + lockedOps.get(k).getMerchant_id());
                 }
             }
-
-            mLogger.info("Locked password reset ops: "+lockedOps.size());
-
-            // login with user which is allowed to update 'Users' table
-            /*
-            BackendlessUser user2 = mBackendOps.loginUser(BackendConstants.PASSWORD_RESET_USER_ID,BackendConstants.PASSWORD_RESET_USER_PWD);
-            if(user2==null) {
-                //return mBackendOps.mLastOpStatus;
-                CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
-            }*/
-
-            // process locked objects
-            for (int k = 0; k < ops.size(); k++) {
-                String error = handlePasswdReset(lockedOps.get(k));
-                if( error != null) {
-                    mLogger.error("Failed to process merchant reset password operation: "+lockedOps.get(k).getMerchant_id()+", "+error);
-                } else {
-                    mLogger.debug("Processed passwd reset op for: "+lockedOps.get(k).getMerchant_id());
-                }
-            }
+        } catch (Exception e) {
+            //TODO: raise alarm
+            mLogger.error("Exception in MerchantPasswdResetTimer: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
         }
-
-        //Backendless.Logging.flush();
     }
 
-    private String handlePasswdReset(MerchantOps op) {
-        // fetch user with the given id with related merchant object
-        BackendlessUser user = mBackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT);
-        if(user==null) {
-            return mBackendOps.mLastOpStatus;
-        }
-        Merchants merchant = (Merchants) user.getProperty("merchant");
+    private void initCommon() {
+        // Init logger and utils
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+        mLogger = Backendless.Logging.getLogger("com.mytest.events.MerchantPasswdResetTimer");
+        CommonUtils.initTableToClassMappings();
+    }
 
+    private void handlePasswdReset(MerchantOps op) {
+        // fetch user with the given id with related merchant object
+        BackendlessUser user = BackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT);
+        Merchants merchant = (Merchants) user.getProperty("merchant");
         // check admin status
-        String status = CommonUtils.checkMerchantStatus(merchant);
-        if(status != null) {
-            mLogger.info("Merchant is disabled: "+merchant.getAuto_id()+", "+merchant.getAdmin_status());
-            return status;
-        }
+        CommonUtils.checkMerchantStatus(merchant);
 
         // generate password
         String passwd = CommonUtils.generateTempPassword();
@@ -105,35 +97,20 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
         // update user account for the password
         user.setPassword(passwd);
-        // update user account for the password
-        user.setPassword(passwd);
-        // delete any row, if exists, of earlier wrong attempts
-        /*
-        WrongAttempts attempt = mBackendOps.fetchWrongAttempts(merchant.getAuto_id(), DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
-        if(attempt!=null) {
-            mBackendOps.deleteWrongAttempt(attempt);
-        }*/
-
-        user = mBackendOps.updateUser(user);
-        if(user==null) {
-            return mBackendOps.mLastOpStatus;
-        }
+        BackendOps.updateUser(user);
         mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id());
 
         // Send SMS through HTTP
         String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
         {
-            return BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED;
-            // dont care about return code - if failed, user can always do 'forget password' again
+            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
         }
         mLogger.debug("Sent password reset SMS: "+merchant.getAuto_id());
 
         // Change merchant op status
         op.setOp_status(DbConstants.MERCHANT_OP_STATUS_COMPLETE);
-        mBackendOps.saveMerchantOp(op);
-
-        return null;
+        BackendOps.saveMerchantOp(op);
     }
 
     private String buildWhereClause() {

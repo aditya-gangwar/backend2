@@ -6,6 +6,8 @@ package com.mytest.constants;
  */
 public class BackendConstants {
 
+    public static final String TIMEZONE = "Asia/Kolkata";
+
     // Cashback table pool values
     public static final int CASHBACK_TABLE_POOL_START = 0;
     public static final int CASHBACK_TABLE_POOL_SIZE = 1;

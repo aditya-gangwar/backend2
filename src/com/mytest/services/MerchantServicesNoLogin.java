@@ -74,16 +74,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // check if any request already pending
-            try {
-                BackendOps.fetchMerchantOps(buildPwdResetWhereClause(userId));
+            if( BackendOps.fetchMerchantOps(buildPwdResetWhereClause(userId)) != null) {
                 throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
-            } catch (BackendlessException e) {
-                if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                    throw e;
-                }
             }
-
-            // if here - means no existing 'merchant op' for password reset is found
 
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT);

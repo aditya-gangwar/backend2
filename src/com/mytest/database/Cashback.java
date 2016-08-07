@@ -20,7 +20,6 @@ public class Cashback
   private String rowid_card;
   private Integer total_billed;
   private String rowid;
-  private Merchants merchant;
   private String cust_private_id;
   private String customer_details;
   private String merchant_id;
@@ -150,16 +149,6 @@ public class Cashback
   public void setRowid( String rowid )
   {
     this.rowid = rowid;
-  }
-
-  public Merchants getMerchant()
-  {
-    return merchant;
-  }
-
-  public void setMerchant( Merchants merchant )
-  {
-    this.merchant = merchant;
   }
 
   public Cashback save()

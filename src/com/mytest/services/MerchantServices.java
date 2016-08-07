@@ -16,7 +16,6 @@ import com.mytest.utilities.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -143,7 +142,7 @@ public class MerchantServices implements IBackendlessService {
 
             // fetch customer card object
             card = BackendOps.getCustomerCard(cardId);
-            CommonUtils.getCardStatusForAllocation(card);
+            CommonUtils.checkCardForAllocation(card);
             // TODO: enable in production
             /*
             if(!card.getMerchant_id().equals(merchantId)) {
@@ -254,14 +253,7 @@ public class MerchantServices implements IBackendlessService {
             // Create where clause to fetch cashback
             String colName = (customerIdType==BackendConstants.CUSTOMER_ID_MOBILE) ? "rowid" : "rowid_card";
             String whereClause = colName + " = '" + customerId+merchantId + "'";
-            ArrayList<Cashback> data = null;
-            try {
-                data = BackendOps.fetchCashback(whereClause, merchantCbTable);
-            } catch (BackendlessException e) {
-                if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                    throw e;
-                }
-            }
+            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchantCbTable);
             Cashback cashback = null;
             if(data == null) {
                 cashback = handleCashbackCreate(merchantId, merchantCbTable, customer);
@@ -329,32 +321,34 @@ public class MerchantServices implements IBackendlessService {
 
             // fetch all CB records for this merchant
             ArrayList<Cashback> data = BackendOps.fetchCashback("merchant_id = '" + merchantId + "'", merchant.getCashback_table());
-            // loop on all cashback objects and calculate stats
-            mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
-            for (int k = 0; k < data.size(); k++) {
-                Cashback cb = data.get(k);
+            if(data != null) {
+                // loop on all cashback objects and calculate stats
+                mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
+                for (int k = 0; k < data.size(); k++) {
+                    Cashback cb = data.get(k);
 
-                // update customer counts
-                // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
-                if (cb.getCb_credit() > 0 && cb.getCl_credit() > 0) {
-                    stats.cust_cnt_cb_and_cash++;
-                } else if (cb.getCb_credit() > 0) {
-                    stats.cust_cnt_cb++;
-                } else if (cb.getCl_credit() > 0) {
-                    stats.cust_cnt_cash++;
-                } else {
-                    stats.cust_cnt_no_balance++;
+                    // update customer counts
+                    // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
+                    if (cb.getCb_credit() > 0 && cb.getCl_credit() > 0) {
+                        stats.cust_cnt_cb_and_cash++;
+                    } else if (cb.getCb_credit() > 0) {
+                        stats.cust_cnt_cb++;
+                    } else if (cb.getCl_credit() > 0) {
+                        stats.cust_cnt_cash++;
+                    } else {
+                        stats.cust_cnt_no_balance++;
+                    }
+
+                    // update amounts
+                    stats.cb_credit = stats.cb_credit + cb.getCb_credit();
+                    stats.cb_debit = stats.cb_debit + cb.getCb_debit();
+                    stats.cash_credit = stats.cash_credit + cb.getCl_credit();
+                    stats.cash_debit = stats.cash_debit + cb.getCl_debit();
+                    stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
+                    stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
+
+                    stats.setUpdate_time(new Date());
                 }
-
-                // update amounts
-                stats.cb_credit = stats.cb_credit + cb.getCb_credit();
-                stats.cb_debit = stats.cb_debit + cb.getCb_debit();
-                stats.cash_credit = stats.cash_credit + cb.getCl_credit();
-                stats.cash_debit = stats.cash_debit + cb.getCl_debit();
-                stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
-                stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
-
-                stats.setUpdate_time(new Date());
             }
 
             // save stats object - don't bother about return status

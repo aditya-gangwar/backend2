@@ -32,13 +32,16 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
 {
 
     private Logger mLogger;
-    private BackendOps mBackendOps;
     private SimpleDateFormat mSdfOnlyDateBackend;
     private Date mToday;
 
     @Override
     public void execute( String appVersionId ) throws Exception
     {
+        initCommon();
+        mToday = new Date();
+        mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+        mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
         // delete all wrong attempts of time older than midnight
         deleteOldWrongAttempts();
     }
@@ -47,27 +50,16 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
      * Private helper methods
      */
     private void initCommon() {
-        // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.services.MerchantServices");
-        mBackendOps = new BackendOps(mLogger);
-
-        mToday = new Date();
-        mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-        mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        CommonUtils.initTableToClassMappings();
     }
 
     private int deleteOldWrongAttempts() {
         mLogger.debug( "In deleteOldWrongAttempts: ");
-        /*
-        * curl
-        * -H application-id:application-id-value-from-console
-        * -H secret-key:secret-key-value-from-console
-        * -X DELETE
-        * -v https://api.backendless.com/v1/data/bulk/Person?where=workDays%3D0
-        */
-        // https://api.backendless.com/v1/data/bulk/WrongAttempts?where=created%20%3C%201465237800000
 
+        // https://api.backendless.com/v1/data/bulk/WrongAttempts?where=created%20%3C%201465237800000
+        HttpURLConnection conn = null;
         try {
             String whereClause = URLEncoder.encode(buildWrongAteemptsWhereClause(), "UTF-8").replaceAll("\\+", "%20");
             mLogger.debug( "Delete wrong attempts where clause: "+whereClause);
@@ -80,7 +72,7 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
             mLogger.debug( "WrongAttempts delete URL: "+uri.toString());
             URL url = new URL(uri.toString());
 
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("DELETE");
             conn.setRequestProperty("application-id", BackendConstants.APP_ID);
@@ -107,11 +99,13 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
             }
 
             conn.disconnect();
+            conn=null;
             mLogger.debug("Updated delete status of wrong attempts: "+recordsUpdated);
             return recordsUpdated;
 
         } catch (Exception e) {
             mLogger.error("Exception in deleteOldWrongAttempts: "+e.toString());
+            if(conn!=null) { conn.disconnect(); }
             return -1;
         }
     }

@@ -164,9 +164,8 @@ public class BackendOps {
         BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
         int cnt = users.getTotalObjects();
         if( cnt == 0) {
-            // No unprocessed merchant left with this prefix
-            String errorMsg = "No Merchant found: "+whereClause;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            // No matching merchant is not an error
+            return null;
         } else {
             ArrayList<Merchants> objects = new ArrayList<>();
             while (users.getCurrentPage().size() > 0)
@@ -271,9 +270,8 @@ public class BackendOps {
             }
             return objects;
         } else {
-            String errorMsg = "No cashback found: "+whereClause;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            // no object found is not an error
+            return null;
         }
     }
 
@@ -440,9 +438,8 @@ public class BackendOps {
             }
             return objects;
         } else {
-            String errorMsg = "No merchantop object found: "+whereClause;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            // no object is not an error
+            return null;
         }
     }
 
@@ -532,9 +529,8 @@ public class BackendOps {
 
         int size = collection.getTotalObjects();
         if(size <= 0) {
-            String errorMsg = "No transactions found: "+whereClause;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            // no matching txns in not an error
+            return null;
         }
 
         List<Transaction> transactions = collection.getData();
@@ -542,7 +538,6 @@ public class BackendOps {
             collection = collection.nextPage();
             transactions.addAll(collection.getData());
         }
-
         return transactions;
     }
 
