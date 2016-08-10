@@ -53,7 +53,7 @@ public class MerchantServices implements IBackendlessService {
                 AllOtp newOtp = new AllOtp();
                 newOtp.setUser_id(merchant.getAuto_id());
                 newOtp.setMobile_num(newMobile);
-                newOtp.setOpcode(DbConstants.MERCHANT_OP_CHANGE_MOBILE);
+                newOtp.setOpcode(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
                 BackendOps.generateOtp(newOtp);
 
                 // OTP generated successfully - return exception to indicate so
@@ -72,10 +72,10 @@ public class MerchantServices implements IBackendlessService {
                 // record in merchant ops table
                 MerchantOps merchantops = new MerchantOps();
                 merchantops.setMerchant_id(merchant.getAuto_id());
-                merchantops.setOp_code(DbConstants.MERCHANT_OP_CHANGE_MOBILE);
+                merchantops.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
                 merchantops.setMobile_num(oldMobile);
                 merchantops.setExtra_op_params(newMobile);
-                merchantops.setOp_status(DbConstants.MERCHANT_OP_STATUS_COMPLETE);
+                merchantops.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
                 try {
                     BackendOps.addMerchantOp(merchantops);
                 } catch(Exception e) {
@@ -442,7 +442,7 @@ public class MerchantServices implements IBackendlessService {
         customer.setStatus_update_time(new Date());
 
         // get customer counter value and encode the same to get customer private id
-        Double customerCnt =  BackendOps.fetchCounterValue(DbConstants.CUSTOMER_ID_COUNTER);
+        Double customerCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
         String private_id = Base61.fromBase10(customerCnt.longValue());
         mLogger.debug("Generated private id: "+private_id);
         customer.setPrivate_id(private_id);

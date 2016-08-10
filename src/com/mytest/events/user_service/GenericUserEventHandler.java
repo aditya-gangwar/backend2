@@ -6,10 +6,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
-import com.mytest.constants.BackendConstants;
-import com.mytest.constants.BackendResponseCodes;
-import com.mytest.constants.CommonConstants;
-import com.mytest.constants.DbConstants;
+import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -99,7 +96,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             AllOtp newOtp = new AllOtp();
                             newOtp.setUser_id(userId);
                             newOtp.setMobile_num(merchant.getMobile_num());
-                            newOtp.setOpcode(DbConstants.MERCHANT_OP_NEW_DEVICE_LOGIN);
+                            newOtp.setOpcode(DbConstantsBackend.MERCHANT_OP_NEW_DEVICE_LOGIN);
                             BackendOps.generateOtp(newOtp);
 
                             // OTP generated successfully - return exception to indicate so
@@ -161,13 +158,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false);
-                            CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstants.ATTEMPT_TYPE_USER_LOGIN);
+                            CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
 
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
                             Agents agent = BackendOps.getAgent(login);
-                            CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstants.ATTEMPT_TYPE_USER_LOGIN);
+                            CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
                     }
                 }
@@ -204,12 +201,18 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
                 Merchants merchant = (Merchants) userValue.get("merchant");
                 if (merchant != null) {
+                    // get open merchant id batch
+                    String countryCode = merchant.getAddress().getCity().getCountryCode();
+                    String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
+                    MerchantIdBatches batch = BackendOps.fetchOpenMerchantIdBatch(batchTableName);
+
                     // get merchant counter value and use the same to generate merchant id
-                    Double merchantCnt =  BackendOps.fetchCounterValue(DbConstants.MERCHANT_ID_COUNTER);
+                    Double merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
                     mLogger.debug("Fetched merchant cnt: "+merchantCnt.longValue());
                     // set merchant id
-                    String merchantId = CommonUtils.generateMerchantId(merchantCnt.longValue());
+                    String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt.longValue());
                     mLogger.debug("Generated merchant id: "+merchantId);
+
                     userValue.put("user_id", merchantId);
                     merchant.setAuto_id(merchantId);
                     merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
@@ -301,7 +304,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         int table_suffix = pool_start + ((int)(regCounter % pool_size));
         //int table_suffix = pool_start + (num % pool_size);
 
-        String cbTableName = DbConstants.CASHBACK_TABLE_NAME + String.valueOf(table_suffix);
+        String cbTableName = DbConstantsBackend.CASHBACK_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setCashback_table(cbTableName);
         mLogger.debug("Generated cashback table name:" + cbTableName);
 
@@ -311,7 +314,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         //pool_start = MyGlobalSettings.getGlobalSettings().getTxn_table_pool_start();
         //table_suffix = pool_start + ((int)(mRegCounter % pool_size));
 
-        String transTableName = DbConstants.TRANSACTION_TABLE_NAME + String.valueOf(table_suffix);
+        String transTableName = DbConstantsBackend.TRANSACTION_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setTxn_table(transTableName);
         mLogger.debug("Generated transaction table name:" + transTableName);
     }

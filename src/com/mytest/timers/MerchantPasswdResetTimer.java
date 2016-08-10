@@ -5,10 +5,7 @@ import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
-import com.mytest.constants.BackendConstants;
-import com.mytest.constants.BackendResponseCodes;
-import com.mytest.constants.DbConstants;
-import com.mytest.constants.GlobalSettingsConstants;
+import com.mytest.constants.*;
 import com.mytest.database.MerchantOps;
 import com.mytest.database.Merchants;
 import com.mytest.messaging.SmsConstants;
@@ -51,7 +48,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
                 // this is to avoid any chances of clash with the next run of this timer
                 ArrayList<MerchantOps> lockedOps = new ArrayList<>();
                 for (int i = 0; i < ops.size(); i++) {
-                    ops.get(i).setOp_status(DbConstants.MERCHANT_OP_STATUS_LOCKED);
+                    ops.get(i).setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_LOCKED);
                     try {
                         BackendOps.saveMerchantOp(ops.get(i));
                         mLogger.debug("Locked passwd reset op for: " + ops.get(i).getMerchant_id());
@@ -109,7 +106,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         mLogger.debug("Sent password reset SMS: "+merchant.getAuto_id());
 
         // Change merchant op status
-        op.setOp_status(DbConstants.MERCHANT_OP_STATUS_COMPLETE);
+        op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
         BackendOps.saveMerchantOp(op);
     }
 
@@ -117,8 +114,8 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         StringBuilder whereClause = new StringBuilder();
 
         // for particular merchant
-        whereClause.append("op_code = '").append(DbConstants.MERCHANT_OP_RESET_PASSWD).append("'");
-        whereClause.append(" AND op_status = '").append(DbConstants.MERCHANT_OP_STATUS_PENDING).append("'");
+        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append(" AND op_status = '").append(DbConstantsBackend.MERCHANT_OP_STATUS_PENDING).append("'");
         // older than configured cool off period
         long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
 

@@ -9,10 +9,6 @@ import java.util.Map;
  */
 public class DbConstants {
 
-    // Table names - for which class name is not same
-    public static String CASHBACK_TABLE_NAME = "Cashback";
-    public static String TRANSACTION_TABLE_NAME = "Transaction";
-
     // Users table - 'user_type' column values
     public static final int USER_TYPE_MERCHANT = 0;
     public static final int USER_TYPE_CUSTOMER = 1;
@@ -82,42 +78,6 @@ public class DbConstants {
     public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
     // CustomerOps table - 'status' column values
     public static final String CUSTOMER_OP_STATUS_OTP_MATCHED = "OTP Matched";
-
-    // MerchantOps table - 'opcode' column values
-    public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
-    public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
-    // MerchantOps table - 'status' column values
-    public static final String MERCHANT_OP_STATUS_PENDING = "pending";
-    public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
-    public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
-
-    // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
-    public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";
-
-    // Counters table - 'name' column values
-    public static final String CUSTOMER_ID_COUNTER = "customer_id";
-    public static final String MERCHANT_ID_COUNTER = "merchant_id";
-
-    // WrongAttempts table - 'attempt_type' column values
-    public static final String ATTEMPT_TYPE_FORGOT_USERID = "forgotUserId";
-    public static final String ATTEMPT_TYPE_PASSWORD_RESET = "passwordReset";
-    public static final String ATTEMPT_TYPE_USER_LOGIN = "userLogin";
-    public static final String ATTEMPT_TYPE_USER_PIN = "userPin";
-
-    // Map from backend error codes to local error codes
-    public static final Map<String, Integer> attemptTypeToAccLockedReason;
-    static {
-        Map<String, Integer> aMap = new HashMap<>(10);
-
-        // my own backend response codes
-        aMap.put(ATTEMPT_TYPE_FORGOT_USERID, LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_PASSWORD_RESET, LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_USER_LOGIN, LOCKED_WRONG_PASSWORD_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_USER_PIN, LOCKED_WRONG_PIN_LIMIT_RCHD);
-
-        attemptTypeToAccLockedReason = Collections.unmodifiableMap(aMap);
-    }
-
 
     // GlobalSettings table - should be exactly same as 'names' in DB
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_MINS = "merchant_passwd_reset_mins";

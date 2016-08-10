@@ -5,7 +5,6 @@ import com.backendless.BackendlessCollection;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
-import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
 import com.mytest.constants.*;
@@ -405,7 +404,7 @@ public class BackendOps {
     }
 
     /*
-     * Merchant operations
+     * Merchant operations ops
      */
     public static MerchantOps addMerchantOp(MerchantOps op) {
         return Backendless.Persistence.save( op );
@@ -516,7 +515,9 @@ public class BackendOps {
     /*
      * Transaction operations
      */
-    public static List<Transaction> fetchTransactions(String whereClause) {
+    public static List<Transaction> fetchTransactions(String whereClause, String tableName) {
+        Backendless.Data.mapTableToClass(tableName, Transaction.class);
+
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         // sorted by create time
@@ -568,4 +569,177 @@ public class BackendOps {
     public static Agents updateAgent(Agents agent) {
         return Backendless.Persistence.save(agent);
     }
+
+    /*
+     * Merchant Id ops
+     */
+    public static boolean merchantIdRangeOpen(String tableName, String rangeId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        // Range id is open - if any batch already available for that range in the batches table for that country
+        String whereClause = "rangeId = '"+rangeId+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+
+        int size = collection.getTotalObjects();
+        if(size > 0) {
+            // no matching txns in not an error
+            return true;
+        }
+
+        return false;
+    }
+
+    public static MerchantIdBatches saveMerchantIdBatch(String tableName, MerchantIdBatches batch) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+        return Backendless.Persistence.save(batch);
+    }
+
+    public static MerchantIdBatches fetchOpenMerchantIdBatch(String tableName) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        String whereClause = "status = "+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+        int size = collection.getTotalObjects();
+        if(size == 1) {
+            return collection.getData().get(0);
+        }
+        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH, "Batch object is not exactly 1: "+size+","+tableName);
+    }
+
 }
+
+    /*
+    public static MerchantIdBatches fetchMerchantIdBatch(String tableName, String rangeId, String batchId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        String whereClause = "rangeId = '"+rangeId+"' and batchId = '"+batchId+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+
+        int size = collection.getTotalObjects();
+        if(size == 1) {
+            return collection.getData().get(0);
+        }
+        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "Batch object is not exactly 1: "+size+","+tableName+","+batchId);
+    }
+
+    public static List<MerchantIdBatches> fetchOpenMerchantIdBatches(String tableName) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        String whereClause = "status = "+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+        int size = collection.getTotalObjects();
+        if(size <= 0) {
+            return null;
+        }
+
+        List<MerchantIdBatches> batches = collection.getData();
+        while(collection.getCurrentPage().size() > 0) {
+            collection = collection.nextPage();
+            batches.addAll(collection.getData());
+        }
+        return batches;
+    }
+
+    public static List<MerchantIdBatches> fetchMerchantIdBatch(String tableName, String whereClause) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+
+        int size = collection.getTotalObjects();
+        if(size <= 0) {
+            // no matching txns in not an error
+            return null;
+        }
+
+        List<MerchantIdBatches> batches = collection.getData();
+        while(collection.getCurrentPage().size() > 0) {
+            collection = collection.nextPage();
+            batches.addAll(collection.getData());
+        }
+        return batches;
+    }
+
+    public static boolean merchantIdBatchOpen(String tableName, String batchId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIds.class);
+
+        // Batch is open - if any merchantId already exists for that batchId in the merchantIds table for that range
+        String whereClause = "batchId = '"+batchId+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIds> collection = Backendless.Data.of(MerchantIds.class).find(dataQuery);
+        int size = collection.getTotalObjects();
+        if(size > 0) {
+            // no matching txns in not an error
+            return true;
+        }
+
+        return false;
+    }
+
+    public static MerchantIds createMerchantId(String tableName, MerchantIds batch) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIds.class);
+        return Backendless.Persistence.save(batch);
+    }
+
+    public static int getAvailableMerchantIdCnt(String tableName, String batchId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIds.class);
+
+        // Range id is open - if any batch already available for that range in the batches table for that country
+        String whereClause = "batchId = '"+batchId+"' and status = "+DbConstantsBackend.MERCHANT_ID_STATUS_AVAILABLE+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIds> collection = Backendless.Data.of(MerchantIds.class).find(dataQuery);
+        return collection.getTotalObjects();
+    }
+
+    public static int getTotalMerchantIdCnt(String tableName, String batchId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIds.class);
+
+        // Range id is open - if any batch already available for that range in the batches table for that country
+        String whereClause = "batchId = '"+batchId+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIds> collection = Backendless.Data.of(MerchantIds.class).find(dataQuery);
+        return collection.getTotalObjects();
+    }*/

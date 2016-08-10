@@ -12,6 +12,7 @@ import com.backendless.servercode.annotation.Asset;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.DbConstants;
+import com.mytest.constants.DbConstantsBackend;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -67,7 +68,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 if (!custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
                         !customer.getTxn_pin().equals(pin)) {
 
-                    CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstants.ATTEMPT_TYPE_USER_PIN);
+                    CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
                     throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 

@@ -7,6 +7,7 @@ import com.backendless.servercode.IBackendlessService;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.DbConstants;
+import com.mytest.constants.DbConstantsBackend;
 import com.mytest.database.Agents;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -38,7 +39,7 @@ public class AgentServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String dob = agent.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
-                CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
+                CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
                 throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 

@@ -38,7 +38,7 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD = "543";
     public static final String BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD = "544";
 
-    public static final String BE_ERROR_SERVER_ERROR_ACC_DISABLED = "599";
+    public static final String BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH = "550";
 
 
     // these are defined by backendless

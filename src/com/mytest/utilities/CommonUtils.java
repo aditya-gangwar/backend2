@@ -2,8 +2,6 @@ package com.mytest.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.exceptions.BackendlessFault;
-import com.backendless.logging.Logger;
 import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
@@ -44,6 +42,7 @@ public class CommonUtils {
         return new String(id);
     }
 
+    /*
     public static String generateMerchantId(long regCounter) {
         // Generate unique merchant id based on merchant reg counter value
         // Id is alphanumeric with first 2 alphabets and then 4 digits
@@ -66,9 +65,16 @@ public class CommonUtils {
         }
 
         return sb.toString();
+    }*/
+
+    public static String generateMerchantId(MerchantIdBatches batch, String countryCode, long regCounter) {
+        // 8 digit merchant id format:
+        // <1-3 digit country code> + <0-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
+        int serialNo = (int) (regCounter % BackendConstants.MERCHANT_ID_MAX_SNO_PER_BATCH);
+        return countryCode+batch.getRangeId()+batch.getBatchId()+String.valueOf(serialNo);
     }
 
-    public static String generateCustomerPIN() {
+        public static String generateCustomerPIN() {
         // random numeric string
         Random random = new Random();
         char[] id = new char[CommonConstants.PIN_OTP_LEN];
@@ -249,13 +255,13 @@ public class CommonUtils {
                 try {
                     switch(userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
-                            setMerchantStatus((Merchants)userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            setMerchantStatus((Merchants)userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType));
                             break;
                         case DbConstants.USER_TYPE_CUSTOMER:
-                            setCustomerStatus((Customers) userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            setCustomerStatus((Customers) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType));
                             break;
                         case DbConstants.USER_TYPE_AGENT:
-                            setAgentStatus((Agents) userObject, DbConstants.USER_STATUS_LOCKED, DbConstants.attemptTypeToAccLockedReason.get(attemptType));
+                            setAgentStatus((Agents) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType));
                             break;
                     }
                 } catch (Exception e) {
@@ -438,11 +444,17 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
         Backendless.Data.mapTableToClass("Agents", Agents.class);
 
+        /*
+        Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
+
+        Backendless.Data.mapTableToClass("MerchantIds199", MerchantIds.class);
+
         Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
 
         Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
+        */
     }
 
 

@@ -87,10 +87,9 @@ public class TxnArchiver
         mLogger.debug("Fetched merchant id: "+merchantId);
 
         String txnTableName = mLastFetchMerchant.getTxn_table();
-        //Backendless.Data.mapTableToClass(txnTableName, Transaction.class);
 
         mLastFetchTransactions = null;
-        mLastFetchTransactions = BackendOps.fetchTransactions(buildTxnWhereClause(merchantId));
+        mLastFetchTransactions = BackendOps.fetchTransactions(buildTxnWhereClause(merchantId), txnTableName);
         if(mLastFetchTransactions != null) {
             mLogger.debug("Fetched "+mLastFetchTransactions.size()+" transactions for "+merchantId);
             if(mLastFetchTransactions.size() > 0) {

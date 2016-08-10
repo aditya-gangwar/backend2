@@ -96,7 +96,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String name = merchant.getName();
             if (name == null || !name.equalsIgnoreCase(brandName)) {
-                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstants.ATTEMPT_TYPE_PASSWORD_RESET);
+                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
                 throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
@@ -109,8 +109,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 MerchantOps op = new MerchantOps();
                 op.setMerchant_id(merchant.getAuto_id());
                 op.setMobile_num(merchant.getMobile_num());
-                op.setOp_code(DbConstants.MERCHANT_OP_RESET_PASSWD);
-                op.setOp_status(DbConstants.MERCHANT_OP_STATUS_PENDING);
+                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD);
+                op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_PENDING);
 
                 BackendOps.addMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
@@ -139,7 +139,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
-                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstants.ATTEMPT_TYPE_FORGOT_USERID);
+                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_FORGOT_USERID);
                 throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
@@ -189,7 +189,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         // Single password reset request allowed in every 2 hours
 
         // for particular merchant
-        whereClause.append("op_code = '").append(DbConstants.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
         whereClause.append("AND merchant_id = '").append(merchantId).append("'");
         // greater than configured period
         long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS * 60 * 1000);

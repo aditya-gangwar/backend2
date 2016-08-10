@@ -64,7 +64,7 @@ public class TxnTableEventHelper {
             if(CommonUtils.customerPinRequired(merchant, transaction)) {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
-                        CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstants.ATTEMPT_TYPE_USER_PIN);
+                        CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
                         throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
                     }
                 } else {

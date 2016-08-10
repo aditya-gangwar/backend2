@@ -15,6 +15,16 @@ public class Cities
   private String ownerId;
   private java.util.Date created;
   private String state;
+  private String countryCode;
+
+  public String getCountryCode() {
+    return countryCode;
+  }
+
+  public void setCountryCode(String countryCode) {
+    this.countryCode = countryCode;
+  }
+
   public java.util.Date getUpdated()
   {
     return updated;

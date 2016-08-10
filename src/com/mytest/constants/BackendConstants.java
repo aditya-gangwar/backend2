@@ -13,7 +13,7 @@ public class BackendConstants {
     public static final int CASHBACK_TABLE_POOL_SIZE = 1;
 
     public static final int PASSWORD_LEN = 5;
-    public static final int CUSTOMER_PRIVATE_ID_LEN = 4;
+    public static final int CUSTOMER_PRIVATE_ID_LEN = 6;
 
     // used in generating temporary passwords
     public static final char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
@@ -42,5 +42,8 @@ public class BackendConstants {
     public static final int CUSTOMER_ID_MOBILE = 0;
     public static final int CUSTOMER_ID_CARD = 1;
     public static final int CUSTOMER_ID_PRIVATE_ID = 2;
+
+    // Merchant id constants
+    public static final int MERCHANT_ID_MAX_SNO_PER_BATCH = 1000; // 3 digit serialNo
 
 }
