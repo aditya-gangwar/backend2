@@ -2,11 +2,8 @@ package com.mytest.database;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
-import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
-import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
-import com.mytest.database.Future;
 
 public class MerchantIdBatches
 {
@@ -16,8 +13,18 @@ public class MerchantIdBatches
   private String objectId;
   private java.util.Date created;
   private String rangeId;
-  private String batchId;
+  private int batchId;
   private String status;
+  private String rangeBatchId;
+
+  public String getRangeBatchId() {
+    return rangeBatchId;
+  }
+
+  public void setRangeBatchId(String rangeBatchId) {
+    this.rangeBatchId = rangeBatchId;
+  }
+
   public java.util.Date getStatusTime()
   {
     return statusTime;
@@ -58,12 +65,12 @@ public class MerchantIdBatches
     this.rangeId = rangeId;
   }
 
-  public String getBatchId()
+  public int getBatchId()
   {
     return batchId;
   }
 
-  public void setBatchId( String batchId )
+  public void setBatchId(int batchId )
   {
     this.batchId = batchId;
   }

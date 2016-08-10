@@ -2,10 +2,12 @@ package com.mytest.timers;
 
 import com.backendless.Backendless;
 import com.backendless.HeadersManager;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.constants.BackendConstants;
 import com.backendless.logging.Logger;
+import com.mytest.utilities.CommonUtils;
 
 /**
  * TxnArchive0Timer is a timer.
@@ -34,6 +36,9 @@ public class TxnArchive0Timer extends com.backendless.servercode.extension.Timer
         } catch(Exception e) {
             logger.error("Exception in TxnArchive0Timer: "+e.toString());
             //Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }

@@ -60,7 +60,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String deviceInfo = merchant.getTempDevId();
                     if(deviceInfo==null || deviceInfo.isEmpty()) {
                         // TODO : Raise critical alarm
-                        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
                     }
 
                     // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<time>,<otp>
@@ -77,7 +77,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         // most probably from last login call - setDeviceInfo not called before this login
                         // can indicate sabotage
                         // TODO : Raise critical alarm
-                        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Device data is old");
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Device data is old");
                     }
 
                     // Check if device is in trusted list
@@ -90,7 +90,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // Check for max devices allowed per user
                             int deviceCnt = (merchant.getTrusted_devices()!=null) ? merchant.getTrusted_devices().size() : 0;
                             if (deviceCnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
-                                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Device data is old");
+                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Device data is old");
                             }
                             // Generate OTP
                             AllOtp newOtp = new AllOtp();
@@ -101,7 +101,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                             // OTP generated successfully - return exception to indicate so
                             positiveException = true;
-                            throw CommonUtils.getException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                            throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
 
                         } else {
                             // OTP available - validate the same
@@ -177,6 +177,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 mLogger.error("Exception in afterLogin: "+e.toString());
             }
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }
@@ -195,7 +198,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
             // If merchant, generate login id and password
             // If customer, generate private id and PIN
-            String userId = (String) userValue.get("user_id");
+            //String userId = (String) userValue.get("user_id");
             Integer userType = (Integer) userValue.get("user_type");
 
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
@@ -205,12 +208,15 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String countryCode = merchant.getAddress().getCity().getCountryCode();
                     String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
                     MerchantIdBatches batch = BackendOps.fetchOpenMerchantIdBatch(batchTableName);
+                    if(batch == null) {
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH, "No open merchant id batch available.");
+                    }
 
                     // get merchant counter value and use the same to generate merchant id
-                    Double merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
-                    mLogger.debug("Fetched merchant cnt: "+merchantCnt.longValue());
+                    Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+                    mLogger.debug("Fetched merchant cnt: "+merchantCnt);
                     // set merchant id
-                    String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt.longValue());
+                    String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
                     mLogger.debug("Generated merchant id: "+merchantId);
 
                     userValue.put("user_id", merchantId);
@@ -219,6 +225,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
                     merchant.setStatus_update_time(new Date());
                     merchant.setAdmin_remarks("New registered merchant");
+                    merchant.setMobile_num(CommonUtils.addMobileCC(merchant.getMobile_num()));
 
                     // generate and set password
                     String pwd = CommonUtils.generateTempPassword();
@@ -226,13 +233,16 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     userValue.put("password",pwd);
 
                     // set cashback and transaction table names
-                    setCbAndTransTables(merchant, merchantCnt.longValue());
+                    setCbAndTransTables(merchant, merchantCnt);
                 }
             }
             //Backendless.Logging.flush();
         } catch (Exception e) {
             mLogger.error("Exception in beforeRegister: "+e.toString());
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }
@@ -279,6 +289,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         } catch (Exception e) {
             mLogger.error("Exception in beforeRegister: "+e.toString());
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }

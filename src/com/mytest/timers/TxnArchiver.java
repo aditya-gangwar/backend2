@@ -7,6 +7,7 @@ import com.mytest.constants.CommonConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
 import com.mytest.utilities.BackendOps;
+import com.mytest.utilities.CommonUtils;
 import com.mytest.utilities.DateUtil;
 
 import java.io.BufferedReader;
@@ -58,12 +59,14 @@ public class TxnArchiver
     {
         long startTime = System.currentTimeMillis();
         mLogger = logger;
-        mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix);
 
         mSdfDateWithTime.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
         mSdfOnlyDateBackend.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
         mSdfOnlyDateBackendGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
+
+        mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix+", "+mSdfDateWithTime.format(startTime));
+        CommonUtils.initTableToClassMappings();
 
         // Fetch next not processed merchant
         mLastFetchMerchant = null;

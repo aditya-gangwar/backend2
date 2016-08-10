@@ -17,7 +17,7 @@ public class Cashback
   private Integer cb_credit;
   private Integer cl_debit;
   private java.util.Date created;
-  private String rowid_card;
+  //private String rowid_card;
   private Integer total_billed;
   private String rowid;
   private String cust_private_id;
@@ -121,6 +121,7 @@ public class Cashback
     return created;
   }
 
+  /*
   public String getRowid_card()
   {
     return rowid_card;
@@ -130,6 +131,7 @@ public class Cashback
   {
     this.rowid_card = rowid_card;
   }
+  */
 
   public Integer getTotal_billed()
   {

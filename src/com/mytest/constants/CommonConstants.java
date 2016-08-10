@@ -8,6 +8,7 @@ import java.util.Locale;
  */
 public class CommonConstants {
 
+    public static final String INDIA_MOBILE_COUNTRY_CODE = "91";
     /*
      * Due to some issue in backendless - the errorCode is not correctly transmitted to app
      * from the Backend API - on raising an exception.
@@ -40,8 +41,10 @@ public class CommonConstants {
     /*
      * Size, Length and Limits
      */
-    public static final int MERCHANT_ID_LEN = 6;
-    public static final int AGENT_ID_LEN = 8;
+    public static final int MERCHANT_ID_LEN = 8;
+    public static final int AGENT_ID_LEN = 7;
+    public static final int CUSTOMER_ID_LEN = 12; // 12 digit mobile number
+    public static final int CUSTOMER_CARDID_LEN = 11;
 
     // DOB in format 'DDMMYYYY'
     public static final int DOB_SECRET_LEN = 8; //mobile number
@@ -51,7 +54,6 @@ public class CommonConstants {
     public static final int MAX_DEVICES_PER_MERCHANT = 3;
     public static final int MOBILE_NUM_LENGTH = 10;
     public static final int dbQueryMaxPageSize = 100;
-    public static final int CUSTOMER_QRCODE_LENGTH = 7;
 
     /*
      * Backend path constants

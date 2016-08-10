@@ -9,10 +9,7 @@ import com.backendless.servercode.AbstractContext;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
-import com.mytest.constants.BackendConstants;
-import com.mytest.constants.BackendResponseCodes;
-import com.mytest.constants.DbConstants;
-import com.mytest.constants.DbConstantsBackend;
+import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
@@ -50,7 +47,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 String errorMsg = "";
 
                 // Fetch customer
-                String mobileNum = customerops.getMobile_num();
+                String mobileNum = CommonUtils.addMobileCC(customerops.getMobile_num());
                 Customers customer = BackendOps.getCustomer(mobileNum, BackendConstants.CUSTOMER_ID_MOBILE);
                 // check if customer is enabled
                 CommonUtils.checkCustomerStatus(customer);
@@ -60,7 +57,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 if (!custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
                         !customer.getMembership_card().getCard_id().equals(customerops.getQr_card())) {
 
-                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card");
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card");
                 }
 
                 // Don't verify PIN for 'reset PIN' operation
@@ -69,7 +66,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                         !customer.getTxn_pin().equals(pin)) {
 
                     CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
-                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
                 // Generate OTP and send SMS
@@ -85,7 +82,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw CommonUtils.getException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
 
             } else {
                 // Second run, as OTP available
@@ -102,6 +99,10 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 mLogger.error("Exception in CustomerOpsTableEventHandler:beforeCreate: "+e.toString());
             }
             Backendless.Logging.flush();
+
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }
@@ -118,10 +119,10 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             String opcode = customerops.getOp_code();
             switch(opcode) {
                 case DbConstants.CUSTOMER_OP_NEW_CARD:
-                    changeCustomerCardOrMobile(customerops, true);
+                    changeCustomerCard(customerops);
                     break;
                 case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
-                    changeCustomerCardOrMobile(customerops, false);
+                    changeCustomerMobile(customerops);
                     break;
                 case DbConstants.CUSTOMER_OP_RESET_PIN:
                     resetCustomerPin(customerops.getMobile_num());
@@ -131,6 +132,9 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         } catch (Exception e) {
             mLogger.error("Exception in CustomerOpsTableEventHandler:afterCreate: "+e.toString());
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }
@@ -144,6 +148,112 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         mLogger = Backendless.Logging.getLogger("com.mytest.services.CustomerOpsTableEventHandler");
     }
 
+    private void changeCustomerMobile(CustomerOps custOp) {
+        String oldMobile = CommonUtils.addMobileCC(custOp.getMobile_num());
+        String newMobile = CommonUtils.addMobileCC(custOp.getExtra_op_params());
+
+        // fetch user with the given id with related customer object
+        BackendlessUser user = BackendOps.fetchUser(oldMobile, DbConstants.USER_TYPE_CUSTOMER);
+        Customers customer = (Customers) user.getProperty("customer");
+        // check if customer is enabled
+        CommonUtils.checkCustomerStatus(customer);
+
+        // update mobile number
+        user.setProperty("user_id", newMobile);
+        customer.setMobile_num(newMobile);
+        user.setProperty("customer", customer);
+        BackendOps.updateUser(user);
+
+        // Send message to customer informing the same - ignore sent status
+        String smsText = buildMobileChangeSMS( CommonUtils.removeMobileCC(oldMobile), CommonUtils.removeMobileCC(customer.getMobile_num()) );
+        SmsHelper.sendSMS(smsText, oldMobile+","+customer.getMobile_num());
+    }
+
+    private void changeCustomerCard(CustomerOps custOp) {
+        // fetch new card record
+        CustomerCards newCard = BackendOps.getCustomerCard(custOp.getQr_card());
+        CommonUtils.checkCardForAllocation(newCard);
+        //TODO: enable this in final testing
+        //if(!newCard.getMerchantId().equals(merchantId)) {
+        //  return ResponseCodes.RESPONSE_CODE_QR_WRONG_MERCHANT;
+        //}
+
+        // fetch user with the given id with related customer object
+        String custMobile = custOp.getMobile_num();
+        BackendlessUser user = BackendOps.fetchUser(custMobile, DbConstants.USER_TYPE_CUSTOMER);
+        Customers customer = (Customers) user.getProperty("customer");
+        CustomerCards oldCard = customer.getMembership_card();
+        // check if customer is enabled
+        CommonUtils.checkCustomerStatus(customer);
+
+        // update 'customer' and 'CustomerCard' objects for new card
+        newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED);
+        newCard.setStatus_update_time(new Date());
+        customer.setMembership_card(newCard);
+        customer.setCardId(newCard.getCard_id());
+
+        user.setProperty("customer", customer);
+        BackendOps.updateUser(user);
+
+        // update old card status
+        try {
+            oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_REMOVED);
+            oldCard.setStatus_reason(custOp.getExtra_op_params());
+            oldCard.setStatus_update_time(new Date());
+            BackendOps.saveCustomerCard(oldCard);
+        } catch (BackendlessException e) {
+            // ignore as not considered as failure for whole 'changeCustomerCardOrMobile' operation
+            // but log as alarm for manual correction
+            //TODO: raise alarm
+            mLogger.error("Exception while updating old card status: "+e.toString());
+        }
+
+        // Send message to customer informing the same - ignore sent status
+        String smsText = buildNewCardSMS(CommonUtils.removeMobileCC(customer.getMobile_num()), newCard.getCard_id());
+        SmsHelper.sendSMS(smsText, customer.getMobile_num());
+    }
+
+    private void resetCustomerPin(String mobileNum) {
+        // fetch user with the given id with related customer object
+        BackendlessUser user = BackendOps.fetchUser(CommonUtils.addMobileCC(mobileNum), DbConstants.USER_TYPE_CUSTOMER);
+        Customers customer = (Customers) user.getProperty("customer");
+        CommonUtils.checkCustomerStatus(customer);
+
+        // generate pin
+        String newPin = CommonUtils.generateCustomerPIN();
+
+        // update user account for the PIN
+        user.setPassword(newPin);
+        //TODO: encode PIN
+        customer.setTxn_pin(newPin);
+        user.setProperty("customer",customer);
+
+        BackendOps.updateUser(user);
+
+        // Send SMS through HTTP
+        String smsText = buildPwdResetSMS(CommonUtils.removeMobileCC(customer.getMobile_num()), newPin);
+        if( !SmsHelper.sendSMS(smsText, customer.getMobile_num()) )
+        {
+            //TODO: raise alarm
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+        }
+    }
+
+    private String buildPwdResetSMS(String userId, String pin) {
+        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
+    }
+
+    private String buildNewCardSMS(String userId, String card_num) {
+        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
+    }
+
+    private String buildMobileChangeSMS(String userId, String mobile_num) {
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
+    }
+
+}
+
+    /*
     private void changeCustomerCardOrMobile(CustomerOps custOp, boolean isNewCardCase) {
         // fetch new card record
         // if ok, fetch customer record
@@ -279,7 +389,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         } else {
             //TODO: raise alarm
             mLogger.error("Cashback with non-matching mobile num: "+rowid+","+oldMobile);
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
         }
     }
 
@@ -293,47 +403,8 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         } else {
             //TODO: raise alarm
             mLogger.error("Cashback with non-matching qr code: "+cb.getRowid_card()+","+oldQrCode);
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
         }
     }
+    */
 
-    private void resetCustomerPin(String mobileNum) {
-        // fetch user with the given id with related customer object
-        BackendlessUser user = BackendOps.fetchUser(mobileNum, DbConstants.USER_TYPE_CUSTOMER);
-        Customers customer = (Customers) user.getProperty("customer");
-        CommonUtils.checkCustomerStatus(customer);
-
-        // generate pin
-        String newPin = CommonUtils.generateCustomerPIN();
-
-        // update user account for the PIN
-        user.setPassword(newPin);
-        //TODO: encode PIN
-        customer.setTxn_pin(newPin);
-        user.setProperty("customer",customer);
-
-        BackendOps.updateUser(user);
-
-        // Send SMS through HTTP
-        String smsText = buildPwdResetSMS(mobileNum, newPin);
-        if( !SmsHelper.sendSMS(smsText, mobileNum) )
-        {
-            //TODO: raise alarm
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "");
-        }
-    }
-
-    private String buildPwdResetSMS(String userId, String pin) {
-        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
-    }
-
-    private String buildNewCardSMS(String userId, String card_num) {
-        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
-    }
-
-    private String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
-    }
-
-
-}

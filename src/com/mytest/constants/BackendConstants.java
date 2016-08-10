@@ -44,6 +44,10 @@ public class BackendConstants {
     public static final int CUSTOMER_ID_PRIVATE_ID = 2;
 
     // Merchant id constants
+    public static final int MERCHANT_ID_MAX_BATCH_ID_PER_RANGE = 99; // 2 digit batchId
     public static final int MERCHANT_ID_MAX_SNO_PER_BATCH = 1000; // 3 digit serialNo
 
+    public static final String MY_CARD_ISSUER_ID = "51";
+    public static final int CARD_ID_MAX_BATCH_ID_PER_RANGE = 999; // 3 digit batchId
+    public static final int CARD_ID_MAX_SNO_PER_BATCH = 1000; // 3 digit serialNo
 }

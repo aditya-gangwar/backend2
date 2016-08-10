@@ -13,6 +13,7 @@ public class DbConstantsBackend {
     public static String CASHBACK_TABLE_NAME = "Cashback";
     public static String TRANSACTION_TABLE_NAME = "Transaction";
     public static String MERCHANT_ID_BATCH_TABLE_NAME = "MerchantIdBatches";
+    public static String CARD_ID_BATCH_TABLE_NAME = "CardIdBatches";
 
     // MerchantOps table - 'opcode' column values
     public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
@@ -48,13 +49,13 @@ public class DbConstantsBackend {
         attemptTypeToAccLockedReason = Collections.unmodifiableMap(aMap);
     }
 
-    // Merchant Id Range status
+    // Merchant Id Batch status
     public static final String MERCHANT_ID_BATCH_STATUS_AVAILABLE = "available";
     public static final String MERCHANT_ID_BATCH_STATUS_OPEN = "open";
     public static final String MERCHANT_ID_BATCH_STATUS_CLOSED = "closed";
-    // Merchant Id status
-    public static final String MERCHANT_ID_STATUS_AVAILABLE = "available";
-    public static final String MERCHANT_ID_STATUS_ALLOTTED = "allotted";
-    public static final String MERCHANT_ID_STATUS_CLOSED = "closed";
+    // Card Id Batch status
+    public static final String CARD_ID_BATCH_STATUS_AVAILABLE = "available";
+    public static final String CARD_ID_BATCH_STATUS_OPEN = "open";
+    public static final String CARD_ID_BATCH_STATUS_CLOSED = "closed";
 
 }

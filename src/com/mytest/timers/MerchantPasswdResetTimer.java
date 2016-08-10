@@ -3,6 +3,7 @@ package com.mytest.timers;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.mytest.constants.*;
@@ -70,6 +71,9 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             //TODO: raise alarm
             mLogger.error("Exception in MerchantPasswdResetTimer: "+e.toString());
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }
@@ -101,7 +105,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
         {
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
         }
         mLogger.debug("Sent password reset SMS: "+merchant.getAuto_id());
 

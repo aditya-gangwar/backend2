@@ -143,7 +143,7 @@ public class CommonUtils {
         }
 
         if(errorCode != null) {
-            throw CommonUtils.getException(errorCode, errorMsg);
+            throw new BackendlessException(errorCode, errorMsg);
         }
     }
 
@@ -181,16 +181,16 @@ public class CommonUtils {
                 break;
         }
         if(errorCode != null) {
-            throw CommonUtils.getException(errorCode, errorMsg);
+            throw new BackendlessException(errorCode, errorMsg);
         }
     }
 
     public static void checkAgentStatus(Agents agent) {
         switch (agent.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_ACC_DISABLED, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_DISABLED, "");
             case DbConstants.USER_STATUS_LOCKED:
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_ACC_LOCKED, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_LOCKED, "");
         }
     }
 
@@ -203,21 +203,21 @@ public class CommonUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
         }
     }
 
     public static void checkCardForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_CARD_INUSE, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_CARD_INUSE, "");
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;*/
 
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
         }
     }
 
@@ -269,7 +269,7 @@ public class CommonUtils {
                     // TODO: raise alarm
                 }
                 // throw max attempt limit reached exception
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD, "");
             }
         } else {
             // related attempt row not available - create the same
@@ -305,10 +305,10 @@ public class CommonUtils {
         throw new BackendlessException(fault);
     }*/
 
-    public static BackendlessException getException(String errorCode, String errorMsg) {
+    public static BackendlessException getNewException(BackendlessException be) {
         // to be removed once issue is fixed on backendless side
-        errorMsg = CommonConstants.PREFIX_ERROR_CODE_AS_MSG + errorCode;
-        return new BackendlessException(errorCode, errorMsg);
+        // currently for 'custom error code' getCode() always returns 0 - from event handlers
+        return new BackendlessException(be.getCode(), CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode());
     }
 
     public static int getUserType(String userdId) {
@@ -317,6 +317,8 @@ public class CommonUtils {
                 return DbConstants.USER_TYPE_MERCHANT;
             case CommonConstants.AGENT_ID_LEN:
                 return DbConstants.USER_TYPE_AGENT;
+            case CommonConstants.CUSTOMER_ID_LEN:
+                return DbConstants.USER_TYPE_CUSTOMER;
             default:
                 return -1;
         }
@@ -346,7 +348,7 @@ public class CommonUtils {
     }
 
     public static boolean customerIdMobile(String id) {
-        return id.length()==CommonConstants.MOBILE_NUM_LENGTH;
+        return id.length()==CommonConstants.CUSTOMER_ID_LEN;
     }
 
     // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
@@ -431,6 +433,15 @@ public class CommonUtils {
                 return null;
         }
     }
+
+    public static String removeMobileCC(String mobileNum) {
+        // assuming 2 digit mobile country code - 91 for india
+        return mobileNum.substring(2);
+    }
+    public static String addMobileCC(String mobileNum) {
+        return CommonConstants.INDIA_MOBILE_COUNTRY_CODE+mobileNum;
+    }
+
 
     public static void initTableToClassMappings() {
         Backendless.Data.mapTableToClass("CustomerCards", CustomerCards.class);

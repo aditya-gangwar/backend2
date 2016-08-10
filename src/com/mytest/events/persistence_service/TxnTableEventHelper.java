@@ -3,6 +3,7 @@ package com.mytest.events.persistence_service;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.InvocationContext;
@@ -52,7 +53,7 @@ public class TxnTableEventHelper {
             String merchantId = merchant.getAuto_id();
 
             // Fetch customer
-            String customerId = transaction.getCustomer_id();
+            String customerId = CommonUtils.addMobileCC(transaction.getCustomer_id());
             Customers customer = BackendOps.getCustomer(customerId, BackendConstants.CUSTOMER_ID_MOBILE);
             // check if customer is enabled
             CommonUtils.checkCustomerStatus(customer);
@@ -65,15 +66,15 @@ public class TxnTableEventHelper {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
                         CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
-                        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
                     }
                 } else {
-                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId);
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId);
                 }
             }
 
             // Fetch cashback record
-            String whereClause = "rowid = '" + customerId + merchantId + "'";
+            String whereClause = "rowid = '" + customer.getPrivate_id() + merchantId + "'";
             Cashback cashback = null;
             ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, cbTable);
             if (data != null) {
@@ -84,7 +85,7 @@ public class TxnTableEventHelper {
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
                 if ((cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT) {
-                    throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId);
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId);
                 }
                 cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
                 cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
@@ -92,9 +93,10 @@ public class TxnTableEventHelper {
                 cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
 
                 // add/update transaction fields
+                transaction.setCustomer_id(customer.getMobile_num());
+                transaction.setCust_private_id(customer.getPrivate_id());
                 transaction.setMerchant_id(merchantId);
                 transaction.setMerchant_name(merchant.getName());
-                transaction.setCust_private_id(cashback.getCust_private_id());
                 transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
                 transaction.setCreate_time(new Date());
                 transaction.setArchived(false);
@@ -109,12 +111,15 @@ public class TxnTableEventHelper {
 
             } else {
                 //TODO: add in alarms
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "Txn commit: No cashback object found: "+merchantId+","+customerId);
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Txn commit: No cashback object found: "+merchantId+","+customerId);
             }
 
         } catch (Exception e) {
             mLogger.error("Exception in TxnEventHelper:handleBeforeCreate: "+e.toString());
             Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         }
     }

@@ -73,7 +73,7 @@ public class BackendOps {
         BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+userid;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -94,7 +94,7 @@ public class BackendOps {
         if (merchant == null) {
             //mLogger.error("Merchant object in null");
             String errorMsg = "Merchant object in null";
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         }
         return user;
 
@@ -135,7 +135,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+userId;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -148,7 +148,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+mobileNum;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -156,7 +156,6 @@ public class BackendOps {
 
     public static ArrayList<Merchants> fetchMerchants(String whereClause) {
         BackendlessDataQuery query = new BackendlessDataQuery();
-        // fetch all merchants, not yet archived
         query.setPageSize(CommonConstants.dbQueryMaxPageSize);
         query.setWhereClause(whereClause);
 
@@ -179,6 +178,14 @@ public class BackendOps {
             }
             return objects;
         }
+    }
+
+    public static int getMerchantCnt(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
+        return users.getTotalObjects();
     }
 
     public static Merchants updateMerchant(Merchants merchant) {
@@ -209,11 +216,11 @@ public class BackendOps {
         BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+custId;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             if(user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
             }
             return user.getData().get(0);
         }
@@ -233,7 +240,7 @@ public class BackendOps {
         BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
         if( collection.getTotalObjects() == 0) {
             String errorMsg = "No membership card found: "+cardId;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
         } else {
             return collection.getData().get(0);
         }
@@ -241,6 +248,14 @@ public class BackendOps {
 
     public static CustomerCards saveCustomerCard(CustomerCards card) {
         return Backendless.Persistence.save( card );
+    }
+
+    public static int getCardCnt(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<CustomerCards> users = Backendless.Data.of( CustomerCards.class ).find(query);
+        return users.getTotalObjects();
     }
 
     /*
@@ -309,11 +324,11 @@ public class BackendOps {
 
             if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num())) {
                 String errorMsg = "In generateOtp: Failed to send SMS";
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, errorMsg);
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, errorMsg);
             }
         } catch (Exception e) {
             String errorMsg = "Exception in generateOtp: "+e.toString();
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
         }
     }
 
@@ -327,7 +342,7 @@ public class BackendOps {
             otp = BackendOps.fetchOtp(userId);
         } catch(BackendlessException e) {
             if(e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
             }
             throw e;
         }
@@ -346,7 +361,7 @@ public class BackendOps {
                 // TODO: raise alarm
             }
         } else {
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
         }
     }
 
@@ -367,6 +382,7 @@ public class BackendOps {
     /*
      * Counters operations
      */
+    /*
     public static Double fetchCounterValue(String name) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause("name = '" + name + "'");
@@ -384,6 +400,10 @@ public class BackendOps {
             BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
             throw new BackendlessException(fault);
         }
+    }*/
+
+    public static Long fetchCounterValue(String name) {
+        return Backendless.Counters.incrementAndGet(name);
     }
 
     /*
@@ -553,7 +573,7 @@ public class BackendOps {
         if( user.getTotalObjects() == 0) {
             // no data found
             String errorMsg = "No agent found: "+userId;
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -573,26 +593,27 @@ public class BackendOps {
     /*
      * Merchant Id ops
      */
-    public static boolean merchantIdRangeOpen(String tableName, String rangeId) {
+    public static MerchantIdBatches firstMerchantIdBatchByBatchId(String tableName, String whereClause, boolean highest) {
         Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
-
-        // Range id is open - if any batch already available for that range in the batches table for that country
-        String whereClause = "rangeId = '"+rangeId+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        QueryOptions options = new QueryOptions();
+        if(highest) {
+            options.addSortByOption("batchId DESC");
+        } else {
+            options.addSortByOption("batchId ASC");
+        }
+        dataQuery.setQueryOptions(options);
+        dataQuery.setPageSize(1);
         dataQuery.setWhereClause(whereClause);
 
         BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
-
-        int size = collection.getTotalObjects();
-        if(size > 0) {
-            // no matching txns in not an error
-            return true;
+        if(collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            return null;
         }
-
-        return false;
     }
 
     public static MerchantIdBatches saveMerchantIdBatch(String tableName, MerchantIdBatches batch) {
@@ -603,19 +624,70 @@ public class BackendOps {
     public static MerchantIdBatches fetchOpenMerchantIdBatch(String tableName) {
         Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
 
-        String whereClause = "status = "+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+        String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
         dataQuery.setWhereClause(whereClause);
 
         BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
         int size = collection.getTotalObjects();
-        if(size == 1) {
+        if(size == 0) {
+            return null;
+        } else if(size == 1) {
             return collection.getData().get(0);
         }
-        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH, "Batch object is not exactly 1: "+size+","+tableName);
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "More than 1 open merchant id batches: "+size+","+tableName);
+    }
+
+    /*
+     * Card Id ops
+     */
+    public static CardIdBatches firstCardIdBatchByBatchId(String tableName, String whereClause, boolean highest) {
+        Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        QueryOptions options = new QueryOptions();
+        if(highest) {
+            options.addSortByOption("batchId DESC");
+        } else {
+            options.addSortByOption("batchId ASC");
+        }
+        dataQuery.setQueryOptions(options);
+        dataQuery.setPageSize(1);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<CardIdBatches> collection = Backendless.Data.of(CardIdBatches.class).find(dataQuery);
+        if(collection.getTotalObjects() > 0) {
+            return collection.getData().get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public static CardIdBatches saveCardIdBatch(String tableName, CardIdBatches batch) {
+        Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
+        return Backendless.Persistence.save(batch);
+    }
+
+    public static CardIdBatches fetchOpenCardIdBatch(String tableName) {
+        Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
+
+        String whereClause = "status = '"+DbConstantsBackend.CARD_ID_BATCH_STATUS_OPEN+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<CardIdBatches> collection = Backendless.Data.of(CardIdBatches.class).find(dataQuery);
+        int size = collection.getTotalObjects();
+        if(size == 0) {
+            return null;
+        } else if(size == 1) {
+            return collection.getData().get(0);
+        }
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "More than 1 open Card id batches: "+size+","+tableName);
     }
 
 }
@@ -637,7 +709,7 @@ public class BackendOps {
         if(size == 1) {
             return collection.getData().get(0);
         }
-        throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_GENERAL, "Batch object is not exactly 1: "+size+","+tableName+","+batchId);
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Batch object is not exactly 1: "+size+","+tableName+","+batchId);
     }
 
     public static List<MerchantIdBatches> fetchOpenMerchantIdBatches(String tableName) {
@@ -742,4 +814,26 @@ public class BackendOps {
 
         BackendlessCollection<MerchantIds> collection = Backendless.Data.of(MerchantIds.class).find(dataQuery);
         return collection.getTotalObjects();
+    }*/
+    /*
+    public static boolean merchantIdRangeOpen(String tableName, String rangeId) {
+        Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
+
+        // Range id is open - if any batch already available for that range in the batches table for that country
+        String whereClause = "rangeId = '"+rangeId+"'";
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantIdBatches> collection = Backendless.Data.of(MerchantIdBatches.class).find(dataQuery);
+
+        int size = collection.getTotalObjects();
+        if(size > 0) {
+            // no matching txns in not an error
+            return true;
+        }
+
+        return false;
     }*/

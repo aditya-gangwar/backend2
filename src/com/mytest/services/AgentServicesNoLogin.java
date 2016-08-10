@@ -2,6 +2,7 @@ package com.mytest.services;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.IBackendlessService;
 import com.mytest.constants.BackendConstants;
@@ -40,7 +41,7 @@ public class AgentServicesNoLogin implements IBackendlessService {
             String dob = agent.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
                 CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             handlePasswdResetImmediate(user, agent);
@@ -78,7 +79,7 @@ public class AgentServicesNoLogin implements IBackendlessService {
         String smsText = buildAgentPwdResetSMS(agent.getMobile_num(), passwd);
         if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
         {
-            throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
         }
         mLogger.debug("Sent first password reset SMS: "+agent.getMobile_num());
     }
