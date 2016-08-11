@@ -10,6 +10,8 @@ import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.DbConstants;
 import com.mytest.constants.DbConstantsBackend;
 import com.mytest.database.Agents;
+import com.mytest.database.InternalUserDevice;
+import com.mytest.database.Merchants;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
@@ -25,6 +27,36 @@ public class AgentServicesNoLogin implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
+    public void setDeviceForLogin(String loginId, String deviceId) {
+        initCommon();
+
+        try {
+            if (deviceId == null || deviceId.isEmpty()) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "");
+            }
+
+            mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceId);
+            //mLogger.debug(InvocationContext.asString());
+            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+
+            // fetch internal user device data
+            InternalUserDevice deviceData = BackendOps.fetchInternalUserDevice(loginId);
+            if(deviceData==null) {
+                deviceData = new InternalUserDevice();
+                deviceData.setUserId(loginId);
+                deviceData.setInstanceId("");
+            }
+
+            // Update device Info in merchant object
+            deviceData.setTempId(deviceId);
+            BackendOps.saveInternalUserDevice(deviceData);
+
+        } catch(Exception e) {
+            mLogger.error("Exception in setDeviceForLogin: "+e.toString());
+            throw e;
+        }
+    }
+
     public void resetPassword(String userId, String secret1) {
         initCommon();
         try {

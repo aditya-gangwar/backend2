@@ -15,7 +15,7 @@ public class CommonConstants {
      * So, the errorCode is passed in 'errorMsg' field of the Backendless exception.
      * This prefix is added to the message to signal the same.
      */
-    public static final String PREFIX_ERROR_CODE_AS_MSG = "ZZ_";
+    public static final String PREFIX_ERROR_CODE_AS_MSG = "ZZ/";
     /*
      * To use int as boolean
      */

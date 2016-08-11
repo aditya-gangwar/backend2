@@ -3,6 +3,7 @@ package com.mytest.events.persistence_service;
 import com.backendless.Backendless;
 import com.backendless.BackendlessCollection;
 import com.backendless.HeadersManager;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.geo.GeoPoint;
 import com.backendless.logging.Logger;
 import com.backendless.persistence.BackendlessDataQuery;
@@ -31,13 +32,50 @@ import java.util.Map;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-/*
 @Asset( "MerchantOps" )
 public class MerchantOpsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<MerchantOps>
 {
-    private Logger mLogger;
-    private BackendOps mBackendOps;
+    @Override
+    public void beforeFirst( RunnerContext context ) throws Exception
+    {
+        // block for not-authenticated user
+        // this event handler does not get called, if find done from servercode
+        if(context.getUserToken()==null) {
+            Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+            Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantOpsTableEventHandler");
+            logger.error("In beforeLast: find attempt by not-authenticated user.");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+        }
+    }
 
+    @Override
+    public void beforeFind( RunnerContext context, BackendlessDataQuery query ) throws Exception
+    {
+        // block for not-authenticated user
+        // this event handler does not get called, if find done from servercode
+        if(context.getUserToken()==null) {
+            Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+            Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantOpsTableEventHandler");
+            logger.error("In beforeLast: find attempt by not-authenticated user.");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+        }
+    }
+
+    @Override
+    public void beforeLast( RunnerContext context ) throws Exception
+    {
+        // block for not-authenticated user
+        // this event handler does not get called, if find done from servercode
+        if(context.getUserToken()==null) {
+            Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+            Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantOpsTableEventHandler");
+            logger.error("In beforeLast: find attempt by not-authenticated user.");
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+        }
+    }
+    
+}
+/*
     @Override
     public void beforeCreate( RunnerContext context, MerchantOps merchantops) throws Exception
     {
@@ -153,5 +191,4 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             CommonUtils.throwException(mLogger,mBackendOps.mLastOpStatus, mBackendOps.mLastOpErrorMsg, false);
         }
     }
-}
 */

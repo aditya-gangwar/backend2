@@ -308,7 +308,8 @@ public class CommonUtils {
     public static BackendlessException getNewException(BackendlessException be) {
         // to be removed once issue is fixed on backendless side
         // currently for 'custom error code' getCode() always returns 0 - from event handlers
-        return new BackendlessException(be.getCode(), CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode());
+        return new BackendlessException(be.getCode(),
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode()+"/"+be.getMessage());
     }
 
     public static int getUserType(String userdId) {
@@ -436,10 +437,12 @@ public class CommonUtils {
 
     public static String removeMobileCC(String mobileNum) {
         // assuming 2 digit mobile country code - 91 for india
-        return mobileNum.substring(2);
+        //return mobileNum.substring(2);
+        return mobileNum;
     }
     public static String addMobileCC(String mobileNum) {
-        return CommonConstants.INDIA_MOBILE_COUNTRY_CODE+mobileNum;
+        //return CommonConstants.INDIA_MOBILE_COUNTRY_CODE+mobileNum;
+        return mobileNum;
     }
 
 

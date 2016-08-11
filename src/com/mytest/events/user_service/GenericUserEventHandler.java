@@ -149,6 +149,37 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     Agents agent = BackendOps.getAgent(userId);
                     // check admin status
                     CommonUtils.checkAgentStatus(agent);
+
+                    // fetch device data
+                    InternalUserDevice deviceData = BackendOps.fetchInternalUserDevice(userId);
+                    if(deviceData==null || deviceData.getTempId()==null || deviceData.getTempId().isEmpty()) {
+                        // TODO : Raise critical alarm
+                        mLogger.fatal("In afterLogin for agent: Temp instance id not available: "+userId);
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode1");
+                    }
+                    // If first login after register - store the provided 'instanceId' as trusted
+                    if(agent.getAdmin_status()==DbConstants.USER_STATUS_NEW_REGISTERED) {
+                        mLogger.debug("First login case for agent user: "+userId);
+                        if(deviceData.getInstanceId()==null || deviceData.getInstanceId().isEmpty()) {
+                            deviceData.setInstanceId(deviceData.getTempId());
+                            // update agent state
+                            agent.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+                            agent.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+                            BackendOps.updateAgent(agent);
+                        } else {
+                            // invalid state
+                            mLogger.fatal("In afterLogin for agent: Invalid state: "+userId);
+                            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode2");
+                        }
+                    } else {
+                        // compare instanceIds
+                        if(!deviceData.getInstanceId().equals(deviceData.getTempId())) {
+                            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode3");
+                        }
+                    }
+                    // update device data
+                    deviceData.setTempId(null);
+                    BackendOps.saveInternalUserDevice(deviceData);
                 }
 
             } else {
@@ -176,7 +207,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if(!positiveException) {
                 mLogger.error("Exception in afterLogin: "+e.toString());
             }
-            Backendless.Logging.flush();
+            //Backendless.Logging.flush();
             if(e instanceof BackendlessException) {
                 throw CommonUtils.getNewException((BackendlessException) e);
             }
@@ -190,11 +221,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         initCommon();
         try {
             mLogger.debug("In GenericUserEventHandler: beforeRegister");
-            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.debug(context.toString());
+            mLogger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("beforeRegister:"+context.toString());
             // Print roles for debugging
             List<String> roles = Backendless.UserService.getUserRoles();
-            mLogger.debug("Roles: "+roles.toString());
+            mLogger.debug("beforeRegister: Roles: "+roles.toString());
+            Backendless.Logging.flush();
 
             // If merchant, generate login id and password
             // If customer, generate private id and PIN
@@ -207,9 +239,11 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     // get open merchant id batch
                     String countryCode = merchant.getAddress().getCity().getCountryCode();
                     String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
-                    MerchantIdBatches batch = BackendOps.fetchOpenMerchantIdBatch(batchTableName);
+                    String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+                    MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
                     if(batch == null) {
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH, "No open merchant id batch available.");
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH,
+                                "No open merchant id batch available: "+batchTableName+","+whereClause);
                     }
 
                     // get merchant counter value and use the same to generate merchant id
@@ -288,7 +322,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             }
         } catch (Exception e) {
             mLogger.error("Exception in beforeRegister: "+e.toString());
-            Backendless.Logging.flush();
+            //Backendless.Logging.flush();
             if(e instanceof BackendlessException) {
                 throw CommonUtils.getNewException((BackendlessException) e);
             }

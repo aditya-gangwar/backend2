@@ -44,7 +44,7 @@ public class AdminServices implements IBackendlessService {
             agent.setMobile_num(mobile);
             agent.setDob(dob);
             agent.setName(name);
-            agent.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+            agent.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
             agent.setStatus_reason(DbConstants.ENABLED_ACTIVE);
 
             BackendlessUser agentUser = new BackendlessUser();
@@ -142,7 +142,8 @@ public class AdminServices implements IBackendlessService {
             String tableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
 
             // get current open batch
-            MerchantIdBatches openBatch = BackendOps.fetchOpenMerchantIdBatch(tableName);
+            MerchantIdBatches openBatch = BackendOps.fetchMerchantIdBatch(tableName,
+                    "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'");
             if(openBatch!=null && !openBatch.getRangeId().equals(rangeId)) {
                 // If rangeId of 'current open batch' is different from the one provided
                 // first close the current open batch manually, and then try again.

@@ -332,10 +332,6 @@ public class BackendOps {
         }
     }
 
-    public static void deleteOtp(AllOtp otp) {
-        Backendless.Persistence.of( AllOtp.class ).remove( otp );
-    }
-
     public static void validateOtp(String userId, String rcvdOtp) {
         AllOtp otp = null;
         try {
@@ -365,7 +361,11 @@ public class BackendOps {
         }
     }
 
-    public static AllOtp fetchOtp(String userId) {
+    private static void deleteOtp(AllOtp otp) {
+        Backendless.Persistence.of( AllOtp.class ).remove( otp );
+    }
+
+    private static AllOtp fetchOtp(String userId) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause("user_id = '" + userId + "'");
 
@@ -621,10 +621,8 @@ public class BackendOps {
         return Backendless.Persistence.save(batch);
     }
 
-    public static MerchantIdBatches fetchOpenMerchantIdBatch(String tableName) {
+    public static MerchantIdBatches fetchMerchantIdBatch(String tableName, String whereClause) {
         Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
-
-        String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -689,6 +687,25 @@ public class BackendOps {
         }
         throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "More than 1 open Card id batches: "+size+","+tableName);
     }
+
+
+    public static InternalUserDevice fetchInternalUserDevice(String userId) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("userId = '"+userId+"'");
+
+        BackendlessCollection<InternalUserDevice> user = Backendless.Data.of( InternalUserDevice.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            return null;
+        } else {
+            return user.getData().get(0);
+        }
+    }
+
+    public static InternalUserDevice saveInternalUserDevice(InternalUserDevice device) {
+        return Backendless.Persistence.save(device);
+    }
+
+
 
 }
 
