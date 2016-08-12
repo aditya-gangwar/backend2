@@ -97,11 +97,12 @@ public class AdminServices implements IBackendlessService {
             // get highest 'batch id' from already created batches - for given range id
             MerchantIdBatches highestBatch = BackendOps.firstMerchantIdBatchByBatchId(tableName, "rangeId = '"+rangeId+"'", true);
 
-            int highestBatchId = (highestBatch!=null) ? highestBatch.getBatchId() : -1;
+            int highestBatchId = (highestBatch!=null) ? highestBatch.getBatchId() : 0;
             if(highestBatchId >= BackendConstants.MERCHANT_ID_MAX_BATCH_ID_PER_RANGE) {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "All batches already available: "+countryCode+","+rangeId);
             }
 
+            // batch will start from 1, and not 0, which is reserved for future use
             int startIdx = highestBatchId+1;
             int endIdx = startIdx+batchCnt;
             if(endIdx > BackendConstants.MERCHANT_ID_MAX_BATCH_ID_PER_RANGE) {
@@ -109,7 +110,7 @@ public class AdminServices implements IBackendlessService {
             }
 
             // add batches for this range
-            // assuming 2 digit batch ids from 00 - 99
+            // assuming 2 digit batch ids from 01 - 99 (00 reserved for now)
             for(int i=startIdx; i<endIdx; i++) {
                 MerchantIdBatches batch = new MerchantIdBatches();
                 batch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_AVAILABLE);

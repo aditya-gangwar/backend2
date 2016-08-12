@@ -71,7 +71,7 @@ public class CommonUtils {
         // 8 digit merchant id format:
         // <1-3 digit country code> + <0-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
         int serialNo = (int) (regCounter % BackendConstants.MERCHANT_ID_MAX_SNO_PER_BATCH);
-        return countryCode+batch.getRangeId()+batch.getBatchId()+String.valueOf(serialNo);
+        return countryCode+batch.getRangeBatchId()+String.format("%03d",serialNo);
     }
 
         public static String generateCustomerPIN() {

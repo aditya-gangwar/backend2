@@ -39,7 +39,7 @@ public class SmsConstants {
     public static String SMS_TXN_DEBIT_CB = "Mycash: %s debited Rs %d from your Cashback on %s. Balance:- Account:Rs %d, Cashback:Rs %d";
 
     // Password/PIN/OTP messages
-    public static String SMS_FIRST_PASSWD = "Dear Merchant - Welcome to MyCash family !! Your User ID is %s, and your first password is '%s'. PLZ CHANGE PASSWORD AFTER FIRST LOGIN.";
+    public static String SMS_FIRST_PASSWD = "Dear Merchant - Welcome to MyCash family !! Your User ID is %s, and your password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD = "MyCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_FIRST_PIN_CUSTOMER = "Dear Customer - Welcome to MyCash family !! Your User ID is %s, and your first PIN is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";

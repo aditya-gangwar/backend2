@@ -40,8 +40,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
         try {
             mLogger.debug("In GenericUserEventHandler: afterLogin");
-            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
-            //mLogger.debug(context.toString());
+            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug(context.toString());
 
             if(result.getException()==null) {
                 // Login is successful
@@ -215,6 +215,31 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         }
     }
 
+    /*
+    @Override
+    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception {
+        Backendless.Logging.setLogReportingPolicy(1,0);
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+
+        logger.debug("In GenericUserEventHandler: beforeRegister");
+        logger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
+        logger.debug("beforeRegister:"+context.toString());
+        Backendless.Logging.flush();
+    }
+
+    @Override
+    public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
+    {
+        Backendless.Logging.setLogReportingPolicy(1,0);
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+
+        logger.debug("In GenericUserEventHandler: afterRegister");
+        logger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
+        logger.debug("afterRegister:"+context.toString());
+        Backendless.Logging.flush();
+    }
+    */
+    /*
     @Override
     public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
     {
@@ -236,6 +261,19 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
                 Merchants merchant = (Merchants) userValue.get("merchant");
                 if (merchant != null) {
+
+                    userValue.put("user_id", "123435678");
+                    userValue.put("password","1234");
+                    merchant.setAuto_id("123435678");
+                    merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
+                    merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
+                    merchant.setStatus_update_time(new Date());
+                    merchant.setAdmin_remarks("New registered merchant");
+                    merchant.setMobile_num(merchant.getMobile_num());
+                    merchant.setCashback_table("cashback0");
+                    merchant.setTxn_table("transactions0");
+
+
                     // get open merchant id batch
                     String countryCode = merchant.getAddress().getCity().getCountryCode();
                     String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
@@ -287,6 +325,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         initCommon();
         try {
             mLogger.debug("In GenericUserEventHandler: afterRegister");
+            mLogger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("afterRegister:"+context.toString());
+            Backendless.Logging.flush();
 
             // send password in SMS, if registration is successful
             if (result.getException() == null) {
@@ -328,7 +369,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             }
             throw e;
         }
-    }
+    }*/
 
     /*
      * Private helper methods
@@ -336,9 +377,10 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+        mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
     }
 
+    /*
     private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin
         //int pool_size = gSettings.getCb_table_pool_size();
@@ -365,6 +407,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         merchant.setTxn_table(transTableName);
         mLogger.debug("Generated transaction table name:" + transTableName);
     }
+    */
 }
 
     /*

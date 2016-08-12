@@ -24,7 +24,6 @@ public class SmsHelper {
         mLogger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
         mLogger.debug("SMS to send: " + message);
 
-        /*
         HttpURLConnection uc = null;
         try {
 
@@ -63,7 +62,7 @@ public class SmsHelper {
             if (uc != null) {
                 uc.disconnect();
             }
-        } */
+        }
 
         return true;
     }
