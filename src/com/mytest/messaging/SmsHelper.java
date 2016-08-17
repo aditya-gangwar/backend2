@@ -22,7 +22,16 @@ public class SmsHelper {
 
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
-        mLogger.debug("SMS to send: " + message);
+
+        if(BackendConstants.DEBUG_MODE) {
+            System.out.println("SMS: " + message);
+        } else {
+            mLogger.debug("SMS: " + message);
+        }
+
+        if(BackendConstants.TESTING_MODE) {
+            return true;
+        }
 
         HttpURLConnection uc = null;
         try {

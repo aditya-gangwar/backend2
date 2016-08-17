@@ -9,7 +9,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
 
-import javax.ws.rs.core.UriBuilder;
+//import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +27,7 @@ import java.util.TimeZone;
  * the special annotation - BackendlessTimer. The annotation contains a JSON
  * object which describes all properties of the timer.
  */
+/*
 @BackendlessTimer("{'startDate':1465326000000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'WrongAttemptsCleanUp'}")
 public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extension.TimerExtender
 {
@@ -46,9 +47,6 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
         deleteOldWrongAttempts();
     }
 
-    /*
-     * Private helper methods
-     */
     private void initCommon() {
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.mytest.services.MerchantServices");
@@ -79,10 +77,10 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
             conn.setRequestProperty("secret-key", BackendConstants.SECRET_KEY);
             conn.setRequestProperty("Content-Type", "application/json");
 
-            /*
-            OutputStream os = conn.getOutputStream();
-            os.write(input.getBytes());
-            os.flush();*/
+
+            //OutputStream os = conn.getOutputStream();
+            //os.write(input.getBytes());
+            //os.flush();
 
             if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 mLogger.error("Error HTTP response: "+conn.getResponseCode());
@@ -116,3 +114,4 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
         return "created < '"+today+"'";
     }
 }
+*/

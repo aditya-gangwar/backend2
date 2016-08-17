@@ -458,17 +458,14 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
         Backendless.Data.mapTableToClass("Agents", Agents.class);
 
-        /*
         Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
-
-        Backendless.Data.mapTableToClass("MerchantIds199", MerchantIds.class);
 
         Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
 
         Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
-        */
+
     }
 
 

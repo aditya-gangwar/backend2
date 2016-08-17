@@ -11,6 +11,7 @@ import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
+import com.mytest.timers.TxnArchiver;
 import com.mytest.utilities.*;
 
 import java.text.SimpleDateFormat;
@@ -349,8 +350,6 @@ public class MerchantServices implements IBackendlessService {
                     stats.cash_debit = stats.cash_debit + cb.getCl_debit();
                     stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
                     stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
-
-                    stats.setUpdate_time(new Date());
                 }
             }
 
@@ -358,6 +357,7 @@ public class MerchantServices implements IBackendlessService {
             // This is just for our own reporting purpose,
             // as for merchant stats anyways are calculated fresh each time from cashback objects
             try {
+                stats.setUpdate_time(new Date());
                 BackendOps.saveMerchantStats(stats);
             } catch (Exception e) {
                 // ignore the exception
@@ -372,6 +372,29 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
+    public void archiveTxns() {
+        initCommon();
+        try {
+            mLogger.debug("In archiveTxns");
+
+            // Fetch merchant
+            BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), DbConstants.USER_TYPE_MERCHANT);
+            Merchants merchant = (Merchants) user.getProperty("merchant");
+            // not checking for merchant account status
+
+            // archive txns
+            TxnArchiver archiver = new TxnArchiver(mLogger, merchant, InvocationContext.getUserToken());
+            archiver.archiveMerchantTxns();
+            Backendless.Logging.flush();
+
+        } catch (Exception e) {
+            mLogger.error("Exception in archiveTxns: "+e.toString());
+            Backendless.Logging.flush();
+            throw e;
+        }
+
+
+    }
 
     /*
      * Private helper methods

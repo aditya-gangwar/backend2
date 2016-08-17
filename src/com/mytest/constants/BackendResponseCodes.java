@@ -43,6 +43,7 @@ public class BackendResponseCodes {
 
     // these are defined by backendless
     public static final String BL_ERROR_NO_DATA_FOUND = "1009";
+    public static final String BL_ERROR_NO_PERMISSIONS = "1012";
     public static final String BL_ERROR_DUPLICATE_ENTRY = "1155";
 
     public static final String BL_ERROR_REGISTER_DUPLICATE = "3033";

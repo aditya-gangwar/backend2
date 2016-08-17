@@ -80,7 +80,7 @@ public class TxnTableEventHelper {
             if (data != null) {
                 cashback = data.get(0);
 
-                // update amounts in cashback oject
+                // update amounts in cashback object
                 cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
@@ -93,7 +93,7 @@ public class TxnTableEventHelper {
                 cashback.setCb_billed(cashback.getCb_billed() + transaction.getCb_billed());
 
                 // add/update transaction fields
-                transaction.setCustomer_id(customer.getMobile_num());
+                //transaction.setCustomer_id(customer.getMobile_num());
                 transaction.setCust_private_id(customer.getPrivate_id());
                 transaction.setMerchant_id(merchantId);
                 transaction.setMerchant_name(merchant.getName());

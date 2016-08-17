@@ -43,7 +43,7 @@ public class CommonConstants {
      */
     public static final int MERCHANT_ID_LEN = 8;
     public static final int AGENT_ID_LEN = 7;
-    public static final int CUSTOMER_ID_LEN = 12; // 12 digit mobile number
+    public static final int CUSTOMER_ID_LEN = 10; // 10 digit mobile number
     public static final int CUSTOMER_CARDID_LEN = 11;
 
     // DOB in format 'DDMMYYYY'
@@ -60,9 +60,9 @@ public class CommonConstants {
      */
     public static String FILE_PATH_SEPERATOR = "/";
     public static String MERCHANT_ROOT_DIR = "merchants"+ CommonConstants.FILE_PATH_SEPERATOR;
-    public static String MERCHANT_USERDATA_ROOT_DIR = MERCHANT_ROOT_DIR+"userdata"+ CommonConstants.FILE_PATH_SEPERATOR;
-    public static String MERCHANT_TXN_ROOT_DIR = MERCHANT_ROOT_DIR+"txn_files"+ CommonConstants.FILE_PATH_SEPERATOR;
-    public static String MERCHANT_TXN_IMAGE_ROOT_DIR = MERCHANT_ROOT_DIR+"txn_images"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_TEMP_DISPLAY_IMAGES_DIR = MERCHANT_ROOT_DIR+"displayImages"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_TXN_ROOT_DIR = MERCHANT_ROOT_DIR+"txnCsvFiles"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_TXN_IMAGE_ROOT_DIR = MERCHANT_ROOT_DIR+"txnImages"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_FILE_PREFIX = "txns_";
 
     public static final String CSV_DELIMETER = ",";

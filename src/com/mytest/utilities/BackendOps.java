@@ -373,9 +373,7 @@ public class BackendOps {
         if( collection.getTotalObjects() > 0) {
             return collection.getData().get(0);
         } else {
-            String errorMsg = "In fetchOtp: No data found" + userId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            return null;
         }
     }
 

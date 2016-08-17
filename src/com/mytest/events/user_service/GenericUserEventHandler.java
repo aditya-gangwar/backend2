@@ -42,6 +42,16 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             mLogger.debug("In GenericUserEventHandler: afterLogin");
             mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
             mLogger.debug(context.toString());
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());
+            if(BackendConstants.DEBUG_MODE) {
+                System.out.println("Before: "+HeadersManager.getInstance().getHeaders().toString());
+                System.out.println(context.toString());
+                System.out.println("Roles: "+roles.toString());
+            }
+
+            // add user token, so as correct roles are assumed
+            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
             if(result.getException()==null) {
                 // Login is successful
@@ -67,12 +77,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
                     String deviceId = csvFields[0];
                     long entryTime = Long.parseLong(csvFields[4]);
-                    String rcvdOtp = csvFields[5];
+                    String rcvdOtp = (csvFields.length==6) ? csvFields[5] : null;
 
                     // 'deviceInfo' is valid only if from last DEVICE_INFO_VALID_SECS
                     // This logic helps us to avoid resetting 'tempDevId' to NULL on each login call
                     long timeDiff = System.currentTimeMillis() - entryTime;
-                    if( timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS*1000) ) {
+                    if( timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS*1000) &&
+                            !BackendConstants.TESTING_MODE) {
                         // deviceInfo is old than 5 mins = 300 secs
                         // most probably from last login call - setDeviceInfo not called before this login
                         // can indicate sabotage
@@ -201,7 +212,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 }
             }
         } catch (Exception e) {
-            if(result.getException()!=null) {
+            if(result.getException()==null) {
                 BackendOps.logoutUser();
             }
             if(!positiveException) {

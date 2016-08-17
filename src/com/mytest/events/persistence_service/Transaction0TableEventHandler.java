@@ -33,10 +33,11 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
     @Override
     public void afterCreate( RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result ) throws Exception
     {
-      TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-      txnEventHelper.handleAfterCreate(context, transaction, result);
+        TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
+        txnEventHelper.handleAfterCreate(context, transaction, result);
     }
 
+    /*
     @Override
     public void beforeLast( RunnerContext context ) throws Exception
     {
@@ -75,4 +76,5 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
+    */
 }

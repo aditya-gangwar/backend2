@@ -18,16 +18,17 @@ import com.mytest.utilities.CommonUtils;
  * object which describes all properties of the timer.
  */
 
+/*
 @BackendlessTimer("{'startDate':1463167800000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'TxnArchive0'}")
 public class TxnArchive0Timer extends com.backendless.servercode.extension.TimerExtender
 {
-    private String MERCHANT_ID_SUFFIX = "0";
-
     @Override
     public void execute( String appVersionId ) throws Exception
     {
+        String MERCHANT_ID_SUFFIX = "0";
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         Logger logger = Backendless.Logging.getLogger("com.mytest.timers.TxnArchiver0");
+
         try {
             logger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
@@ -42,4 +43,4 @@ public class TxnArchive0Timer extends com.backendless.servercode.extension.Timer
             throw e;
         }
     }
-}
+}*/

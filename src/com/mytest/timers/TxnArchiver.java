@@ -1,8 +1,10 @@
 package com.mytest.timers;
 
 import com.backendless.Backendless;
+import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.mytest.constants.BackendConstants;
+import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.CommonConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
@@ -28,7 +30,7 @@ public class TxnArchiver
 
     private List<Transaction> mLastFetchTransactions;
     private Merchants mLastFetchMerchant;
-    private String mMerchantIdSuffix;
+    //private String mMerchantIdSuffix;
 
     // map of 'txn date' -> 'csv file url'
     private HashMap<String,String> mCsvFiles;
@@ -37,24 +39,31 @@ public class TxnArchiver
 
     // All required date formatters
     private SimpleDateFormat mSdfDateWithTime;
-    private SimpleDateFormat mSdfOnlyDateBackend;
-    private SimpleDateFormat mSdfOnlyDateBackendGMT;
+    //private SimpleDateFormat mSdfOnlyDateBackend;
+    //private SimpleDateFormat mSdfOnlyDateBackendGMT;
     private SimpleDateFormat mSdfOnlyDateFilename;
     private Date mToday;
+    private String mUserToken;
 
-    public TxnArchiver(String merchantIdSuffix) {
-        mMerchantIdSuffix = merchantIdSuffix;
+    //public TxnArchiver(String merchantIdSuffix, Logger logger, Merchants merchant) {
+    public TxnArchiver(Logger logger, Merchants merchant, String userToken) {
+        //mMerchantIdSuffix = merchantIdSuffix;
 
         mToday = new Date();
         mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
-        mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-        mSdfOnlyDateBackendGMT = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+        //mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+        //mSdfOnlyDateBackendGMT = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
         mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
         mCsvFiles = new HashMap<>();
         mCsvDataMap = new HashMap<>();
+
+        mLogger = logger;
+        mLastFetchMerchant = merchant;
+        mUserToken = userToken;
     }
 
+    /*
     public void execute(Logger logger) throws Exception
     {
         long startTime = System.currentTimeMillis();
@@ -83,9 +92,9 @@ public class TxnArchiver
         long endTime = System.currentTimeMillis();
         mLogger.debug( "Exiting TxnArchiver: "+((endTime-startTime)/1000));
         //Backendless.Logging.flush();
-    }
+    }*/
 
-    private void archiveMerchantTxns() {
+    public void archiveMerchantTxns() {
         String merchantId = mLastFetchMerchant.getAuto_id();
         mLogger.debug("Fetched merchant id: "+merchantId);
 
@@ -108,8 +117,9 @@ public class TxnArchiver
                         //TODO: raise alarm
                         // rollback
                         deleteCsvFiles();
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
                     } else if(recordsUpdated != mLastFetchTransactions.size()) {
-                        //TODO: raise alarm
+                        //TODO: raise critical alarm
                         mLogger.error( "Count of txns updated for status does not match.");
                         // rollback
                         if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
@@ -117,17 +127,14 @@ public class TxnArchiver
                             mLogger.error( "Txn archive timer: rollback 1 failed.");
                         }
                         deleteCsvFiles();
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
                     } else {
-                        if(updateMerchantArchiveTime()) {
-                            mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
-                        } else {
-                            // rollback
-                            if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
-                                //TODO: raise critical alarm
-                                mLogger.error( "Txn archive timer: rollback 2 failed.");
-                            }
-                            deleteCsvFiles();
-                        }
+                        // update archive date in merchant record
+                        // set to current time
+                        mLastFetchMerchant.setLast_txn_archive(mToday);
+                        // dont care even if below update fails
+                        BackendOps.updateMerchant(mLastFetchMerchant);
+                        mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
                     }
                 }
             }
@@ -161,6 +168,7 @@ public class TxnArchiver
             conn.setDoOutput(true);
             conn.setRequestMethod("PUT");
             conn.setRequestProperty("application-id", BackendConstants.APP_ID);
+            conn.setRequestProperty("user-token", mUserToken);
             conn.setRequestProperty("secret-key", BackendConstants.SECRET_KEY);
             conn.setRequestProperty("Content-Type", "application/json");
 
@@ -197,16 +205,6 @@ public class TxnArchiver
             mLogger.error("Failed to update txn status: "+e.toString());
             return -1;
         }
-    }
-
-    private boolean updateMerchantArchiveTime() {
-        // update archive date in merchant record
-        // set to current time
-        mLastFetchMerchant.setLast_txn_archive(mToday);
-        if( BackendOps.updateMerchant(mLastFetchMerchant)==null ) {
-            return false;
-        }
-        return true;
     }
 
     private boolean createCsvFiles(String merchantId) {
@@ -247,10 +245,10 @@ public class TxnArchiver
     }
 
     private String getMerchantTxnDir(String merchantId) {
-        // directory: merchants/txn_files/<first 2 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
+        // merchant directory: merchants/<first 3 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
         return CommonConstants.MERCHANT_TXN_ROOT_DIR +
-                merchantId.substring(0,2) + CommonConstants.FILE_PATH_SEPERATOR +
-                merchantId.substring(2,4) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId.substring(0,3) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId.substring(3,5) + CommonConstants.FILE_PATH_SEPERATOR +
                 merchantId + CommonConstants.FILE_PATH_SEPERATOR;
     }
 
@@ -259,7 +257,7 @@ public class TxnArchiver
         return CommonConstants.MERCHANT_TXN_FILE_PREFIX + merchantId + "_" + date + CommonConstants.CSV_FILE_EXT;
     }
 
-    // Assumes mLastFetchTransactions can contain txns prior to yesterday too
+    // Assumes mLastFetchTransactions may contain txns prior to yesterday too
     // Creates HashMap with one entry for each day
     private void buildCsvString() {
         int size = mLastFetchTransactions.size();
@@ -304,11 +302,12 @@ public class TxnArchiver
         }
     }
 
+    /*
     private String buildMerchantWhereClause() {
         StringBuilder whereClause = new StringBuilder();
         //TODO: use mMerchantIdSuffix in production
         //whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
-        whereClause.append("auto_id LIKE '%").append("'");
+        whereClause.append("auto_id LIKE '1%").append("'");
 
         //String today = mSdfOnlyDateBackend.format(mToday);
         // merchants with last_txn_archive time before today midnight
@@ -320,7 +319,7 @@ public class TxnArchiver
 
         mLogger.debug("Merchant where clause: " + whereClause.toString());
         return whereClause.toString();
-    }
+    }*/
 
     private String buildTxnWhereClause(String merchantId) {
         StringBuilder whereClause = new StringBuilder();
