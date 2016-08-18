@@ -61,6 +61,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         } catch(Exception e) {
             mLogger.error("Exception in setDeviceForLogin: "+e.toString());
+            Backendless.Logging.flush();
             throw e;
         }
     }

@@ -30,7 +30,7 @@ import java.util.*;
 
 public class GenericUserEventHandler extends com.backendless.servercode.extension.UserExtender
 {
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     @Override
     public void afterLogin( RunnerContext context, String login, String password, ExecutionResult<HashMap> result ) throws Exception
@@ -39,22 +39,22 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         boolean positiveException = false;
 
         try {
-            mLogger.debug("In GenericUserEventHandler: afterLogin");
-            mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.debug(context.toString());
-            List<String> roles = Backendless.UserService.getUserRoles();
-            mLogger.debug("Roles: "+roles.toString());
+            mLogger.debug("In GenericUserEventHandler: afterLogin: "+login);
+            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug(context.toString());
+            //List<String> roles = Backendless.UserService.getUserRoles();
+            //mLogger.debug("Roles: "+roles.toString());
+            /*
             if(BackendConstants.DEBUG_MODE) {
                 System.out.println("Before: "+HeadersManager.getInstance().getHeaders().toString());
                 System.out.println(context.toString());
                 System.out.println("Roles: "+roles.toString());
-            }
-
-            // add user token, so as correct roles are assumed
-            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            }*/
 
             if(result.getException()==null) {
                 // Login is successful
+                // add user token, so as correct roles are assumed
+                HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
                 String userId = (String) result.getResult().get("user_id");
                 Integer userType = (Integer) result.getResult().get("user_type");
@@ -196,6 +196,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             } else {
                 // login failed - increase count if failed due to wrong password
                 if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
+                    mLogger.debug("Login failed for user: "+login+" due to wrong id/passwd");
                     switch(CommonUtils.getUserType(login)) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
@@ -209,6 +210,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
                     }
+                } else {
+                    mLogger.debug("Login failed for user: "+login+": "+result.getException().getCode()+": "+result.getException().getExceptionMessage());
                 }
             }
         } catch (Exception e) {
@@ -218,7 +221,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if(!positiveException) {
                 mLogger.error("Exception in afterLogin: "+e.toString());
             }
-            //Backendless.Logging.flush();
+            Backendless.Logging.flush();
             if(e instanceof BackendlessException) {
                 throw CommonUtils.getNewException((BackendlessException) e);
             }
@@ -388,7 +391,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
+        mLogger = new MyLogger(logger);
     }
 
     /*

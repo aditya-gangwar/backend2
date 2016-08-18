@@ -177,6 +177,28 @@ public class AdminServices implements IBackendlessService {
             lowestBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN);
             BackendOps.saveMerchantIdBatch(tableName, lowestBatch);
 
+            // save dummy files to create directories for 'txn image' and 'txn csv data' files
+            /*
+            try {
+                String txnCsvDummyFilepath = CommonConstants.MERCHANT_TXN_ROOT_DIR +
+                        rangeId + CommonConstants.FILE_PATH_SEPERATOR +
+                        lowestBatch.getRangeBatchId() + CommonConstants.FILE_PATH_SEPERATOR +
+                        BackendConstants.DUMMY_FILENAME;
+
+                Backendless.Files.saveFile(txnCsvDummyFilepath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                mLogger.debug("Saved dummy txn csv file: " + txnCsvDummyFilepath);
+
+                String txnImageDummyFilepath = CommonConstants.MERCHANT_TXN_IMAGE_ROOT_DIR +
+                        rangeId + CommonConstants.FILE_PATH_SEPERATOR +
+                        lowestBatch.getRangeBatchId() + CommonConstants.FILE_PATH_SEPERATOR +
+                        BackendConstants.DUMMY_FILENAME;
+
+                Backendless.Files.saveFile(txnImageDummyFilepath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                mLogger.debug("Saved dummy txn image file: " + txnImageDummyFilepath);
+            } catch(Exception e) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create txn directories");
+            }*/
+
             // logout admin user
             BackendOps.logoutUser();
 

@@ -13,6 +13,8 @@ public class BackendConstants {
 
 
     public static final String TIMEZONE = "Asia/Kolkata";
+    public static final String DUMMY_DATA = "This is dummy file. Please ignore.";
+    public static final String DUMMY_FILENAME = "dummy.txt";
 
     // Cashback table pool values
     public static final int CASHBACK_TABLE_POOL_START = 0;

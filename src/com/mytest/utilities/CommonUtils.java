@@ -2,6 +2,7 @@ package com.mytest.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.logging.Logger;
 import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
@@ -19,7 +20,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class CommonUtils {
 
-    private static SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+    private static final SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+    private static final SimpleDateFormat mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
     public static String getHalfVisibleId(String userId) {
         // build half visible userid : XXXXX91535
@@ -237,16 +239,7 @@ public class CommonUtils {
         }
 
         // check if related wrong attempt row already exists
-        WrongAttempts attempt = null;
-        try {
-            attempt = BackendOps.fetchWrongAttempts(userId, attemptType);
-        } catch(BackendlessException e) {
-            // ignore exception, when data not found
-            if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                throw e;
-            }
-        }
-
+        WrongAttempts attempt = BackendOps.fetchWrongAttempts(userId, attemptType);
         if(attempt != null) {
             // related attempt row already available
             // lock customer account - if 'max attempts per day' crossed
@@ -433,6 +426,27 @@ public class CommonUtils {
                 // TODO: Raise alarm
                 return null;
         }
+    }
+
+    public static String getMerchantTxnDir(String merchantId) {
+        // merchant directory: merchants/<first 3 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
+        return CommonConstants.MERCHANT_TXN_ROOT_DIR +
+                merchantId.substring(0,3) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId.substring(0,5) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId;
+    }
+
+    public static String getTxnCsvFilename(Date date, String merchantId) {
+        // File name: txns_<merchant_id>_<ddMMMyy>.csv
+        return CommonConstants.MERCHANT_TXN_FILE_PREFIX + merchantId + "_" + mSdfOnlyDateFilename.format(date) + CommonConstants.CSV_FILE_EXT;
+    }
+
+    public static String getTxnImgDir(String merchantId) {
+        // merchant directory: merchants/<first 3 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
+        return CommonConstants.MERCHANT_TXN_IMAGE_ROOT_DIR +
+                merchantId.substring(0,3) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId.substring(0,5) + CommonConstants.FILE_PATH_SEPERATOR +
+                merchantId;
     }
 
     public static String removeMobileCC(String mobileNum) {

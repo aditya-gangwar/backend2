@@ -403,6 +403,9 @@ public class BackendOps {
     public static Long fetchCounterValue(String name) {
         return Backendless.Counters.incrementAndGet(name);
     }
+    public static Long decrementCounterValue(String name) {
+        return Backendless.Counters.decrementAndGet(name);
+    }
 
     /*
      * Trusted Devices operations
@@ -498,9 +501,7 @@ public class BackendOps {
         if( collection.getTotalObjects() > 0) {
             return collection.getData().get(0);
         } else {
-            String errorMsg = "No WrongAttempts object found: "+userId+type;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            return null;
         }
     }
 

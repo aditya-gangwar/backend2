@@ -41,7 +41,7 @@ public class TxnArchiver
     private SimpleDateFormat mSdfDateWithTime;
     //private SimpleDateFormat mSdfOnlyDateBackend;
     //private SimpleDateFormat mSdfOnlyDateBackendGMT;
-    private SimpleDateFormat mSdfOnlyDateFilename;
+    //private SimpleDateFormat mSdfOnlyDateFilename;
     private Date mToday;
     private String mUserToken;
 
@@ -53,7 +53,7 @@ public class TxnArchiver
         mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
         //mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
         //mSdfOnlyDateBackendGMT = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-        mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
+        //mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
         mCsvFiles = new HashMap<>();
         mCsvDataMap = new HashMap<>();
@@ -211,16 +211,16 @@ public class TxnArchiver
         mCsvFiles.clear();
         // one file for each day i.e. each entry in mCsvDataMap
         for (Map.Entry<String, StringBuilder> entry : mCsvDataMap.entrySet()) {
-            String txnDate = entry.getKey();
+            String filename = entry.getKey();
             StringBuilder sb = entry.getValue();
 
             // File name: txns_<merchant_id>_<ddMMMyy>.csv
-            String filepath = getMerchantTxnDir(merchantId) + getTxnCsvFilename(txnDate,merchantId);
+            String filepath = CommonUtils.getMerchantTxnDir(merchantId) + CommonConstants.FILE_PATH_SEPERATOR + filename;
 
             try {
                 String fileUrl = Backendless.Files.saveFile(filepath, sb.toString().getBytes("UTF-8"), true);
                 mLogger.debug("Txn CSV file uploaded: " + fileUrl);
-                mCsvFiles.put(txnDate,filepath);
+                mCsvFiles.put(filename,filepath);
             } catch (Exception e) {
                 //TODO: raise alarm
                 mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
@@ -244,19 +244,6 @@ public class TxnArchiver
         return true;
     }
 
-    private String getMerchantTxnDir(String merchantId) {
-        // merchant directory: merchants/<first 3 chars of merchant id>/<next 2 chars of merchant id>/<merchant id>/
-        return CommonConstants.MERCHANT_TXN_ROOT_DIR +
-                merchantId.substring(0,3) + CommonConstants.FILE_PATH_SEPERATOR +
-                merchantId.substring(3,5) + CommonConstants.FILE_PATH_SEPERATOR +
-                merchantId + CommonConstants.FILE_PATH_SEPERATOR;
-    }
-
-    private String getTxnCsvFilename(String date, String merchantId) {
-        // File name: txns_<merchant_id>_<ddMMMyy>.csv
-        return CommonConstants.MERCHANT_TXN_FILE_PREFIX + merchantId + "_" + date + CommonConstants.CSV_FILE_EXT;
-    }
-
     // Assumes mLastFetchTransactions may contain txns prior to yesterday too
     // Creates HashMap with one entry for each day
     private void buildCsvString() {
@@ -267,16 +254,17 @@ public class TxnArchiver
             Transaction txn = mLastFetchTransactions.get(i);
             Date txnDate = txn.getCreate_time();
             // get 'date' for this transaction - in the filename format - to be used as key in map
-            String txnDateStr = mSdfOnlyDateFilename.format(txnDate);
+            //String txnDateStr = mSdfOnlyDateFilename.format(txnDate);
+            String filename = CommonUtils.getTxnCsvFilename(txnDate, mLastFetchMerchant.getAuto_id());
 
-            StringBuilder sb = mCsvDataMap.get(txnDateStr);
+            StringBuilder sb = mCsvDataMap.get(filename);
             if(sb==null) {
-                mLogger.debug("buildCsvString, new day : "+txnDateStr);
+                mLogger.debug("buildCsvString, new day : "+filename);
                 sb = new StringBuilder(CSV_RECORD_MAX_CHARS*size);
                 // new file - write first line as header
                 sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
                 sb.append(CommonConstants.CSV_NEWLINE);
-                mCsvDataMap.put(txnDateStr,sb);
+                mCsvDataMap.put(filename,sb);
             }
 
             /*

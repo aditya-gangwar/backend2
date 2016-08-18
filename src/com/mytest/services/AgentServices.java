@@ -2,14 +2,13 @@ package com.mytest.services;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.FilePermission;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.logging.Logger;
 import com.backendless.servercode.IBackendlessService;
-import com.mytest.constants.BackendConstants;
-import com.mytest.constants.BackendResponseCodes;
-import com.mytest.constants.DbConstants;
-import com.mytest.constants.DbConstantsBackend;
+import com.backendless.servercode.InvocationContext;
+import com.mytest.constants.*;
 import com.mytest.database.MerchantIdBatches;
 import com.mytest.database.Merchants;
 import com.mytest.messaging.SmsConstants;
@@ -34,6 +33,9 @@ public class AgentServices  implements IBackendlessService {
         initCommon();
         try {
             mLogger.debug("In registerMerchant");
+            mLogger.debug("registerMerchant: Before: "+ InvocationContext.asString());
+            mLogger.debug("registerMerchant: Before: "+HeadersManager.getInstance().getHeaders().toString());
+            Backendless.Logging.flush();
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -75,21 +77,42 @@ public class AgentServices  implements IBackendlessService {
 
             try {
                 BackendOps.assignRole(merchantId, BackendConstants.ROLE_MERCHANT);
-                
+
             } catch(Exception e) {
-                // TODO: add as 'Major' alarm - user to be removed later manually
                 mLogger.fatal("Failed to assign role to merchant user: "+merchantId+","+e.toString());
-                // rollback to not-usable state
-                merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-                merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
-                try {
-                    BackendOps.updateMerchant(merchant);
-                } catch(Exception ex) {
-                    mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
-                    //TODO: raise critical alarm
-                }
+                rollbackRegister(merchantId);
                 throw e;
             }
+
+            // create directories for 'txnCsv' and 'txnImage' files
+            String fileDir = null;
+            String filePath = null;
+            try {
+                fileDir = CommonUtils.getMerchantTxnDir(merchantId);
+                filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
+                mLogger.debug("Filepath: " + filePath);
+                // saving dummy files to create parent directories
+                Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                // Give this merchant permissions for this directory
+                FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
+                FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
+                FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
+                mLogger.debug("Saved dummy txn csv file: " + filePath);
+
+                fileDir = CommonUtils.getTxnImgDir(merchantId);
+                filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
+                mLogger.debug("Filepath: " + filePath);
+                Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                // Give read access to this merchant to this directory
+                FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
+                mLogger.debug("Saved dummy txn image file: " + filePath);
+
+            } catch(Exception e) {
+                mLogger.fatal("Failed to create merchant directories: "+merchantId+","+e.toString());
+                rollbackRegister(merchantId);
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, e.toString());
+            }
+
             // send SMS with user id
             String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
             SmsHelper.sendSMS(smsText, merchant.getMobile_num());
@@ -135,6 +158,28 @@ public class AgentServices  implements IBackendlessService {
         String transTableName = DbConstantsBackend.TRANSACTION_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setTxn_table(transTableName);
         mLogger.debug("Generated transaction table name:" + transTableName);
+    }
+
+//    private void rollbackRegister(BackendlessUser user) {
+    private void rollbackRegister(String mchntId) {
+        // TODO: add as 'Major' alarm - user to be removed later manually
+        // rollback to not-usable state
+        try {
+            BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+            //BackendOps.loadMerchant(user);
+            //Merchants merchant = (Merchants)user.getProperty("merchant");
+            Merchants merchant = BackendOps.getMerchant(mchntId, false);
+            merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
+            merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+            merchant.setAdmin_remarks("Registration failed");
+            //user.setProperty("merchant", merchant);
+            //BackendOps.updateUser(user);
+            BackendOps.updateMerchant(merchant);
+        } catch(Exception ex) {
+            mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
+            //TODO: raise critical alarm
+            throw ex;
+        }
     }
 }
 

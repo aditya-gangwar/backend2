@@ -182,27 +182,7 @@ public class MerchantServices implements IBackendlessService {
             } catch(Exception e) {
                 // TODO: add as 'Major' alarm - user to be removed later manually
                 // rollback to not-usable state
-                customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-                customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
-                customer.setMembership_card(null);
-                customerUser.setProperty("customer", customer);
-                try {
-                    BackendOps.updateUser(customerUser);
-                } catch(Exception ex) {
-                    mLogger.fatal("registerCustomer: User Rollback failed: "+ex.toString());
-                    // TODO: raise critical alarm for manual correction
-                }
-
-                // free up the card for next allocation
-                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
-                // TODO: set any other fields required
-                try {
-                    BackendOps.saveCustomerCard(card);
-                } catch(Exception ex) {
-                    mLogger.fatal("registerCustomer: Customefr card Rollback failed: "+ex.toString());
-                    // TODO: raise critical alarm for manual correction
-                }
-
+                rollbackRegister(customerMobile, card);
                 throw e;
             }
 
@@ -510,6 +490,36 @@ public class MerchantServices implements IBackendlessService {
 
     private String buildMobileChangeSMS(String userId, String mobile_num) {
         return String.format(SmsConstants.SMS_MOBILE_CHANGE_MERCHANT, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
+    }
+
+    //    private void rollbackRegister(BackendlessUser user) {
+    private void rollbackRegister(String custId, CustomerCards card) {
+        // TODO: add as 'Major' alarm - user to be removed later manually
+        // rollback to not-usable state
+        try {
+            mLogger.debug("rollbackRegister: Before: "+ InvocationContext.asString());
+            mLogger.debug("rollbackRegister: Before: "+HeadersManager.getInstance().getHeaders().toString());
+            Backendless.Logging.flush();
+
+            BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
+
+            Customers customer = BackendOps.getCustomer(custId, BackendConstants.CUSTOMER_ID_MOBILE);
+            customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
+            customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+            customer.setAdmin_remarks("Registration failed");
+            customer.setMembership_card(null);
+            BackendOps.updateCustomer(customer);
+
+            // free up the card for next allocation
+            card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+            // TODO: set any other fields required
+            BackendOps.saveCustomerCard(card);
+
+        } catch(Exception ex) {
+            mLogger.fatal("registerCustomer: Customer register Rollback failed: "+ex.toString());
+            //TODO: raise critical alarm
+            throw ex;
+        }
     }
 
 }
