@@ -15,6 +15,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 import java.util.Date;
 
@@ -23,7 +24,7 @@ import java.util.Date;
  */
 public class AgentServices  implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     /*
      * Public methods: Backend REST APIs
@@ -35,7 +36,7 @@ public class AgentServices  implements IBackendlessService {
             mLogger.debug("In registerMerchant");
             mLogger.debug("registerMerchant: Before: "+ InvocationContext.asString());
             mLogger.debug("registerMerchant: Before: "+HeadersManager.getInstance().getHeaders().toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -55,11 +56,12 @@ public class AgentServices  implements IBackendlessService {
             mLogger.debug("Generated merchant id: "+merchantId);
 
             merchant.setAuto_id(merchantId);
-            merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
-            merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
+            merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+            merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
             merchant.setAdmin_remarks("New registered merchant");
             merchant.setMobile_num(CommonUtils.addMobileCC(merchant.getMobile_num()));
+            merchant.setFirst_login_ok(false);
             // set cashback and transaction table names
             setCbAndTransTables(merchant, merchantCnt);
 
@@ -90,7 +92,6 @@ public class AgentServices  implements IBackendlessService {
             try {
                 fileDir = CommonUtils.getMerchantTxnDir(merchantId);
                 filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
-                mLogger.debug("Filepath: " + filePath);
                 // saving dummy files to create parent directories
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
                 // Give this merchant permissions for this directory
@@ -101,7 +102,6 @@ public class AgentServices  implements IBackendlessService {
 
                 fileDir = CommonUtils.getTxnImgDir(merchantId);
                 filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
-                mLogger.debug("Filepath: " + filePath);
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
                 // Give read access to this merchant to this directory
                 FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
@@ -119,7 +119,7 @@ public class AgentServices  implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in registerMerchant: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -130,7 +130,8 @@ public class AgentServices  implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.AgentServices");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AgentServices");
+        mLogger = new MyLogger(logger);
     }
 
     private void setCbAndTransTables(Merchants merchant, long regCounter) {

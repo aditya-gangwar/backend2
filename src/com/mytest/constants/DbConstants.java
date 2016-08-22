@@ -15,18 +15,17 @@ public class DbConstants {
     public static final int USER_TYPE_AGENT = 2;
 
     // Merchant table - 'admin_status' column values
-    public static final int USER_STATUS_NEW_REGISTERED = 1;
-    public static final int USER_STATUS_ACTIVE = 2;
+    //public static final int USER_STATUS_NEW_REGISTERED = 1;
+    public static final int USER_STATUS_ACTIVE = 1;
     // Disabled means permanent - until further action by the admin to explicitly enable the account
-    public static final int USER_STATUS_DISABLED = 3;
+    public static final int USER_STATUS_DISABLED = 2;
     // Locked means temporary - and will be automatically unlocked after defined duration
-    public static final int USER_STATUS_LOCKED = 4;
+    public static final int USER_STATUS_LOCKED = 3;
     // Error during registration - to be manually deleted
-    public static final int USER_STATUS_REG_ERROR = 5;
+    public static final int USER_STATUS_REG_ERROR = 4;
     // status code to text description
     public static String userStatusDesc[] = {
             "",
-            "New Registered",
             "Active",
             "Disabled",
             "Locked",
@@ -34,20 +33,19 @@ public class DbConstants {
     };
 
     // Merchant table - 'status_reason' column values
-    public static final int ENABLED_NEW_USER = 1;
-    public static final int ENABLED_ACTIVE = 2;
-    public static final int DISABLED_AUTO_BY_SYSTEM = 3;
-    public static final int DISABLED_ON_USER_REQUEST = 4;
-    public static final int LOCKED_WRONG_PASSWORD_LIMIT_RCHD = 5;
-    public static final int LOCKED_WRONG_PIN_LIMIT_RCHD = 6;
-    public static final int LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD = 7;
-    public static final int LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD = 8;
-    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 9;
+    //public static final int ENABLED_NEW_USER = 1;
+    public static final int ENABLED_ACTIVE = 1;
+    public static final int DISABLED_AUTO_BY_SYSTEM = 2;
+    public static final int DISABLED_ON_USER_REQUEST = 3;
+    public static final int LOCKED_WRONG_PASSWORD_LIMIT_RCHD = 4;
+    public static final int LOCKED_WRONG_PIN_LIMIT_RCHD = 5;
+    public static final int LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD = 6;
+    public static final int LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD = 7;
+    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 8;
 
     // Map int status values to corresponding descriptions
     public static String statusReasonDescriptions[] = {
             "",
-            "User is new registered",
             "User is active",
             "By system for security purpose. Will be re-activated after verification.",
             "On user request.",
@@ -77,6 +75,7 @@ public class DbConstants {
     public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
     public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
     // CustomerOps table - 'status' column values
+    public static final String CUSTOMER_OP_STATUS_OTP_GENERATED = "OTP Generated";
     public static final String CUSTOMER_OP_STATUS_OTP_MATCHED = "OTP Matched";
 
     // GlobalSettings table - should be exactly same as 'names' in DB

@@ -13,6 +13,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +24,7 @@ import java.util.List;
  */
 public class MerchantServicesNoLogin implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
     //private BackendOps mBackendOps;
 
     /*
@@ -61,7 +62,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         } catch(Exception e) {
             mLogger.error("Exception in setDeviceForLogin: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -88,21 +89,30 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // Check if from trusted device
             // don't check for first time after merchant is registered
-            if (merchant.getAdmin_status() != DbConstants.USER_STATUS_NEW_REGISTERED) {
-                if (!CommonUtils.isTrustedDevice(deviceId, merchant)) {
+            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+            if (merchant.getFirst_login_ok()) {
+                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
                 }
             }
+            /*
+            if (merchant.getAdmin_status() != DbConstants.USER_STATUS_NEW_REGISTERED &&
+                    trustedDevices!=null &&
+                    !trustedDevices.isEmpty() ) {
+                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                }
+            }*/
 
             // check for 'extra verification'
             String name = merchant.getName();
             if (name == null || !name.equalsIgnoreCase(brandName)) {
-                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
+                CommonUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             // For new registered merchant - send the password immediately
-            if (merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
+            if (!merchant.getFirst_login_ok()) {
                 handlePasswdResetImmediate(user, merchant);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
             } else {
@@ -120,7 +130,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in resetMerchantPwd: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -141,7 +151,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
-                CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_FORGOT_USERID);
+                CommonUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_FORGOT_USERID);
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
@@ -152,7 +162,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             }
         } catch (Exception e) {
             mLogger.error("Exception in sendMerchantId: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -163,7 +173,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.MerchantServicesNoLogin");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantServicesNoLogin");
+        mLogger = new MyLogger(logger);
         //mBackendOps = new BackendOps(mLogger);
         CommonUtils.initTableToClassMappings();
     }
@@ -174,7 +185,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         // update user account for the password
         user.setPassword(passwd);
         BackendOps.updateUser(user);
-        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id());
+        //TODO: remove printing passwd
+        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
 
         // Send SMS through HTTP
         String smsText = buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);

@@ -24,6 +24,15 @@ public class Customers
   private String private_id;
   private CustomerCards membership_card;
   private String cardId;
+  private Boolean first_login_ok;
+
+  public Boolean getFirst_login_ok() {
+    return first_login_ok;
+  }
+
+  public void setFirst_login_ok(Boolean first_login_ok) {
+    this.first_login_ok = first_login_ok;
+  }
 
   public String getCardId() {
     return cardId;

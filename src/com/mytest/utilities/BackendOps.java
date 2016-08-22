@@ -265,7 +265,9 @@ public class BackendOps {
         Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        // TODO: change to max size in production
+        dataQuery.setPageSize(1);
+        //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
         dataQuery.setWhereClause(whereClause);
 
         BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
@@ -521,9 +523,7 @@ public class BackendOps {
         if( collection.getTotalObjects() > 0) {
             return collection.getData().get(0);
         } else {
-            String errorMsg = "No MerchantStats object found: "+merchantId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
-            throw new BackendlessException(fault);
+            return null;
         }
     }
 

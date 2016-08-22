@@ -114,6 +114,7 @@ public class CommonUtils {
         String errorMsg = null;
 
         switch (merchant.getAdmin_status()) {
+            case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
                 errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
                 errorMsg = "Account is not active";
@@ -138,7 +139,7 @@ public class CommonUtils {
                         }
                     } else {
                         errorCode = BackendResponseCodes.BE_ERROR_ACC_LOCKED;
-                        errorMsg = "Account is locked";
+                        errorMsg = "Account is locked: "+now.getTime()+","+blockedTime.getTime()+","+allowedDuration;
                     }
                 }
                 break;
@@ -153,6 +154,7 @@ public class CommonUtils {
         String errorCode = null;
         String errorMsg = null;
         switch(customer.getAdmin_status()) {
+            case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
                 errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
                 errorMsg = "Account is not active";
@@ -223,27 +225,28 @@ public class CommonUtils {
         }
     }
 
-    public static void handleWrongAttempt(Object userObject, int userType, String attemptType) {
-        // find user id based on user type
-        String userId = null;
-        switch(userType) {
-            case DbConstants.USER_TYPE_MERCHANT:
-                userId = ((Merchants) userObject).getAuto_id();
-                break;
-            case DbConstants.USER_TYPE_CUSTOMER:
-                userId = ((Customers) userObject).getMobile_num();
-                break;
-            case DbConstants.USER_TYPE_AGENT:
-                userId = ((Agents) userObject).getId();
-                break;
-        }
+    public static void handleWrongAttempt(String userId, Object userObject, int userType, String attemptType) {
 
         // check if related wrong attempt row already exists
         WrongAttempts attempt = BackendOps.fetchWrongAttempts(userId, attemptType);
         if(attempt != null) {
             // related attempt row already available
             // lock customer account - if 'max attempts per day' crossed
-            if( attempt.getAttempt_cnt() >= GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT) {
+
+            int confMaxAttempts = 0;
+            switch(userType) {
+                case DbConstants.USER_TYPE_MERCHANT:
+                    confMaxAttempts = GlobalSettingsConstants.MERCHANT_WRONG_ATTEMPT_LIMIT;
+                    break;
+                case DbConstants.USER_TYPE_CUSTOMER:
+                    confMaxAttempts = GlobalSettingsConstants.CUSTOMER_WRONG_ATTEMPT_LIMIT;
+                    break;
+                case DbConstants.USER_TYPE_AGENT:
+                    confMaxAttempts = GlobalSettingsConstants.INTERNAL_USER_WRONG_ATTEMPT_LIMIT;
+                    break;
+            }
+
+            if( attempt.getAttempt_cnt() >= confMaxAttempts) {
                 // lock merchant account
                 try {
                     switch(userType) {
@@ -328,8 +331,8 @@ public class CommonUtils {
                 || txn.getCb_debit() > cb_debit_threshold );
     }
 
-    public static boolean isTrustedDevice(String deviceId, Merchants merchant) {
-        List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+    public static boolean isTrustedDevice(String deviceId, List<MerchantDevice> trustedDevices) {
+        //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
         if (trustedDevices != null &&
                 (deviceId != null && !deviceId.isEmpty())) {
             for (MerchantDevice device : trustedDevices) {
@@ -348,6 +351,9 @@ public class CommonUtils {
     // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
     // like from 'USER_STATUS_NEW_REGISTERED' -> 'USER_STATUS_ACTIVE'
     public static void setMerchantStatus(Merchants merchant, int status, int reason) {
+        if(status == merchant.getAdmin_status()) {
+            return;
+        }
         // update merchant account
         merchant.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[merchant.getAdmin_status()]
                 + ", and status time was "+mSdfDateWithTime.format(merchant.getStatus_update_time()));
@@ -368,6 +374,9 @@ public class CommonUtils {
     }
 
     public static void setCustomerStatus(Customers customer, int status, int reason) {
+        if(status == customer.getAdmin_status()) {
+            return;
+        }
         // update merchant account
         customer.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[customer.getAdmin_status()]
                 + ", and status time was "+mSdfDateWithTime.format(customer.getStatus_update_time()));
@@ -388,6 +397,9 @@ public class CommonUtils {
     }
 
     public static void setAgentStatus(Agents agent, int status, int reason) {
+        if(status == agent.getAdmin_status()) {
+            return;
+        }
         // update merchant account
         agent.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[agent.getAdmin_status()]);
         agent.setAdmin_status(status);

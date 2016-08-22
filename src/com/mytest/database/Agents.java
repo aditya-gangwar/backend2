@@ -20,6 +20,16 @@ public class Agents
   private String dob;
   private String ownerId;
   private String admin_remarks;
+  private Boolean first_login_ok;
+
+  public Boolean getFirst_login_ok() {
+    return first_login_ok;
+  }
+
+  public void setFirst_login_ok(Boolean first_login_ok) {
+    this.first_login_ok = first_login_ok;
+  }
+
   public java.util.Date getUpdated()
   {
     return updated;

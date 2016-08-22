@@ -8,8 +8,6 @@ import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import com.mytest.constants.*;
 import com.mytest.database.*;
-import com.mytest.messaging.SmsConstants;
-import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.*;
 
 import java.util.*;
@@ -92,7 +90,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     }
 
                     // Check if device is in trusted list
-                    if(!CommonUtils.isTrustedDevice(deviceId, merchant)) {
+                    List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                    if(!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
                         // Device not in trusted list
 
                         if (rcvdOtp == null || rcvdOtp.isEmpty()) {
@@ -120,7 +119,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                             // OTP is valid - add this device to trusted list
                             // Trusted device may be null - create new if so
-                            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                            //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
                             if(trustedDevices == null) {
                                 trustedDevices = new ArrayList<>();
                             }
@@ -141,14 +140,17 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             merchant.setTrusted_devices(trustedDevices);
                             // when USER_STATUS_NEW_REGISTERED, the device will also be new
                             // so it is not required to update this outside this if block
+                            /*
                             if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
                                 // not using fx. CommonUtils.setMerchantStatus() - as the status update is internal and not relevant for end user
                                 merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
                                 merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
                                 merchant.setStatus_update_time(new Date());
                                 merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
+                            }*/
+                            if(!merchant.getFirst_login_ok()) {
+                                merchant.setFirst_login_ok(true);
                             }
-
                             merchant.setTempDevId(null);
                             BackendOps.updateMerchant(merchant);
                         }
@@ -169,7 +171,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode1");
                     }
                     // If first login after register - store the provided 'instanceId' as trusted
-                    if(agent.getAdmin_status()==DbConstants.USER_STATUS_NEW_REGISTERED) {
+                    if(!agent.getFirst_login_ok()) {
                         mLogger.debug("First login case for agent user: "+userId);
                         if(deviceData.getInstanceId()==null || deviceData.getInstanceId().isEmpty()) {
                             deviceData.setInstanceId(deviceData.getTempId());
@@ -195,23 +197,24 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
             } else {
                 // login failed - increase count if failed due to wrong password
-                if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
+                //if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
+                if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
                     mLogger.debug("Login failed for user: "+login+" due to wrong id/passwd");
                     switch(CommonUtils.getUserType(login)) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false);
-                            CommonUtils.handleWrongAttempt(merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
+                            CommonUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
 
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
                             Agents agent = BackendOps.getAgent(login);
-                            CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
+                            CommonUtils.handleWrongAttempt(login, agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
                     }
                 } else {
-                    mLogger.debug("Login failed for user: "+login+": "+result.getException().getCode()+": "+result.getException().getExceptionMessage());
+                    mLogger.debug("Login failed for user: "+login+": "+result.getException().toString());
                 }
             }
         } catch (Exception e) {

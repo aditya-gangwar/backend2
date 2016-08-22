@@ -28,7 +28,7 @@ import java.util.Date;
 @Asset( "CustomerOps" )
 public class CustomerOpsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<CustomerOps>
 {
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     @Override
     public void beforeCreate(RunnerContext context, CustomerOps customerops) throws Exception
@@ -65,7 +65,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 if (!custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
                         !customer.getTxn_pin().equals(pin)) {
 
-                    CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
+                    CommonUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
@@ -145,7 +145,8 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.CustomerOpsTableEventHandler");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.CustomerOpsTableEventHandler");
+        mLogger = new MyLogger(logger);
     }
 
     private void changeCustomerMobile(CustomerOps custOp) {

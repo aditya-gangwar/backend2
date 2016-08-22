@@ -13,6 +13,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -20,7 +21,7 @@ import com.mytest.utilities.CommonUtils;
 
 public class CommonServices implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     public void changePassword(String userId, String oldPasswd, String newPasswd) {
         initCommon();
@@ -72,7 +73,7 @@ public class CommonServices implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in changePassword: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -81,7 +82,8 @@ public class CommonServices implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.CommonServices");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.CommonServices");
+        mLogger = new MyLogger(logger);
         CommonUtils.initTableToClassMappings();
     }
 

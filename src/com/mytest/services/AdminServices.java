@@ -13,6 +13,7 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 import java.util.Date;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.List;
  */
 public class AdminServices implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     /*
      * Public methods: Backend REST APIs
@@ -44,7 +45,7 @@ public class AdminServices implements IBackendlessService {
             agent.setMobile_num(mobile);
             agent.setDob(dob);
             agent.setName(name);
-            agent.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
+            agent.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
             agent.setStatus_reason(DbConstants.ENABLED_ACTIVE);
 
             BackendlessUser agentUser = new BackendlessUser();
@@ -81,7 +82,7 @@ public class AdminServices implements IBackendlessService {
         } catch (Exception e) {
             mLogger.error("Exception in registerAgent: "+e.toString());
             BackendOps.logoutUser();
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -128,7 +129,7 @@ public class AdminServices implements IBackendlessService {
         } catch (Exception e) {
             mLogger.error("Exception in createMerchantIdBatches: "+e.toString());
             BackendOps.logoutUser();
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -204,7 +205,7 @@ public class AdminServices implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in openNextMerchantIdBatch: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             BackendOps.logoutUser();
             throw e;
         }
@@ -251,7 +252,7 @@ public class AdminServices implements IBackendlessService {
         } catch (Exception e) {
             mLogger.error("Exception in createCardIdBatches: "+e.toString());
             BackendOps.logoutUser();
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -304,7 +305,7 @@ public class AdminServices implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in openNextCardIdBatch: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             BackendOps.logoutUser();
             throw e;
         }
@@ -316,7 +317,8 @@ public class AdminServices implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.AdminServices");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AdminServices");
+        mLogger = new MyLogger(logger);
         CommonUtils.initTableToClassMappings();
     }
 

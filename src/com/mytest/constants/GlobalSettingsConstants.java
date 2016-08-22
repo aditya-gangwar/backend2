@@ -13,8 +13,9 @@ public class GlobalSettingsConstants {
     public static final int OTP_VALID_MINS = 30;
 
     // Corresponding to 'merchant_wrong_password_attempts'  in GlobalSettings table
-    public static int MERCHANT_WRONG_ATTEMPT_LIMIT = 4;
-    public static int CUSTOMER_WRONG_ATTEMPT_LIMIT = 4;
+    public static int MERCHANT_WRONG_ATTEMPT_LIMIT = 5;
+    public static int CUSTOMER_WRONG_ATTEMPT_LIMIT = 5;
+    public static int INTERNAL_USER_WRONG_ATTEMPT_LIMIT = 5;
 
     // Keep it 2-5 minutes less than what is configured in GlobalSettings
     // to allow for the time between 'message request submitted' and 'message actually delivered'
@@ -27,7 +28,7 @@ public class GlobalSettingsConstants {
     public static int CUSTOMER_ACCOUNT_BLOCKED_HOURS = 24;
 
     // Corresponding 'merchant_account_block_hrs' in GlobalSettings table
-    public static int MERCHANT_ACCOUNT_BLOCKED_HOURS = 2;
+    public static int MERCHANT_ACCOUNT_BLOCKED_HOURS = 1;
 
     // Corresponding 'cash_account_max_limit' in GlobalSettings table
     public static int CUSTOMER_CASH_MAX_LIMIT = 500;

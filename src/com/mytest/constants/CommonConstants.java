@@ -60,6 +60,7 @@ public class CommonConstants {
      */
     public static String FILE_PATH_SEPERATOR = "/";
     public static String MERCHANT_ROOT_DIR = "merchants"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_LOGGING_ROOT_DIR = "logging"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TEMP_DISPLAY_IMAGES_DIR = MERCHANT_ROOT_DIR+"displayImages"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_ROOT_DIR = MERCHANT_ROOT_DIR+"txnCsvFiles"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_IMAGE_ROOT_DIR = MERCHANT_ROOT_DIR+"txnImages"+ CommonConstants.FILE_PATH_SEPERATOR;

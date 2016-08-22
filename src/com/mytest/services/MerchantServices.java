@@ -11,7 +11,7 @@ import com.mytest.constants.*;
 import com.mytest.database.*;
 import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
-import com.mytest.timers.TxnArchiver;
+import com.mytest.utilities.TxnArchiver;
 import com.mytest.utilities.*;
 
 import java.text.SimpleDateFormat;
@@ -24,7 +24,7 @@ import java.util.TimeZone;
  */
 public class MerchantServices implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     /*
      * Public methods: Backend REST APIs
@@ -123,7 +123,7 @@ public class MerchantServices implements IBackendlessService {
 
         } catch (Exception e) {
             mLogger.error("Exception in updateSettings: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -207,11 +207,11 @@ public class MerchantServices implements IBackendlessService {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED, "");
             }
 
-            //Backendless.Logging.flush();
+            //mLogger.flush();
 
         } catch (Exception e) {
             mLogger.error("Exception in registerCustomer: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -253,12 +253,12 @@ public class MerchantServices implements IBackendlessService {
             cashback.setCustomer_details(buildCustomerDetails(customer));
             stripCashback(cashback);
 
-            //Backendless.Logging.flush();
+            //mLogger.flush();
             return cashback;
 
         } catch (Exception e) {
             mLogger.error("Exception in getCashback: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -277,31 +277,24 @@ public class MerchantServices implements IBackendlessService {
 
             // create new stats object
             // fetch merchant stat object, if exists
-            MerchantStats stats = null;
-            try {
-                stats = BackendOps.fetchMerchantStats(merchantId);
-            } catch(BackendlessException e) {
-                if(!e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                    throw e;
-                }
-            }
+            MerchantStats stats = BackendOps.fetchMerchantStats(merchantId);
             // create object if not already available
             if (stats == null) {
+                mLogger.debug("Creating new stats object");
                 stats = new MerchantStats();
                 stats.setMerchant_id(merchantId);
-            } else {
-                //reset all stats to 0
-                stats.setBill_amt_no_cb(0);
-                stats.setBill_amt_total(0);
-                stats.setCash_credit(0);
-                stats.setCb_credit(0);
-                stats.setCash_debit(0);
-                stats.setCb_debit(0);
-                stats.setCust_cnt_cash(0);
-                stats.setCust_cnt_cb(0);
-                stats.setCust_cnt_cb_and_cash(0);
-                stats.setCust_cnt_no_balance(0);
             }
+            //reset all stats to 0
+            stats.setBill_amt_no_cb(0);
+            stats.setBill_amt_total(0);
+            stats.setCash_credit(0);
+            stats.setCb_credit(0);
+            stats.setCash_debit(0);
+            stats.setCb_debit(0);
+            stats.setCust_cnt_cash(0);
+            stats.setCust_cnt_cb(0);
+            stats.setCust_cnt_cb_and_cash(0);
+            stats.setCust_cnt_no_balance(0);
 
             // fetch all CB records for this merchant
             ArrayList<Cashback> data = BackendOps.fetchCashback("merchant_id = '" + merchantId + "'", merchant.getCashback_table());
@@ -310,6 +303,7 @@ public class MerchantServices implements IBackendlessService {
                 mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
                 for (int k = 0; k < data.size(); k++) {
                     Cashback cb = data.get(k);
+                    //mLogger.debug("cashback : " + cb.getRowid());
 
                     // update customer counts
                     // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
@@ -347,7 +341,7 @@ public class MerchantServices implements IBackendlessService {
             return stats;
         } catch (Exception e) {
             mLogger.error("Exception in getMerchantStats: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -365,11 +359,11 @@ public class MerchantServices implements IBackendlessService {
             // archive txns
             TxnArchiver archiver = new TxnArchiver(mLogger, merchant, InvocationContext.getUserToken());
             archiver.archiveMerchantTxns();
-            Backendless.Logging.flush();
+            mLogger.flush();
 
         } catch (Exception e) {
             mLogger.error("Exception in archiveTxns: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
 
@@ -382,7 +376,8 @@ public class MerchantServices implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.MerchantServices");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantServices");
+        mLogger = new MyLogger(logger);
         //mBackendOps = new BackendOps(mLogger);
         CommonUtils.initTableToClassMappings();
     }
@@ -499,7 +494,7 @@ public class MerchantServices implements IBackendlessService {
         try {
             mLogger.debug("rollbackRegister: Before: "+ InvocationContext.asString());
             mLogger.debug("rollbackRegister: Before: "+HeadersManager.getInstance().getHeaders().toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
 
             BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
 
@@ -573,7 +568,7 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "Failed to send password reset SMS: "+userId, false);
         }
 
-        //Backendless.Logging.flush();
+        //mLogger.flush();
         //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
     }
     private String buildPwdChangeSMS(String userId) {

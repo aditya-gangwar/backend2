@@ -17,6 +17,7 @@ import com.mytest.database.Cashback;
 import com.mytest.database.Transaction;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ import java.util.TimeZone;
  * Created by adgangwa on 13-05-2016.
  */
 public class TxnTableEventHelper {
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     private int cl_debit;
     private int cl_credit;
@@ -65,7 +66,7 @@ public class TxnTableEventHelper {
             if(CommonUtils.customerPinRequired(merchant, transaction)) {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
-                        CommonUtils.handleWrongAttempt(customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
+                        CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
                         throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
                     }
                 } else {
@@ -145,7 +146,8 @@ public class TxnTableEventHelper {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.events.TxnTableEventHelper");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.events.TxnTableEventHelper");
+        mLogger = new MyLogger(logger);
     }
 
     private void buildAndSendTxnSMS(Transaction transaction) throws Exception

@@ -9,26 +9,23 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import com.backendless.logging.Logger;
+import com.mytest.utilities.MyLogger;
 
 
 /**
  * Created by adgangwa on 12-05-2016.
  */
 public class SmsHelper {
-    private static Logger mLogger;
+    private static MyLogger mLogger;
 
 
     public static boolean sendSMS(String message, String recipients) {
 
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
+        mLogger = new MyLogger(logger);
 
-        if(BackendConstants.DEBUG_MODE) {
-            System.out.println("SMS: " + message);
-        } else {
-            mLogger.debug("SMS: " + message);
-        }
-
+        mLogger.debug("SMS: " + message);
         if(BackendConstants.TESTING_MODE) {
             return true;
         }

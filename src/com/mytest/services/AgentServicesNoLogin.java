@@ -16,13 +16,14 @@ import com.mytest.messaging.SmsConstants;
 import com.mytest.messaging.SmsHelper;
 import com.mytest.utilities.BackendOps;
 import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 /**
  * Created by adgangwa on 17-07-2016.
  */
 public class AgentServicesNoLogin implements IBackendlessService {
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     /*
      * Public methods: Backend REST APIs
@@ -72,18 +73,18 @@ public class AgentServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String dob = agent.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
-                CommonUtils.handleWrongAttempt(agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
+                CommonUtils.handleWrongAttempt(userId, agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET);
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             handlePasswdResetImmediate(user, agent);
             mLogger.debug("Processed passwd reset op for: " + agent.getMobile_num());
 
-            //Backendless.Logging.flush();
+            //mLogger.flush();
 
         } catch (Exception e) {
             mLogger.error("Exception in resetPassword: "+e.toString());
-            Backendless.Logging.flush();
+            mLogger.flush();
             throw e;
         }
     }
@@ -95,7 +96,8 @@ public class AgentServicesNoLogin implements IBackendlessService {
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        mLogger = Backendless.Logging.getLogger("com.mytest.services.AgentServicesNoLogin");
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AgentServicesNoLogin");
+        mLogger = new MyLogger(logger);
         CommonUtils.initTableToClassMappings();
     }
 

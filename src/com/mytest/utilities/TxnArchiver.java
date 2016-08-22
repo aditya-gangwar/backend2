@@ -1,4 +1,4 @@
-package com.mytest.timers;
+package com.mytest.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
@@ -26,7 +26,7 @@ public class TxnArchiver
     //transid(10),time(20),merchantid(6),merchantname(50),customermobile(10),customerprivid(5),amts(6x4=24),rate(2) = 115 chars = 115x2 = 250 bytes
     private static final int CSV_RECORD_MAX_CHARS = 250;
 
-    private Logger mLogger;
+    private MyLogger mLogger;
 
     private List<Transaction> mLastFetchTransactions;
     private Merchants mLastFetchMerchant;
@@ -46,7 +46,7 @@ public class TxnArchiver
     private String mUserToken;
 
     //public TxnArchiver(String merchantIdSuffix, Logger logger, Merchants merchant) {
-    public TxnArchiver(Logger logger, Merchants merchant, String userToken) {
+    public TxnArchiver(MyLogger logger, Merchants merchant, String userToken) {
         //mMerchantIdSuffix = merchantIdSuffix;
 
         mToday = new Date();
