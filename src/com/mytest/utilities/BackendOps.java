@@ -46,7 +46,11 @@ public class BackendOps {
     }
 
     public static void logoutUser() {
-        Backendless.UserService.logout();
+        try {
+            Backendless.UserService.logout();
+        } catch (Exception e) {
+            // ignore exception
+        }
     }
 
     public static BackendlessUser updateUser(BackendlessUser user) {

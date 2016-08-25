@@ -11,56 +11,75 @@ import com.mytest.constants.CommonConstants;
 public class MyLogger {
     
     private Logger mLogger;
-    private StringBuilder sb;
+    private StringBuilder mSb;
 
     public MyLogger(Logger logger) {
         mLogger = logger;
         if(BackendConstants.DEBUG_MODE) {
-            sb = new StringBuilder();
+            mSb = new StringBuilder();
         }
     }
 
     public void debug(String msg) {
         mLogger.debug(msg);
         if(BackendConstants.DEBUG_MODE) {
-            System.out.println(msg);
-            sb.append("\n"+msg);
+            msg = "Debug | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
+        }
+    }
+
+    public void edr(String[] edrData) {
+        StringBuilder sbEdr = new StringBuilder(BackendConstants.BACKEND_EDR_MAX_SIZE);
+        for (String s: edrData)
+        {
+            if(s==null) {
+                sbEdr.append(BackendConstants.BACKEND_EDR_DELIMETER);
+            } else {
+                sbEdr.append(s).append(BackendConstants.BACKEND_EDR_DELIMETER);
+            }
+        }
+
+        String edr = "EDR | "+sbEdr.toString();
+        mLogger.info(edr);
+        if(BackendConstants.DEBUG_MODE) {
+            mSb.append("\n").append(edr);
         }
     }
 
     public void error(String msg) {
         mLogger.error(msg);
         if(BackendConstants.DEBUG_MODE) {
-            msg = "Error: "+msg;
-            System.out.println(msg);
-            sb.append("\n"+msg);
+            msg = "Error | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
         }
     }
 
     public void fatal(String msg) {
         mLogger.fatal(msg);
         if(BackendConstants.DEBUG_MODE) {
-            msg = "Fatal: "+msg;
-            System.out.println(msg);
-            sb.append("\n"+msg);
+            msg = "Fatal | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
         }
     }
 
     public void warn(String msg) {
         mLogger.warn(msg);
         if(BackendConstants.DEBUG_MODE) {
-            msg = "Warning: "+msg;
-            System.out.println(msg);
-            sb.append("\n"+msg);
+            msg = "Warning | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
         }
     }
 
     public void flush() {
-        Backendless.Logging.flush();
+        //Backendless.Logging.flush();
         try {
             if (BackendConstants.DEBUG_MODE) {
-                String filePath = CommonConstants.MERCHANT_LOGGING_ROOT_DIR + "myLog.txt";
-                Backendless.Files.saveFile(filePath, sb.toString().getBytes("UTF-8"), true);
+                String filePath = CommonConstants.MERCHANT_LOGGING_ROOT_DIR + "myBackendLog.txt";
+                Backendless.Files.saveFile(filePath, mSb.toString().getBytes("UTF-8"), true);
             }
         } catch(Exception e) {
             //ignore exception

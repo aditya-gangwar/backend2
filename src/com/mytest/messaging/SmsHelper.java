@@ -26,7 +26,7 @@ public class SmsHelper {
         mLogger = new MyLogger(logger);
 
         mLogger.debug("SMS: " + message);
-        if(BackendConstants.TESTING_MODE) {
+        if(BackendConstants.TESTING_SKIP_SMS) {
             return true;
         }
 

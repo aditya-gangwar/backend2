@@ -44,31 +44,6 @@ public class CommonUtils {
         return new String(id);
     }
 
-    /*
-    public static String generateMerchantId(long regCounter) {
-        // Generate unique merchant id based on merchant reg counter value
-        // Id is alphanumeric with first 2 alphabets and then 4 digits
-
-        // 9999 is max for 4 digits
-        // not using 10,000 as divisor to avoid using 0000 in user id
-        int divisor = 9999;
-        int rem = (int)(regCounter%divisor);
-
-        // first alphabet = counter / 26*9999
-        // second alphabet = counter / 9999
-        // digits = counter % 9999
-        StringBuilder sb = new StringBuilder();
-        sb.append(CommonConstants.numToChar[(int)(regCounter/(26*divisor))]);
-        sb.append(CommonConstants.numToChar[(int) (regCounter/divisor)]);
-        if(rem==0) {
-            sb.append(divisor);
-        } else {
-            sb.append(String.format("%04d",rem));
-        }
-
-        return sb.toString();
-    }*/
-
     public static String generateMerchantId(MerchantIdBatches batch, String countryCode, long regCounter) {
         // 8 digit merchant id format:
         // <1-3 digit country code> + <0-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
@@ -600,5 +575,30 @@ public class CommonUtils {
                 return DbConstants.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD;
         }
         return 100;
+    }*/
+
+    /*
+    public static String generateMerchantId(long regCounter) {
+        // Generate unique merchant id based on merchant reg counter value
+        // Id is alphanumeric with first 2 alphabets and then 4 digits
+
+        // 9999 is max for 4 digits
+        // not using 10,000 as divisor to avoid using 0000 in user id
+        int divisor = 9999;
+        int rem = (int)(regCounter%divisor);
+
+        // first alphabet = counter / 26*9999
+        // second alphabet = counter / 9999
+        // digits = counter % 9999
+        StringBuilder sb = new StringBuilder();
+        sb.append(CommonConstants.numToChar[(int)(regCounter/(26*divisor))]);
+        sb.append(CommonConstants.numToChar[(int) (regCounter/divisor)]);
+        if(rem==0) {
+            sb.append(divisor);
+        } else {
+            sb.append(String.format("%04d",rem));
+        }
+
+        return sb.toString();
     }*/
 

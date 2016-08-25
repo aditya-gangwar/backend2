@@ -9,8 +9,32 @@ public class BackendConstants {
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = true;
-    public static final boolean TESTING_MODE = true;
+    public static final boolean TESTING_SKIP_SMS = true;
+    public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
 
+    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>
+    // 50+10+10+5+10+10+10+10+10+50+10+5+100 = ~300 chars
+    public static final int BACKEND_EDR_MAX_SIZE = 500;
+    public static final String BACKEND_EDR_DELIMETER = ",";
+    public static final String BACKEND_EDR_SUB_DELIMETER = ":";
+    public static final String BACKEND_EDR_RESULT_OK = "SUCCESS";
+    public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
+
+    // array indexes giving position of EDR fields
+    public static final int EDR_API_NAME_IDX = 0;
+    public static final int EDR_START_TIME_IDX = 1;
+    public static final int EDR_END_TIME_IDX = 2;
+    public static final int EDR_EXEC_DURATION_IDX = 3;
+    public static final int EDR_USER_ID_IDX = 4;
+    public static final int EDR_USER_TYPE_IDX = 5;
+    public static final int EDR_MCHNT_ID_IDX = 6;
+    public static final int EDR_AGENT_ID_IDX = 7;
+    public static final int EDR_CUST_ID_IDX = 8;
+    public static final int EDR_API_PARAMS_IDX = 9;
+    public static final int EDR_RESULT_IDX = 10;
+    public static final int EDR_EXP_CODE_IDX = 11;
+    public static final int EDR_EXP_MSG_IDX = 12;
+    public static final int BACKEND_EDR_MAX_FIELDS = 13;
 
     public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";

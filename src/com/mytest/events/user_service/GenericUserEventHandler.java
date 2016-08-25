@@ -29,10 +29,15 @@ import java.util.*;
 public class GenericUserEventHandler extends com.backendless.servercode.extension.UserExtender
 {
     private MyLogger mLogger;
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     @Override
     public void afterLogin( RunnerContext context, String login, String password, ExecutionResult<HashMap> result ) throws Exception
     {
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "afterLogin";
+        mEdr[BackendConstants.EDR_USER_ID_IDX] = login;
         initCommon();
         boolean positiveException = false;
 
@@ -42,12 +47,6 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             //mLogger.debug(context.toString());
             //List<String> roles = Backendless.UserService.getUserRoles();
             //mLogger.debug("Roles: "+roles.toString());
-            /*
-            if(BackendConstants.DEBUG_MODE) {
-                System.out.println("Before: "+HeadersManager.getInstance().getHeaders().toString());
-                System.out.println(context.toString());
-                System.out.println("Roles: "+roles.toString());
-            }*/
 
             if(result.getException()==null) {
                 // Login is successful
@@ -56,10 +55,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 String userId = (String) result.getResult().get("user_id");
                 Integer userType = (Integer) result.getResult().get("user_type");
+                mEdr[BackendConstants.EDR_USER_TYPE_IDX] = userType.toString();
 
                 if (userType == DbConstants.USER_TYPE_MERCHANT) {
                     // fetch merchant object
                     Merchants merchant = BackendOps.getMerchant(userId, true);
+                    mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
                     // check admin status
                     CommonUtils.checkMerchantStatus(merchant);
 
@@ -81,7 +83,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     // This logic helps us to avoid resetting 'tempDevId' to NULL on each login call
                     long timeDiff = System.currentTimeMillis() - entryTime;
                     if( timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS*1000) &&
-                            !BackendConstants.TESTING_MODE) {
+                            BackendConstants.TESTING_SKIP_DEVICEID_CHECK) {
                         // deviceInfo is old than 5 mins = 300 secs
                         // most probably from last login call - setDeviceInfo not called before this login
                         // can indicate sabotage
@@ -160,6 +162,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 } else if (userType == DbConstants.USER_TYPE_AGENT) {
                     Agents agent = BackendOps.getAgent(userId);
+                    mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
                     // check admin status
                     CommonUtils.checkAgentStatus(agent);
 
@@ -196,197 +199,67 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 }
 
             } else {
+                Integer userType = CommonUtils.getUserType(login);
+                mEdr[BackendConstants.EDR_USER_TYPE_IDX] = userType.toString();
+
                 // login failed - increase count if failed due to wrong password
                 //if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
                 if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
                     mLogger.debug("Login failed for user: "+login+" due to wrong id/passwd");
-                    switch(CommonUtils.getUserType(login)) {
+                    switch(userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false);
+                            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                             CommonUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
 
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
                             Agents agent = BackendOps.getAgent(login);
+                            mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
                             CommonUtils.handleWrongAttempt(login, agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
                             break;
                     }
                 } else {
                     mLogger.debug("Login failed for user: "+login+": "+result.getException().toString());
                 }
+                // login failed - set the exception code to the same
+                //mEdr[BackendConstants.EDR_EXP_CODE_IDX] = BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD;
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = String.valueOf(result.getException().getCode());
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = result.getException().getExceptionMessage();
             }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch (Exception e) {
             if(result.getException()==null) {
                 BackendOps.logoutUser();
             }
-            if(!positiveException) {
+
+            if(positiveException) {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            } else {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
                 mLogger.error("Exception in afterLogin: "+e.toString());
             }
-            Backendless.Logging.flush();
+
+            mEdr[BackendConstants.EDR_EXP_CODE_IDX] = e.getMessage();
             if(e instanceof BackendlessException) {
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
                 throw CommonUtils.getNewException((BackendlessException) e);
             }
             throw e;
+        } finally {
+            long endTime = System.currentTimeMillis();
+            long execTime = endTime - startTime;
+            mEdr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
+            mEdr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
+            mLogger.edr(mEdr);
+            mLogger.flush();
         }
     }
-
-    /*
-    @Override
-    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception {
-        Backendless.Logging.setLogReportingPolicy(1,0);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
-
-        logger.debug("In GenericUserEventHandler: beforeRegister");
-        logger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
-        logger.debug("beforeRegister:"+context.toString());
-        Backendless.Logging.flush();
-    }
-
-    @Override
-    public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
-    {
-        Backendless.Logging.setLogReportingPolicy(1,0);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
-
-        logger.debug("In GenericUserEventHandler: afterRegister");
-        logger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
-        logger.debug("afterRegister:"+context.toString());
-        Backendless.Logging.flush();
-    }
-    */
-    /*
-    @Override
-    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
-    {
-        initCommon();
-        try {
-            mLogger.debug("In GenericUserEventHandler: beforeRegister");
-            mLogger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.debug("beforeRegister:"+context.toString());
-            // Print roles for debugging
-            List<String> roles = Backendless.UserService.getUserRoles();
-            mLogger.debug("beforeRegister: Roles: "+roles.toString());
-            Backendless.Logging.flush();
-
-            // If merchant, generate login id and password
-            // If customer, generate private id and PIN
-            //String userId = (String) userValue.get("user_id");
-            Integer userType = (Integer) userValue.get("user_type");
-
-            if (userType == DbConstants.USER_TYPE_MERCHANT) {
-                Merchants merchant = (Merchants) userValue.get("merchant");
-                if (merchant != null) {
-
-                    userValue.put("user_id", "123435678");
-                    userValue.put("password","1234");
-                    merchant.setAuto_id("123435678");
-                    merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
-                    merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
-                    merchant.setStatus_update_time(new Date());
-                    merchant.setAdmin_remarks("New registered merchant");
-                    merchant.setMobile_num(merchant.getMobile_num());
-                    merchant.setCashback_table("cashback0");
-                    merchant.setTxn_table("transactions0");
-
-
-                    // get open merchant id batch
-                    String countryCode = merchant.getAddress().getCity().getCountryCode();
-                    String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
-                    String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
-                    MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
-                    if(batch == null) {
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH,
-                                "No open merchant id batch available: "+batchTableName+","+whereClause);
-                    }
-
-                    // get merchant counter value and use the same to generate merchant id
-                    Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
-                    mLogger.debug("Fetched merchant cnt: "+merchantCnt);
-                    // set merchant id
-                    String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
-                    mLogger.debug("Generated merchant id: "+merchantId);
-
-                    userValue.put("user_id", merchantId);
-                    merchant.setAuto_id(merchantId);
-                    merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
-                    merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
-                    merchant.setStatus_update_time(new Date());
-                    merchant.setAdmin_remarks("New registered merchant");
-                    merchant.setMobile_num(CommonUtils.addMobileCC(merchant.getMobile_num()));
-
-                    // generate and set password
-                    String pwd = CommonUtils.generateTempPassword();
-                    mLogger.debug("Generated passwd: "+pwd);
-                    userValue.put("password",pwd);
-
-                    // set cashback and transaction table names
-                    setCbAndTransTables(merchant, merchantCnt);
-                }
-            }
-            //Backendless.Logging.flush();
-        } catch (Exception e) {
-            mLogger.error("Exception in beforeRegister: "+e.toString());
-            Backendless.Logging.flush();
-            if(e instanceof BackendlessException) {
-                throw CommonUtils.getNewException((BackendlessException) e);
-            }
-            throw e;
-        }
-    }
-
-    @Override
-    public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
-    {
-        initCommon();
-        try {
-            mLogger.debug("In GenericUserEventHandler: afterRegister");
-            mLogger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.debug("afterRegister:"+context.toString());
-            Backendless.Logging.flush();
-
-            // send password in SMS, if registration is successful
-            if (result.getException() == null) {
-                String userId = (String) userValue.get("user_id");
-                Integer userType = (Integer) userValue.get("user_type");
-
-                if (userType == DbConstants.USER_TYPE_MERCHANT) {
-                    Merchants merchant = (Merchants) userValue.get("merchant");
-                    if (merchant != null) {
-                        // assign merchant role
-                        try {
-                            BackendOps.assignRole(userId, BackendConstants.ROLE_MERCHANT);
-                        } catch(Exception e) {
-                            // TODO: add as 'Major' alarm - user to be removed later manually
-                            // rollback to not-usable state
-                            merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-                            merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
-                            try {
-                                BackendOps.updateMerchant(merchant);
-                            } catch(Exception ex) {
-                                mLogger.fatal("afterRegister: Merchant Rollback failed: "+ex.toString());
-                                //TODO: raise critical alarm
-                            }
-                            throw e;
-                        }
-                        // send SMS with user id
-                        String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, userId);
-                        SmsHelper.sendSMS(smsText, merchant.getMobile_num());
-                    }
-                }
-            } else {
-                mLogger.error("In afterRegister, received exception: " + result.getException().toString());
-            }
-        } catch (Exception e) {
-            mLogger.error("Exception in beforeRegister: "+e.toString());
-            //Backendless.Logging.flush();
-            if(e instanceof BackendlessException) {
-                throw CommonUtils.getNewException((BackendlessException) e);
-            }
-            throw e;
-        }
-    }*/
 
     /*
      * Private helper methods
@@ -588,6 +461,162 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if(status != null) {
                 CommonUtils.throwException(mLogger, status, "Customer account not active: "+userId, false);
             }
+        }
+    }*/
+
+    /*
+    @Override
+    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception {
+        Backendless.Logging.setLogReportingPolicy(1,0);
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+
+        logger.debug("In GenericUserEventHandler: beforeRegister");
+        logger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
+        logger.debug("beforeRegister:"+context.toString());
+        Backendless.Logging.flush();
+    }
+
+    @Override
+    public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
+    {
+        Backendless.Logging.setLogReportingPolicy(1,0);
+        Logger logger = Backendless.Logging.getLogger("com.mytest.services.GenericUserEventHandler");
+
+        logger.debug("In GenericUserEventHandler: afterRegister");
+        logger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
+        logger.debug("afterRegister:"+context.toString());
+        Backendless.Logging.flush();
+    }
+    */
+    /*
+    @Override
+    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
+    {
+        initCommon();
+        try {
+            mLogger.debug("In GenericUserEventHandler: beforeRegister");
+            mLogger.debug("Before: beforeRegister: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("beforeRegister:"+context.toString());
+            // Print roles for debugging
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("beforeRegister: Roles: "+roles.toString());
+            Backendless.Logging.flush();
+
+            // If merchant, generate login id and password
+            // If customer, generate private id and PIN
+            //String userId = (String) userValue.get("user_id");
+            Integer userType = (Integer) userValue.get("user_type");
+
+            if (userType == DbConstants.USER_TYPE_MERCHANT) {
+                Merchants merchant = (Merchants) userValue.get("merchant");
+                if (merchant != null) {
+
+                    userValue.put("user_id", "123435678");
+                    userValue.put("password","1234");
+                    merchant.setAuto_id("123435678");
+                    merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
+                    merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
+                    merchant.setStatus_update_time(new Date());
+                    merchant.setAdmin_remarks("New registered merchant");
+                    merchant.setMobile_num(merchant.getMobile_num());
+                    merchant.setCashback_table("cashback0");
+                    merchant.setTxn_table("transactions0");
+
+
+                    // get open merchant id batch
+                    String countryCode = merchant.getAddress().getCity().getCountryCode();
+                    String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
+                    String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+                    MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
+                    if(batch == null) {
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH,
+                                "No open merchant id batch available: "+batchTableName+","+whereClause);
+                    }
+
+                    // get merchant counter value and use the same to generate merchant id
+                    Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+                    mLogger.debug("Fetched merchant cnt: "+merchantCnt);
+                    // set merchant id
+                    String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
+                    mLogger.debug("Generated merchant id: "+merchantId);
+
+                    userValue.put("user_id", merchantId);
+                    merchant.setAuto_id(merchantId);
+                    merchant.setAdmin_status(DbConstants.USER_STATUS_NEW_REGISTERED);
+                    merchant.setStatus_reason(DbConstants.ENABLED_NEW_USER);
+                    merchant.setStatus_update_time(new Date());
+                    merchant.setAdmin_remarks("New registered merchant");
+                    merchant.setMobile_num(CommonUtils.addMobileCC(merchant.getMobile_num()));
+
+                    // generate and set password
+                    String pwd = CommonUtils.generateTempPassword();
+                    mLogger.debug("Generated passwd: "+pwd);
+                    userValue.put("password",pwd);
+
+                    // set cashback and transaction table names
+                    setCbAndTransTables(merchant, merchantCnt);
+                }
+            }
+            //Backendless.Logging.flush();
+        } catch (Exception e) {
+            mLogger.error("Exception in beforeRegister: "+e.toString());
+            Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void afterRegister( RunnerContext context, HashMap userValue, ExecutionResult<HashMap> result ) throws Exception
+    {
+        initCommon();
+        try {
+            mLogger.debug("In GenericUserEventHandler: afterRegister");
+            mLogger.debug("Before: afterRegister: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("afterRegister:"+context.toString());
+            Backendless.Logging.flush();
+
+            // send password in SMS, if registration is successful
+            if (result.getException() == null) {
+                String userId = (String) userValue.get("user_id");
+                Integer userType = (Integer) userValue.get("user_type");
+
+                if (userType == DbConstants.USER_TYPE_MERCHANT) {
+                    Merchants merchant = (Merchants) userValue.get("merchant");
+                    if (merchant != null) {
+                        // assign merchant role
+                        try {
+                            BackendOps.assignRole(userId, BackendConstants.ROLE_MERCHANT);
+                        } catch(Exception e) {
+                            // TODO: add as 'Major' alarm - user to be removed later manually
+                            // rollback to not-usable state
+                            merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
+                            merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+                            try {
+                                BackendOps.updateMerchant(merchant);
+                            } catch(Exception ex) {
+                                mLogger.fatal("afterRegister: Merchant Rollback failed: "+ex.toString());
+                                //TODO: raise critical alarm
+                            }
+                            throw e;
+                        }
+                        // send SMS with user id
+                        String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, userId);
+                        SmsHelper.sendSMS(smsText, merchant.getMobile_num());
+                    }
+                }
+            } else {
+                mLogger.error("In afterRegister, received exception: " + result.getException().toString());
+            }
+        } catch (Exception e) {
+            mLogger.error("Exception in beforeRegister: "+e.toString());
+            //Backendless.Logging.flush();
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
+            throw e;
         }
     }*/
 
