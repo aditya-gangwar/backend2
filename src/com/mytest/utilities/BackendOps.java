@@ -85,22 +85,22 @@ public class BackendOps {
 
 
 
-    public static BackendlessUser fetchUserByObjectId(String objectId, int userType) {
-        //BackendlessUser user = Backendless.UserService.findById(objectId);
+    public static BackendlessUser fetchUserByObjectId(String objectId) {
         ArrayList<String> relationProps = new ArrayList<>();
-        if(userType == DbConstants.USER_TYPE_MERCHANT) {
-            relationProps.add("merchant");
-        }
-        BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
+        relationProps.add("merchant");
+        relationProps.add("agent");
+        return Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
+        //BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
 
         //TODO: remove below
+        /*
         Merchants merchant = (Merchants) user.getProperty("merchant");
         if (merchant == null) {
             //mLogger.error("Merchant object in null");
             String errorMsg = "Merchant object in null";
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         }
-        return user;
+        return user;*/
 
         /*
         if(userType == DbConstants.USER_TYPE_MERCHANT) {
@@ -433,10 +433,6 @@ public class BackendOps {
     /*
      * Merchant operations ops
      */
-    public static MerchantOps addMerchantOp(MerchantOps op) {
-        return Backendless.Persistence.save( op );
-    }
-
     public static ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -472,6 +468,14 @@ public class BackendOps {
     public static MerchantOps saveMerchantOp(MerchantOps op) {
         return Backendless.Persistence.save( op );
     }
+
+    /*
+     * Customer operations ops
+     */
+    public static CustomerOps saveCustomerOp(CustomerOps op) {
+        return Backendless.Persistence.save( op );
+    }
+
 
     /*
      * WrongAttempts operations

@@ -12,13 +12,17 @@ public class BackendConstants {
     public static final boolean TESTING_SKIP_SMS = true;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
 
-    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>
-    // 50+10+10+5+10+10+10+10+10+50+10+5+100 = ~300 chars
+    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
+    // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
     public static final int BACKEND_EDR_MAX_SIZE = 500;
     public static final String BACKEND_EDR_DELIMETER = ",";
     public static final String BACKEND_EDR_SUB_DELIMETER = ":";
     public static final String BACKEND_EDR_RESULT_OK = "SUCCESS";
     public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
+    public static final String BACKEND_EDR_SMS_OK = "OK";
+    public static final String BACKEND_EDR_SMS_NOK = "NOK";
+    // special scenarios
+    public static final String BACKEND_FLAG_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;
@@ -30,11 +34,15 @@ public class BackendConstants {
     public static final int EDR_MCHNT_ID_IDX = 6;
     public static final int EDR_AGENT_ID_IDX = 7;
     public static final int EDR_CUST_ID_IDX = 8;
-    public static final int EDR_API_PARAMS_IDX = 9;
-    public static final int EDR_RESULT_IDX = 10;
-    public static final int EDR_EXP_CODE_IDX = 11;
-    public static final int EDR_EXP_MSG_IDX = 12;
-    public static final int BACKEND_EDR_MAX_FIELDS = 13;
+    public static final int EDR_CUST_CARD_ID_IDX = 9;
+    public static final int EDR_API_PARAMS_IDX = 10;
+    public static final int EDR_RESULT_IDX = 11;
+    public static final int EDR_EXP_CODE_IDX = 12;
+    public static final int EDR_EXP_MSG_IDX = 13;
+    public static final int EDR_SMS_STATUS_IDX = 14;
+    public static final int EDR_SPECIAL_FLAG_IDX = 15;
+    public static final int BACKEND_EDR_MAX_FIELDS = 16;
+
 
     public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";

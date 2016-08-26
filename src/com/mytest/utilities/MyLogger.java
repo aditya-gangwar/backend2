@@ -41,7 +41,11 @@ public class MyLogger {
         }
 
         String edr = "EDR | "+sbEdr.toString();
-        mLogger.info(edr);
+        if(edrData[BackendConstants.EDR_RESULT_IDX].equals(BackendConstants.BACKEND_EDR_RESULT_OK)) {
+            mLogger.info(edr);
+        } else {
+            mLogger.error(edr);
+        }
         if(BackendConstants.DEBUG_MODE) {
             mSb.append("\n").append(edr);
         }

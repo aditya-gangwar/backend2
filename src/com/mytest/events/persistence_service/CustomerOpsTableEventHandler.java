@@ -25,37 +25,64 @@ import java.util.Date;
  * Console.
  */
 
+/*
 @Asset( "CustomerOps" )
 public class CustomerOpsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<CustomerOps>
 {
     private MyLogger mLogger;
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     @Override
     public void beforeCreate(RunnerContext context, CustomerOps customerops) throws Exception
     {
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "CustomerOps-beforeCreate";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = customerops.getOp_code()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getExtra_op_params()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getQr_card()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getRequestor_id();
+
         initCommon();
         boolean positiveException = false;
 
         try {
             mLogger.debug("In CustomerOpsTableEventHandler: beforeCreate: " + context.getUserRoles());
-            //mLogger.debug(context.toString());
             HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken());
+
+            // Fetch merchant
+            BackendlessUser user = BackendOps.fetchUserByObjectId(context.getUserId(), DbConstants.USER_TYPE_MERCHANT);
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
+            int userType = (Integer)user.getProperty("user_type");
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
+            if(userType!=DbConstants.USER_TYPE_MERCHANT) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Only merchant operation");
+            }
+
+            Merchants merchant = (Merchants) user.getProperty("merchant");
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+            // check if merchant is enabled
+            CommonUtils.checkMerchantStatus(merchant);
+            customerops.setRequestor_id(merchant.getAuto_id());
 
             String otp = customerops.getOtp();
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
-                String errorMsg = "";
 
                 // Fetch customer
                 String mobileNum = CommonUtils.addMobileCC(customerops.getMobile_num());
                 Customers customer = BackendOps.getCustomer(mobileNum, BackendConstants.CUSTOMER_ID_MOBILE);
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
                 // check if customer is enabled
                 CommonUtils.checkCustomerStatus(customer);
 
                 // Don't verify QR card# for 'new card' operation
+                String cardId = customer.getMembership_card().getCard_id();
+                mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = cardId;
                 String custOp = customerops.getOp_code();
                 if (!custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
-                        !customer.getMembership_card().getCard_id().equals(customerops.getQr_card())) {
+                        !cardId.equals(customerops.getQr_card())) {
 
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card");
                 }
@@ -94,40 +121,71 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 mLogger.debug("OTP matched for given customer operation: " + customerops.getMobile_num() + ", " + customerops.getOp_code());
             }
 
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch (Exception e) {
-            if(!positiveException) {
+            if(positiveException) {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            } else {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
                 mLogger.error("Exception in CustomerOpsTableEventHandler:beforeCreate: "+e.toString());
             }
-            Backendless.Logging.flush();
 
+            mEdr[BackendConstants.EDR_EXP_CODE_IDX] = e.getMessage();
             if(e instanceof BackendlessException) {
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
                 throw CommonUtils.getNewException((BackendlessException) e);
             }
             throw e;
+        } finally {
+            long endTime = System.currentTimeMillis();
+            long execTime = endTime - startTime;
+            mEdr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
+            mEdr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
+            mLogger.edr(mEdr);
+            mLogger.flush();
         }
     }
 
     @Override
     public void afterCreate( RunnerContext context, CustomerOps customerops, ExecutionResult<CustomerOps> result ) throws Exception
     {
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "CustomerOps-afterCreate";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = customerops.getOp_code()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getExtra_op_params()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getQr_card()+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +customerops.getRequestor_id();
+
         initCommon();
         try {
-            mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+((AbstractContext)context).toString());
-            //mLogger.debug(context.toString());
+            mLogger.debug("In CustomerOpsTableEventHandler: afterCreate"+context.toString());
             HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
-            String opcode = customerops.getOp_code();
-            switch(opcode) {
-                case DbConstants.CUSTOMER_OP_NEW_CARD:
-                    changeCustomerCard(customerops);
-                    break;
-                case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
-                    changeCustomerMobile(customerops);
-                    break;
-                case DbConstants.CUSTOMER_OP_RESET_PIN:
-                    resetCustomerPin(customerops.getMobile_num());
-                    break;
+            if(result.getException()==null) {
+                String opcode = customerops.getOp_code();
+                switch (opcode) {
+                    case DbConstants.CUSTOMER_OP_NEW_CARD:
+                        changeCustomerCard(customerops);
+                        break;
+                    case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
+                        changeCustomerMobile(customerops);
+                        break;
+                    case DbConstants.CUSTOMER_OP_RESET_PIN:
+                        resetCustomerPin(customerops.getMobile_num());
+                        break;
+                }
+            } else {
+                mLogger.error("Customer op create failed: "+result.getException().toString());
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = String.valueOf(result.getException().getCode());
+                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = result.getException().getExceptionMessage();
             }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch (Exception e) {
             mLogger.error("Exception in CustomerOpsTableEventHandler:afterCreate: "+e.toString());
@@ -139,9 +197,6 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         }
     }
 
-    /*
-     * Private helper methods
-     */
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
@@ -252,7 +307,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
     }
 
-}
+}*/
 
     /*
     private void changeCustomerCardOrMobile(CustomerOps custOp, boolean isNewCardCase) {

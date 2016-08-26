@@ -47,10 +47,8 @@ public class TxnTableEventHelper {
             HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
             // Fetch merchant
-            BackendlessUser user = BackendOps.fetchUserByObjectId(context.getUserId(), DbConstants.USER_TYPE_MERCHANT);
-            Merchants merchant = (Merchants) user.getProperty("merchant");
-            // check if merchant is enabled
-            CommonUtils.checkMerchantStatus(merchant);
+            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
             String merchantId = merchant.getAuto_id();
 
             // Fetch customer

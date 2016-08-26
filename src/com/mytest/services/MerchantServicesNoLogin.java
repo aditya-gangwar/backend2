@@ -123,7 +123,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD);
                 op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_PENDING);
 
-                BackendOps.addMerchantOp(op);
+                BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
                 throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "");
             }

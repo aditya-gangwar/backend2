@@ -2,15 +2,11 @@ package com.mytest.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.logging.Logger;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.constants.CommonConstants;
 import com.mytest.database.Merchants;
 import com.mytest.database.Transaction;
-import com.mytest.utilities.BackendOps;
-import com.mytest.utilities.CommonUtils;
-import com.mytest.utilities.DateUtil;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -96,7 +92,7 @@ public class TxnArchiver
 
     public void archiveMerchantTxns() {
         String merchantId = mLastFetchMerchant.getAuto_id();
-        mLogger.debug("Fetched merchant id: "+merchantId);
+        //mLogger.debug("Fetched merchant id: "+merchantId);
 
         String txnTableName = mLastFetchMerchant.getTxn_table();
 
@@ -114,20 +110,25 @@ public class TxnArchiver
                 if( createCsvFiles(merchantId) ) {
                     int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
                     if(recordsUpdated == -1) {
+                        String error = "Failed to update txn archive status";
+                        mLogger.error( error);
                         //TODO: raise alarm
                         // rollback
                         deleteCsvFiles();
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NEED_MANUAL_CHECK, error);
+
                     } else if(recordsUpdated != mLastFetchTransactions.size()) {
+                        String error = "Count of txns updated for status does not match.";
                         //TODO: raise critical alarm
-                        mLogger.error( "Count of txns updated for status does not match.");
                         // rollback
                         if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
                             //TODO: raise critical alarm
-                            mLogger.error( "Txn archive timer: rollback 1 failed.");
+                            error = error+": "+"Txn archive timer: rollback 1 failed.";
                         }
+                        mLogger.error(error);
                         deleteCsvFiles();
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NEED_MANUAL_CHECK, error);
+
                     } else {
                         // update archive date in merchant record
                         // set to current time
@@ -290,25 +291,6 @@ public class TxnArchiver
         }
     }
 
-    /*
-    private String buildMerchantWhereClause() {
-        StringBuilder whereClause = new StringBuilder();
-        //TODO: use mMerchantIdSuffix in production
-        //whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
-        whereClause.append("auto_id LIKE '1%").append("'");
-
-        //String today = mSdfOnlyDateBackend.format(mToday);
-        // merchants with last_txn_archive time before today midnight
-        DateUtil todayMidnight = new DateUtil();
-        todayMidnight.toTZ(BackendConstants.TIMEZONE);
-        todayMidnight.toMidnight();
-
-        whereClause.append(" AND (last_txn_archive < '").append(todayMidnight.getTime().getTime()).append("'").append(" OR last_txn_archive is null)");
-
-        mLogger.debug("Merchant where clause: " + whereClause.toString());
-        return whereClause.toString();
-    }*/
-
     private String buildTxnWhereClause(String merchantId) {
         StringBuilder whereClause = new StringBuilder();
 
@@ -327,5 +309,23 @@ public class TxnArchiver
         return whereClause.toString();
     }
 
+    /*
+    private String buildMerchantWhereClause() {
+        StringBuilder whereClause = new StringBuilder();
+        //TODO: use mMerchantIdSuffix in production
+        //whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
+        whereClause.append("auto_id LIKE '1%").append("'");
+
+        //String today = mSdfOnlyDateBackend.format(mToday);
+        // merchants with last_txn_archive time before today midnight
+        DateUtil todayMidnight = new DateUtil();
+        todayMidnight.toTZ(BackendConstants.TIMEZONE);
+        todayMidnight.toMidnight();
+
+        whereClause.append(" AND (last_txn_archive < '").append(todayMidnight.getTime().getTime()).append("'").append(" OR last_txn_archive is null)");
+
+        mLogger.debug("Merchant where clause: " + whereClause.toString());
+        return whereClause.toString();
+    }*/
 }
         

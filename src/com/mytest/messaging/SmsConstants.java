@@ -52,7 +52,7 @@ public class SmsConstants {
     public static String SMS_REG_AGENT = "Dear Agent - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
-    public static String SMS_MOBILE_CHANGE = "Dear Customer - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE_CUSTOMER = "Dear Customer - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_MOBILE_CHANGE_MERCHANT = "Dear Merchant - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
