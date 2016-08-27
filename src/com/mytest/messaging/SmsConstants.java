@@ -31,7 +31,7 @@ public class SmsConstants {
     public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
 
     // MyeCash transaction SMS
-    public static String SMS_TXN_DEBIT_CL_CB = "Mycash: %s debited Rs %d from your Account and Rs %d from Cashback on %s. Balance:- Account:Rs %d, Cashback:Rs %d.";
+    public static String SMS_TXN_DEBIT_CL_CB = "Mycash: %s debited Rs %d from your Account and Rs %d from Cashback on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
     public static String SMS_TXN_CREDIT_CL_DEBIT_CB = "Mycash: %s added Rs %d to your Account and debited Rs %d from Cashback on %s. Balance:- Account:Rs %d, Cashback:Rs %d.";
 
     public static String SMS_TXN_CREDIT_CL = "Mycash: %s added Rs %d to your Account on %s. Balance:- Account:Rs %d, Cashback:Rs %d.";

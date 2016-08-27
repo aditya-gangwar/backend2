@@ -23,13 +23,14 @@ import java.util.List;
  */
 public class AdminServices implements IBackendlessService {
 
-    private MyLogger mLogger;
+    private MyLogger mLogger = new MyLogger("services.AdminServices");
+    //private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     /*
      * Public methods: Backend REST APIs
      */
     public void registerAgent(String userId, String mobile, String name, String dob, String pwd) {
-        initCommon();
+        //initCommon();
         try {
             mLogger.debug("In registerAgent: "+userId+": "+mobile);
             mobile = CommonUtils.addMobileCC(mobile);
@@ -88,7 +89,7 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
-        initCommon();
+        //initCommon();
         try {
             mLogger.debug("In createMerchantIdBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
@@ -135,7 +136,7 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void openNextMerchantIdBatch(String countryCode, String rangeId, String adminPwd) {
-        initCommon();
+        //initCommon();
         try {
             mLogger.debug("In openNextMerchantIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
@@ -212,7 +213,7 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void createCardIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
-        initCommon();
+        //initCommon();
         try {
             mLogger.debug("In createCardBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
@@ -258,7 +259,7 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd) {
-        initCommon();
+        //initCommon();
         try {
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
@@ -314,13 +315,14 @@ public class AdminServices implements IBackendlessService {
     /*
      * Private helper methods
      */
+    /*
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         Logger logger = Backendless.Logging.getLogger("com.mytest.services.AdminServices");
         mLogger = new MyLogger(logger);
         CommonUtils.initTableToClassMappings();
-    }
+    }*/
 
 }
 

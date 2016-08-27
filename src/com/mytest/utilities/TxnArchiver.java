@@ -90,7 +90,7 @@ public class TxnArchiver
         //Backendless.Logging.flush();
     }*/
 
-    public void archiveMerchantTxns() {
+    public void archiveMerchantTxns(String[] edr) {
         String merchantId = mLastFetchMerchant.getAuto_id();
         //mLogger.debug("Fetched merchant id: "+merchantId);
 
@@ -115,7 +115,8 @@ public class TxnArchiver
                         //TODO: raise alarm
                         // rollback
                         deleteCsvFiles();
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NEED_MANUAL_CHECK, error);
+                        edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
 
                     } else if(recordsUpdated != mLastFetchTransactions.size()) {
                         String error = "Count of txns updated for status does not match.";
@@ -127,7 +128,8 @@ public class TxnArchiver
                         }
                         mLogger.error(error);
                         deleteCsvFiles();
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NEED_MANUAL_CHECK, error);
+                        edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
 
                     } else {
                         // update archive date in merchant record

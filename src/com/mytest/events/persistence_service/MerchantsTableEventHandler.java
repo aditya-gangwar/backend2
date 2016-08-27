@@ -11,6 +11,7 @@ import com.backendless.servercode.annotation.Async;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.database.Merchants;
+import com.mytest.utilities.CommonUtils;
 import com.mytest.utilities.MyLogger;
 
 import java.util.Map;
@@ -25,7 +26,8 @@ import java.util.Map;
 @Asset( "Merchants" )
 public class MerchantsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Merchants>
 {
-    private MyLogger mLogger;
+    private MyLogger mLogger = new MyLogger("events.MerchantsTableEventHandler");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     @Override
     public void beforeFirst( RunnerContext context ) throws Exception
@@ -33,8 +35,8 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         // block for not-authenticated user
         // this event handler does not get called, if find done from servercode
         if(context.getUserToken()==null) {
-            initCommon();
-            mLogger.error("In beforeLast: find attempt by not-authenticated user.");
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
+            CommonUtils.writeEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
@@ -45,8 +47,9 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         // block for not-authenticated user
         // this event handler does not get called, if find done from servercode
         if(context.getUserToken()==null) {
-            initCommon();
-            mLogger.error("In beforeLast: find attempt by not-authenticated user.");
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFind";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
+            CommonUtils.writeEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
@@ -57,17 +60,9 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         // block for not-authenticated user
         // this event handler does not get called, if find done from servercode
         if(context.getUserToken()==null) {
-            initCommon();
-            mLogger.error("In beforeLast: find attempt by not-authenticated user.");
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
+            CommonUtils.writeEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
-
-    private void initCommon() {
-        // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantsTableEventHandler");
-        mLogger = new MyLogger(logger);
-    }
-
 }

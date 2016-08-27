@@ -3,12 +3,11 @@ package com.mytest.services;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.FilePermission;
-import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.logging.Logger;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import com.mytest.constants.*;
+import com.mytest.database.Agents;
 import com.mytest.database.MerchantIdBatches;
 import com.mytest.database.Merchants;
 import com.mytest.messaging.SmsConstants;
@@ -24,19 +23,31 @@ import java.util.Date;
  */
 public class AgentServices  implements IBackendlessService {
 
-    private MyLogger mLogger;
+    private MyLogger mLogger = new MyLogger("services.AgentServicesNoLogin");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     /*
      * Public methods: Backend REST APIs
      */
     public void registerMerchant(Merchants merchant)
     {
-        initCommon();
+        //initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerMerchant";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                merchant.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                merchant.getName();
+
         try {
-            mLogger.debug("In registerMerchant");
-            mLogger.debug("registerMerchant: Before: "+ InvocationContext.asString());
-            mLogger.debug("registerMerchant: Before: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.flush();
+            //mLogger.debug("In registerMerchant");
+            //mLogger.debug("registerMerchant: Before: "+ InvocationContext.asString());
+            //mLogger.debug("registerMerchant: Before: "+HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.flush();
+
+            // Fetch agent
+            Agents agent = (Agents) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    true, DbConstants.USER_TYPE_AGENT, mEdr);
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -76,6 +87,8 @@ public class AgentServices  implements IBackendlessService {
             user.setProperty("merchant", merchant);
 
             user = BackendOps.registerUser(user);
+            // register successfull - can write to edr now
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             try {
                 BackendOps.assignRole(merchantId, BackendConstants.ROLE_MERCHANT);
@@ -115,24 +128,33 @@ public class AgentServices  implements IBackendlessService {
 
             // send SMS with user id
             String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num());
+            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num())) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
 
-        } catch (Exception e) {
-            mLogger.error("Exception in registerMerchant: "+e.toString());
-            mLogger.flush();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     /*
      * Private helper methods
      */
+    /*
     private void initCommon() {
         // Init logger and utils
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         Logger logger = Backendless.Logging.getLogger("com.mytest.services.AgentServices");
         mLogger = new MyLogger(logger);
-    }
+    }*/
 
     private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin
@@ -165,6 +187,7 @@ public class AgentServices  implements IBackendlessService {
     private void rollbackRegister(String mchntId) {
         // TODO: add as 'Major' alarm - user to be removed later manually
         // rollback to not-usable state
+        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         try {
             BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             //BackendOps.loadMerchant(user);

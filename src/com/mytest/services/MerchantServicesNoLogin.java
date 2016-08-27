@@ -25,13 +25,19 @@ import java.util.List;
 public class MerchantServicesNoLogin implements IBackendlessService {
 
     private MyLogger mLogger;
-    //private BackendOps mBackendOps;
+    private String[] mEdr;
 
     /*
      * Public methods: Backend REST APIs
      */
     public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
         initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForLogin";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = loginId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                deviceInfo+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                rcvdOtp;
 
         try {
             if (deviceInfo == null || deviceInfo.isEmpty()) {
@@ -44,6 +50,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // fetch merchant
             Merchants merchant = BackendOps.getMerchant(loginId, false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             // deviceInfo format (from app): <device id>,<manufacturer>,<model>,<os version>
             // add time and otp at the end
@@ -60,15 +67,26 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             merchant.setTempDevId(deviceInfo);
             BackendOps.updateMerchant(merchant);
 
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch(Exception e) {
-            mLogger.error("Exception in setDeviceForLogin: "+e.toString());
-            mLogger.flush();
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void resetMerchantPwd(String userId, String deviceId, String brandName) {
         initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMerchantPwd";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                deviceId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                brandName;
+        boolean positiveException = false;
 
         try {
             mLogger.debug("In resetMerchantPwd: " + userId + ": " + deviceId);
@@ -83,6 +101,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT);
             Merchants merchant = (Merchants) user.getProperty("merchant");
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = ((Integer)user.getProperty("user_type")).toString();
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             // check admin status
             CommonUtils.checkMerchantStatus(merchant);
@@ -125,24 +146,35 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
+
+                positiveException = true;
                 throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "");
             }
 
-        } catch (Exception e) {
-            mLogger.error("Exception in resetMerchantPwd: "+e.toString());
-            mLogger.flush();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void sendMerchantId(String mobileNum) {
         initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "sendMerchantId";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mobileNum;
+
         try {
             mLogger.debug("In sendMerchantId: " + mobileNum);
-            mobileNum = CommonUtils.addMobileCC(mobileNum);
 
             // fetch user with the registered mobile number
             Merchants merchant = BackendOps.getMerchantByMobile(mobileNum);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             // check admin status
             CommonUtils.checkMerchantStatus(merchant);
 
@@ -156,14 +188,22 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             }
 
             // send merchant id by SMS
-            String smsText = buildUserIdSMS(merchant.getAuto_id());
-            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num())) {
+            String smsText = SmsHelper.buildUserIdSMS(merchant.getAuto_id());
+            if (SmsHelper.sendSMS(smsText, merchant.getMobile_num())) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-            }
-        } catch (Exception e) {
-            mLogger.error("Exception in sendMerchantId: "+e.toString());
-            mLogger.flush();
+            };
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -172,11 +212,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
      */
     private void initCommon() {
         // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantServicesNoLogin");
-        mLogger = new MyLogger(logger);
-        //mBackendOps = new BackendOps(mLogger);
-        CommonUtils.initTableToClassMappings();
+        mLogger = new MyLogger("services.MerchantServicesNoLogin");
+        mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
+        //CommonUtils.initTableToClassMappings();
     }
 
     private void handlePasswdResetImmediate(BackendlessUser user, Merchants merchant) {
@@ -189,11 +227,13 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
 
         // Send SMS through HTTP
-        String smsText = buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num()) )
-        {
+        String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
+        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num()) ){
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+        } else {
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        }
+        };
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }
 
@@ -211,13 +251,5 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         mLogger.debug("where clause: "+whereClause.toString());
         return whereClause.toString();
-    }
-
-    private String buildFirstPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_FIRST_PASSWD,userId,password);
-    }
-
-    private String buildUserIdSMS(String userId) {
-        return String.format(SmsConstants.SMS_MERCHANT_ID,userId);
     }
 }

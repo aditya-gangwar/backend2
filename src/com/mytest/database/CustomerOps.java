@@ -17,9 +17,6 @@ public class CustomerOps
   private String ownerId;
   private String requestor_id;
   private String op_code;
-  private String op_status;
-  private String otp;
-  private String pin;
   private String objectId;
   public String getExtra_op_params()
   {
@@ -84,36 +81,6 @@ public class CustomerOps
   public void setOp_code( String op_code )
   {
     this.op_code = op_code;
-  }
-
-  public String getOp_status()
-  {
-    return op_status;
-  }
-
-  public void setOp_status( String op_status )
-  {
-    this.op_status = op_status;
-  }
-
-  public String getOtp()
-  {
-    return otp;
-  }
-
-  public void setOtp( String otp )
-  {
-    this.otp = otp;
-  }
-
-  public String getPin()
-  {
-    return pin;
-  }
-
-  public void setPin( String pin )
-  {
-    this.pin = pin;
   }
 
   public String getObjectId()

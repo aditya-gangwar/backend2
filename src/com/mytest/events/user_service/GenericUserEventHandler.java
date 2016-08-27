@@ -28,7 +28,7 @@ import java.util.*;
 
 public class GenericUserEventHandler extends com.backendless.servercode.extension.UserExtender
 {
-    private MyLogger mLogger;
+    private MyLogger mLogger = new MyLogger("events.GenericUserEventHandler");;
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     @Override
@@ -38,7 +38,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "afterLogin";
         mEdr[BackendConstants.EDR_USER_ID_IDX] = login;
-        initCommon();
+        //initCommon();
         boolean positiveException = false;
 
         try {
@@ -109,7 +109,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             newOtp.setUser_id(userId);
                             newOtp.setMobile_num(merchant.getMobile_num());
                             newOtp.setOpcode(DbConstantsBackend.MERCHANT_OP_NEW_DEVICE_LOGIN);
-                            BackendOps.generateOtp(newOtp);
+                            BackendOps.generateOtp(newOtp,mEdr);
 
                             // OTP generated successfully - return exception to indicate so
                             positiveException = true;
@@ -121,7 +121,6 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                             // OTP is valid - add this device to trusted list
                             // Trusted device may be null - create new if so
-                            //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
                             if(trustedDevices == null) {
                                 trustedDevices = new ArrayList<>();
                             }
@@ -233,44 +232,17 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            if(result.getException()==null) {
-                BackendOps.logoutUser();
-            }
-
-            if(positiveException) {
-                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            } else {
-                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
-                mLogger.error("Exception in afterLogin: "+e.toString());
-            }
-
-            mEdr[BackendConstants.EDR_EXP_CODE_IDX] = e.getMessage();
-            if(e instanceof BackendlessException) {
-                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
-                throw CommonUtils.getNewException((BackendlessException) e);
-            }
+        } catch(Exception e) {
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
-            long endTime = System.currentTimeMillis();
-            long execTime = endTime - startTime;
-            mEdr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
-            mEdr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
-            mLogger.edr(mEdr);
-            mLogger.flush();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     /*
      * Private helper methods
      */
-    private void initCommon() {
-        // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.events.GenericUserEventHandler");
-        mLogger = new MyLogger(logger);
-    }
-
     /*
     private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin

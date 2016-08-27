@@ -23,13 +23,19 @@ import com.mytest.utilities.MyLogger;
  */
 public class AgentServicesNoLogin implements IBackendlessService {
 
-    private MyLogger mLogger;
+    private MyLogger mLogger = new MyLogger("services.AgentServicesNoLogin");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     /*
      * Public methods: Backend REST APIs
      */
-    public void setDeviceForLogin(String loginId, String deviceId) {
-        initCommon();
+    public void setDeviceForAgentLogin(String loginId, String deviceId) {
+        //initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForAgentLogin";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = loginId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                deviceId;
 
         try {
             if (deviceId == null || deviceId.isEmpty()) {
@@ -52,20 +58,34 @@ public class AgentServicesNoLogin implements IBackendlessService {
             deviceData.setTempId(deviceId);
             BackendOps.saveInternalUserDevice(deviceData);
 
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch(Exception e) {
-            mLogger.error("Exception in setDeviceForLogin: "+e.toString());
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
-    public void resetPassword(String userId, String secret1) {
-        initCommon();
+    public void resetAgentPassword(String userId, String secret1) {
+        //initCommon();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetAgentPassword";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                secret1;
+
         try {
-            mLogger.debug("In resetPassword: " + userId);
+            mLogger.debug("In resetAgentPassword: " + userId);
 
             // fetch user with the given id with related agent object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_AGENT);
             Agents agent = (Agents) user.getProperty("agent");
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = ((Integer)user.getProperty("user_type")).toString();
+            mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
 
             // check admin status
             CommonUtils.checkAgentStatus(agent);
@@ -80,10 +100,11 @@ public class AgentServicesNoLogin implements IBackendlessService {
             handlePasswdResetImmediate(user, agent);
             mLogger.debug("Processed passwd reset op for: " + agent.getMobile_num());
 
-            //mLogger.flush();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch (Exception e) {
-            mLogger.error("Exception in resetPassword: "+e.toString());
+            mLogger.error("Exception in resetAgentPassword: "+e.toString());
             mLogger.flush();
             throw e;
         }
@@ -93,32 +114,22 @@ public class AgentServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
-    private void initCommon() {
-        // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AgentServicesNoLogin");
-        mLogger = new MyLogger(logger);
-        CommonUtils.initTableToClassMappings();
-    }
-
     private void handlePasswdResetImmediate(BackendlessUser user, Agents agent) {
         // generate password
         String passwd = CommonUtils.generateTempPassword();
         // update user account for the password
         user.setPassword(passwd);
         user = BackendOps.updateUser(user);
-        mLogger.debug("Updated agent for password reset: "+agent.getMobile_num());
+        mLogger.debug("Updated agent for password reset: "+agent.getId());
 
         // Send SMS through HTTP
-        String smsText = buildAgentPwdResetSMS(agent.getMobile_num(), passwd);
-        if( !SmsHelper.sendSMS(smsText, agent.getMobile_num()) )
-        {
+        String smsText = SmsHelper.buildAgentPwdResetSMS(agent.getId(), passwd);
+        if( SmsHelper.sendSMS(smsText, agent.getMobile_num()) ){
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+        } else {
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        }
+        };
         mLogger.debug("Sent first password reset SMS: "+agent.getMobile_num());
-    }
-
-    private String buildAgentPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_PASSWD,userId,password);
     }
 }

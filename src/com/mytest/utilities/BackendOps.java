@@ -199,7 +199,7 @@ public class BackendOps {
     /*
      * Customer operations
      */
-    public static Customers getCustomer(String custId, int idType) {
+    public static Customers getCustomer(String custId, int idType, boolean fetchCard) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         switch(idType) {
             case BackendConstants.CUSTOMER_ID_MOBILE:
@@ -213,16 +213,18 @@ public class BackendOps {
                 break;
         }
 
-        QueryOptions queryOptions = new QueryOptions();
-        queryOptions.addRelated("membership_card");
-        query.setQueryOptions(queryOptions);
+        if(fetchCard) {
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.addRelated("membership_card");
+            query.setQueryOptions(queryOptions);
+        }
 
         BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+custId;
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
-            if(user.getData().get(0).getMembership_card()==null) {
+            if(fetchCard && user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
             }
@@ -302,24 +304,27 @@ public class BackendOps {
     /*
      * OTP operations
      */
-    public static void generateOtp(AllOtp otp) {
+    public static void generateOtp(AllOtp otp, String[] edr) {
         // check if any OTP object already available for this user_id
-        // if yes, update the same for new OTP, op and time.
-        // If no, create new object
+        // If yes, first delete the same.
+        // Create new OTP object
         // Send SMS with OTP
         try {
             AllOtp newOtp = null;
             AllOtp oldOtp = fetchOtp(otp.getUser_id());
             if (oldOtp != null) {
-                // update oldOtp
+                // delete oldOtp
+                deleteOtp(oldOtp);
+                /*
                 oldOtp.setOtp_value(CommonUtils.generateOTP());
                 oldOtp.setOpcode(otp.getOpcode());
                 oldOtp.setMobile_num(otp.getMobile_num());
                 newOtp = Backendless.Persistence.save(oldOtp);
-            } else {
-                otp.setOtp_value(CommonUtils.generateOTP());
-                newOtp = Backendless.Persistence.save(otp);
+                */
             }
+            // create new OTP object
+            otp.setOtp_value(CommonUtils.generateOTP());
+            newOtp = Backendless.Persistence.save(otp);
 
             // Send SMS through HTTP
             String smsText = String.format(SmsConstants.SMS_OTP,
@@ -328,7 +333,10 @@ public class BackendOps {
                     newOtp.getOtp_value(),
                     GlobalSettingsConstants.OTP_VALID_MINS);
 
-            if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num())) {
+            if (SmsHelper.sendSMS(smsText, newOtp.getMobile_num())){
+                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
                 String errorMsg = "In generateOtp: Failed to send SMS";
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, errorMsg);
             }

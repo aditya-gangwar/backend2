@@ -471,7 +471,7 @@ public class CommonUtils {
                 case DbConstants.USER_TYPE_AGENT:
                     Agents agent = (Agents) user.getProperty("agent");
                     edr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
-                    // check if merchant is enabled
+                    // check if agent is enabled
                     CommonUtils.checkAgentStatus(agent);
                     return agent;
 
@@ -481,6 +481,39 @@ public class CommonUtils {
         }
 
         return null;
+    }
+
+    public static void handleException(Exception e, boolean positiveException, MyLogger logger, String[] edr) {
+        if(positiveException) {
+            edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+        } else {
+            edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
+            logger.error("Exception in "+edr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
+        }
+
+        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
+        if(e instanceof BackendlessException) {
+            edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
+        }
+    }
+
+    public static void finalHandling(long startTime, MyLogger logger, String[] edr) {
+        long endTime = System.currentTimeMillis();
+        long execTime = endTime - startTime;
+        edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
+        edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
+        logger.edr(edr);
+        logger.flush();
+    }
+
+    public static void writeEdr(MyLogger logger, String[] mEdr) {
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(System.currentTimeMillis());
+        mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
+        mEdr[BackendConstants.EDR_EXP_CODE_IDX] = BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED;
+        mEdr[BackendConstants.EDR_EXP_MSG_IDX] = mEdr[BackendConstants.EDR_API_NAME_IDX]+" not allowed.";
+        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+        logger.edr(mEdr);
+        logger.flush();
     }
 
 

@@ -74,9 +74,6 @@ public class DbConstants {
     public static final String CUSTOMER_OP_NEW_CARD = "NEW CARD";
     public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
     public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
-    // CustomerOps table - 'status' column values
-    public static final String CUSTOMER_OP_STATUS_OTP_GENERATED = "OTP Generated";
-    public static final String CUSTOMER_OP_STATUS_OTP_MATCHED = "OTP Matched";
 
     // GlobalSettings table - should be exactly same as 'names' in DB
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_MINS = "merchant_passwd_reset_mins";

@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import com.backendless.logging.Logger;
+import com.mytest.utilities.CommonUtils;
 import com.mytest.utilities.MyLogger;
 
 
@@ -18,14 +19,11 @@ import com.mytest.utilities.MyLogger;
 public class SmsHelper {
     private static MyLogger mLogger;
 
-
     public static boolean sendSMS(String message, String recipients) {
 
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.messaging.SmsHelper");
-        mLogger = new MyLogger(logger);
-
+        mLogger = new MyLogger("messaging.SmsHelper");
         mLogger.debug("SMS: " + message);
+
         if(BackendConstants.TESTING_SKIP_SMS) {
             return true;
         }
@@ -72,7 +70,44 @@ public class SmsHelper {
 
         return true;
     }
+
+    /*
+     * Methods to build SMS texts
+     */
+    public static String buildNewCardSMS(String userId, String card_num) {
+        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
+    }
+
+    public static String buildCustMobileChangeSMS(String userId, String mobile_num) {
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE_CUSTOMER, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
+    }
+
+    public static String buildMobileChangeSMS(String userId, String mobile_num) {
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE_MERCHANT, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
+    }
+
+    public static String buildCustPwdResetSMS(String userId, String pin) {
+        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
+    }
+
+    public static String buildFirstPwdResetSMS(String userId, String password) {
+        return String.format(SmsConstants.SMS_FIRST_PASSWD,userId,password);
+    }
+
+    public static String buildUserIdSMS(String userId) {
+        return String.format(SmsConstants.SMS_MERCHANT_ID,userId);
+    }
+
+    public static String buildPwdChangeSMS(String userId) {
+        return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
+    }
+
+    public static String buildAgentPwdResetSMS(String userId, String password) {
+        return String.format(SmsConstants.SMS_PASSWD,userId,password);
+    }
 }
+
+
 
 //http://txtguru.in/imobile/api.php?username=aditya_gang&password=50375135&source=UPDATE&dmobile=918800191535&message=TEST+SMS+GATEWAY
             /*String requestUrl = SmsConstants.SMSGW_BASE_URL +

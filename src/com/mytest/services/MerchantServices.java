@@ -24,15 +24,15 @@ import java.util.TimeZone;
  */
 public class MerchantServices implements IBackendlessService {
 
-    private MyLogger mLogger;
-    private String[] mEdr;
+    private MyLogger mLogger = new MyLogger("services.MerchantServices");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     /*
      * Public methods: Backend REST APIs
      * Merchant operations
      */
     public void changeMobile(String currentMobile, String newMobile, String otp) {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -63,11 +63,12 @@ public class MerchantServices implements IBackendlessService {
                 newOtp.setUser_id(merchant.getAuto_id());
                 newOtp.setMobile_num(newMobile);
                 newOtp.setOpcode(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
-                BackendOps.generateOtp(newOtp);
+                BackendOps.generateOtp(newOtp,mEdr);
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
                 throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+
             } else {
                 // Second run, as OTP available
                 BackendOps.validateOtp(merchant.getAuto_id(), otp);
@@ -95,7 +96,7 @@ public class MerchantServices implements IBackendlessService {
                 mLogger.debug("Processed mobile change for: " + merchant.getAuto_id());
 
                 // Send SMS on old and new mobile - ignore sent status
-                String smsText = buildMobileChangeSMS(oldMobile, newMobile);
+                String smsText = SmsHelper.buildMobileChangeSMS(oldMobile, newMobile);
                 if(SmsHelper.sendSMS(smsText, oldMobile + "," + newMobile)) {
                     mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
                 } else {
@@ -107,16 +108,16 @@ public class MerchantServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            handleException(e,positiveException);
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
 
     public void updateSettings(String cbRate, boolean addClEnabled, String email) {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -142,11 +143,11 @@ public class MerchantServices implements IBackendlessService {
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            handleException(e,false);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -154,7 +155,7 @@ public class MerchantServices implements IBackendlessService {
     // as it will allow any logged-in merchant - to read (not update) cb details of other merchants too
     // but ignoring this for now - to keep this API as fast as possible - as this will be most called API
     public Cashback getCashback(String merchantId, String merchantCbTable, String customerId) {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -172,7 +173,7 @@ public class MerchantServices implements IBackendlessService {
             // one way is to put all mandatory info about customer in cb object only
 
             // Fetch customer using mobile or cardId
-            Customers customer = BackendOps.getCustomer(customerId, customerIdType);
+            Customers customer = BackendOps.getCustomer(customerId, customerIdType, true);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
 
             // Fetch cashback record
@@ -199,16 +200,16 @@ public class MerchantServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
             return cashback;
 
-        } catch (Exception e) {
-            handleException(e,false);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public MerchantStats getMerchantStats() {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -289,16 +290,16 @@ public class MerchantServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
             return stats;
 
-        } catch (Exception e) {
-            handleException(e,false);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void archiveTxns() {
-        initCommon();
+        //initCommon();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMerchantStats";
@@ -313,16 +314,16 @@ public class MerchantServices implements IBackendlessService {
 
             // archive txns
             TxnArchiver archiver = new TxnArchiver(mLogger, merchant, InvocationContext.getUserToken());
-            archiver.archiveMerchantTxns();
+            archiver.archiveMerchantTxns(mEdr);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            handleException(e,false);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -331,7 +332,7 @@ public class MerchantServices implements IBackendlessService {
      * Customer operations by merchant
      */
     public Cashback registerCustomer(String customerMobile, String name, String cardId) {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -381,6 +382,9 @@ public class MerchantServices implements IBackendlessService {
             // use generated PIN as password
             customerUser.setPassword(customer.getTxn_pin());
             customerUser.setProperty("user_type", DbConstants.USER_TYPE_CUSTOMER);
+            // Both 'user' and 'customer' objects get created in single go
+            // This also ensures that 'customer' object's 'ownerId' remains null
+            // This helps to avoid direct update from app by the merchant who created this customer object
             customerUser.setProperty("customer", customer);
 
             customerUser = BackendOps.registerUser(customerUser);
@@ -423,16 +427,16 @@ public class MerchantServices implements IBackendlessService {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED, "");
             }
 
-        } catch (Exception e) {
-            handleException(e,false);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void execCustomerOp(String opCode, String customerId, String scannedCardId, String otp, String pin, String opParam) {
-        initCommon();
+        //initCommon();
 
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -486,7 +490,7 @@ public class MerchantServices implements IBackendlessService {
                     newOtp.setMobile_num(customer.getMobile_num());
                 }
                 newOtp.setOpcode(opCode);
-                BackendOps.generateOtp(newOtp);
+                BackendOps.generateOtp(newOtp,mEdr);
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
@@ -525,25 +529,22 @@ public class MerchantServices implements IBackendlessService {
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            handleException(e,positiveException);
+        } catch(Exception e) {
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
-            finalHandling(startTime);
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     /*
      * Private helper methods
      */
+    /*
     private void initCommon() {
         // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.MerchantServices");
-        mLogger = new MyLogger(logger);
-        //mBackendOps = new BackendOps(mLogger);
+        mLogger = new MyLogger("services.MerchantServices");
         CommonUtils.initTableToClassMappings();
-        mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
     }
 
     private void handleException(Exception e, boolean positiveException) {
@@ -554,7 +555,7 @@ public class MerchantServices implements IBackendlessService {
             mLogger.error("Exception in "+mEdr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
         }
 
-        mEdr[BackendConstants.EDR_EXP_CODE_IDX] = e.getMessage();
+        mEdr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
         if(e instanceof BackendlessException) {
             mEdr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
         }
@@ -567,7 +568,7 @@ public class MerchantServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
         mLogger.edr(mEdr);
         mLogger.flush();
-    }
+    }*/
 
     private Customers createCustomer() {
         Customers customer = new Customers();
@@ -673,14 +674,15 @@ public class MerchantServices implements IBackendlessService {
     private void rollbackRegister(String custId, CustomerCards card) {
         // TODO: add as 'Major' alarm - user to be removed later manually
         // rollback to not-usable state
+        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         try {
-            mLogger.debug("rollbackRegister: Before: "+ InvocationContext.asString());
-            mLogger.debug("rollbackRegister: Before: "+HeadersManager.getInstance().getHeaders().toString());
-            mLogger.flush();
+            //mLogger.debug("rollbackRegister: Before: "+ InvocationContext.asString());
+            //mLogger.debug("rollbackRegister: Before: "+HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.flush();
 
             BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
 
-            Customers customer = BackendOps.getCustomer(custId, BackendConstants.CUSTOMER_ID_MOBILE);
+            Customers customer = BackendOps.getCustomer(custId, BackendConstants.CUSTOMER_ID_MOBILE, false);
             customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
             customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
             customer.setAdmin_remarks("Registration failed");
@@ -732,11 +734,11 @@ public class MerchantServices implements IBackendlessService {
             // but log as alarm for manual correction
             // TODO: raise alarm
             mLogger.error("Exception while updating old card status: "+e.toString());
-            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX]=BackendConstants.BACKEND_FLAG_OLDCARD_SAVE_FAILED;
+            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX]=BackendConstants.BACKEND_ERROR_OLDCARD_SAVE_FAILED;
         }
 
         // Send message to customer informing the same - ignore sent status
-        String smsText = buildNewCardSMS(customer.getMobile_num(), newCardId);
+        String smsText = SmsHelper.buildNewCardSMS(customer.getMobile_num(), newCardId);
         if(SmsHelper.sendSMS(smsText, customer.getMobile_num())) {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {
@@ -755,8 +757,12 @@ public class MerchantServices implements IBackendlessService {
         BackendOps.updateUser(custUser);
 
         // Send message to customer informing the same - ignore sent status
-        String smsText = buildCustMobileChangeSMS( oldMobile, newMobile );
-        SmsHelper.sendSMS(smsText, oldMobile+","+newMobile);
+        String smsText = SmsHelper.buildCustMobileChangeSMS( oldMobile, newMobile );
+        if(SmsHelper.sendSMS(smsText, oldMobile+","+newMobile)){
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+        } else {
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+        };
     }
 
     private void resetCustomerPin(BackendlessUser custUser) {
@@ -773,32 +779,13 @@ public class MerchantServices implements IBackendlessService {
         BackendOps.updateUser(custUser);
 
         // Send SMS through HTTP
-        String smsText = buildCustPwdResetSMS(customer.getMobile_num(), newPin);
+        String smsText = SmsHelper.buildCustPwdResetSMS(customer.getMobile_num(), newPin);
         if( !SmsHelper.sendSMS(smsText, customer.getMobile_num())) {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
         }
     }
-
-    private String buildNewCardSMS(String userId, String card_num) {
-        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
-    }
-
-    private String buildCustMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE_CUSTOMER, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
-    }
-
-    private String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE_MERCHANT, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
-    }
-
-    private String buildCustPwdResetSMS(String userId, String pin) {
-        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
-    }
-
-
-
 }
 
     /*
@@ -941,7 +928,7 @@ public class MerchantServices implements IBackendlessService {
                     // but log as alarm for manual correction
                     // TODO: raise alarm
                     mLogger.error("Exception while updating old card status: "+e.toString());
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX]=BackendConstants.BACKEND_FLAG_OLDCARD_SAVE_FAILED;
+                    mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX]=BackendConstants.BACKEND_ERROR_OLDCARD_SAVE_FAILED;
                 }
 
                 // add to customer ops table - for records purpose

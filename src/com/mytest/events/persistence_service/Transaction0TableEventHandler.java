@@ -12,6 +12,8 @@ import com.backendless.servercode.annotation.Async;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.BackendResponseCodes;
 import com.mytest.database.*;
+import com.mytest.utilities.CommonUtils;
+import com.mytest.utilities.MyLogger;
 
 /**
 * Transaction0TableEventHandler handles events for all entities. This is accomplished
@@ -26,7 +28,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
     public void beforeCreate( RunnerContext context, Transaction transaction) throws Exception
     {
         TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-        txnEventHelper.handleBeforeCreate(context, transaction, "Cashback0");
+        txnEventHelper.handleBeforeCreate(context, transaction);
     }
 
     @Async
@@ -37,6 +39,21 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
         txnEventHelper.handleAfterCreate(context, transaction, result);
     }
 
+    @Override
+    public void beforeUpdate( RunnerContext context, Transaction transaction ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.TransactionEventHandler");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+
+        // update not allowed from app - return exception
+        // beforeUpdate is not called, if update is done from server code
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-beforeUpdate";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                transaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                transaction.getTrans_id();
+        CommonUtils.writeEdr(mLogger, mEdr);
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
+    }
     /*
     @Override
     public void beforeLast( RunnerContext context ) throws Exception

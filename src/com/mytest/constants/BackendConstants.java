@@ -21,8 +21,12 @@ public class BackendConstants {
     public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
     public static final String BACKEND_EDR_SMS_OK = "OK";
     public static final String BACKEND_EDR_SMS_NOK = "NOK";
-    // special scenarios
-    public static final String BACKEND_FLAG_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
+    // special flags
+    public static final String BACKEND_EDR_MANUAL_CHECK = "ManualCheck";
+    public static final String BACKEND_EDR_SECURITY_BREACH = "SecurityBreach";
+    // ignored error scenarios
+    public static final String BACKEND_ERROR_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
+    public static final String BACKEND_ERROR_MOBILE_NUM_NA = "MobileNumNotAvailable";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;
@@ -35,13 +39,14 @@ public class BackendConstants {
     public static final int EDR_AGENT_ID_IDX = 7;
     public static final int EDR_CUST_ID_IDX = 8;
     public static final int EDR_CUST_CARD_ID_IDX = 9;
-    public static final int EDR_API_PARAMS_IDX = 10;
-    public static final int EDR_RESULT_IDX = 11;
-    public static final int EDR_EXP_CODE_IDX = 12;
-    public static final int EDR_EXP_MSG_IDX = 13;
-    public static final int EDR_SMS_STATUS_IDX = 14;
-    public static final int EDR_SPECIAL_FLAG_IDX = 15;
-    public static final int BACKEND_EDR_MAX_FIELDS = 16;
+    public static final int EDR_RESULT_IDX = 10;
+    public static final int EDR_EXP_CODE_IDX = 11;
+    public static final int EDR_EXP_MSG_IDX = 12;
+    public static final int EDR_IGNORED_ERROR_IDX = 13;
+    public static final int EDR_SPECIAL_FLAG_IDX = 14;
+    public static final int EDR_SMS_STATUS_IDX = 15;
+    public static final int EDR_API_PARAMS_IDX = 16;
+    public static final int BACKEND_EDR_MAX_FIELDS = 17;
 
 
     public static final String TIMEZONE = "Asia/Kolkata";
@@ -62,7 +67,9 @@ public class BackendConstants {
     public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
 
-    public static final int SEND_TXN_SMS_MIN_AMOUNT = 10;
+    public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 10;
+    public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 50;
+
     public static final String APP_ID = "09667F8B-98A7-E6B9-FFEB-B2B6EE831A00";
     public static final String SECRET_KEY = "95971CBD-BADD-C61D-FF32-559664AE4F00";
     //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key

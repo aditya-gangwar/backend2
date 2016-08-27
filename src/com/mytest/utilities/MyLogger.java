@@ -11,10 +11,15 @@ import com.mytest.constants.CommonConstants;
 public class MyLogger {
     
     private Logger mLogger;
+    private Logger mEdrLogger;
     private StringBuilder mSb;
 
-    public MyLogger(Logger logger) {
-        mLogger = logger;
+    public MyLogger(String loggerName) {
+        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
+
+        mLogger = Backendless.Logging.getLogger(loggerName);
+        mEdrLogger = Backendless.Logging.getLogger("utilities.edr");
+
         if(BackendConstants.DEBUG_MODE) {
             mSb = new StringBuilder();
         }
@@ -41,10 +46,12 @@ public class MyLogger {
         }
 
         String edr = "EDR | "+sbEdr.toString();
-        if(edrData[BackendConstants.EDR_RESULT_IDX].equals(BackendConstants.BACKEND_EDR_RESULT_OK)) {
-            mLogger.info(edr);
+        if( edrData[BackendConstants.EDR_RESULT_IDX].equals(BackendConstants.BACKEND_EDR_RESULT_NOK) ||
+                (edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX]!=null && !edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX].isEmpty()) ||
+                (edrData[BackendConstants.EDR_IGNORED_ERROR_IDX]!=null && !edrData[BackendConstants.EDR_IGNORED_ERROR_IDX].isEmpty()) ) {
+            mEdrLogger.error(edr);
         } else {
-            mLogger.error(edr);
+            mEdrLogger.info(edr);
         }
         if(BackendConstants.DEBUG_MODE) {
             mSb.append("\n").append(edr);
