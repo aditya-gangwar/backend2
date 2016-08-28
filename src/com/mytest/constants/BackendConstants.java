@@ -11,6 +11,9 @@ public class BackendConstants {
     public static final boolean DEBUG_MODE = true;
     public static final boolean TESTING_SKIP_SMS = true;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
+    public static final boolean FORCED_DEBUG_LOG_MERCHANTS = false;
+    public static final boolean FORCED_DEBUG_LOG_AGENTS = false;
+
 
     // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
@@ -55,10 +58,11 @@ public class BackendConstants {
 
     // Cashback table pool values
     public static final int CASHBACK_TABLE_POOL_START = 0;
-    public static final int CASHBACK_TABLE_POOL_SIZE = 1;
+    public static final int CASHBACK_TABLE_POOL_SIZE = 2;
 
     public static final int PASSWORD_LEN = 5;
     public static final int CUSTOMER_PRIVATE_ID_LEN = 6;
+    public static final int LOG_ID_LEN = 8;
 
     // used in generating temporary passwords
     public static final char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();

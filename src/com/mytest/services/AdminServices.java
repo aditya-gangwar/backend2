@@ -32,8 +32,9 @@ public class AdminServices implements IBackendlessService {
     public void registerAgent(String userId, String mobile, String name, String dob, String pwd) {
         //initCommon();
         try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
             mLogger.debug("In registerAgent: "+userId+": "+mobile);
-            mobile = CommonUtils.addMobileCC(mobile);
             //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
             // login using 'admin' user
@@ -91,6 +92,8 @@ public class AdminServices implements IBackendlessService {
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         //initCommon();
         try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
             mLogger.debug("In createMerchantIdBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
             BackendOps.loginUser("admin",adminPwd);
@@ -138,6 +141,8 @@ public class AdminServices implements IBackendlessService {
     public void openNextMerchantIdBatch(String countryCode, String rangeId, String adminPwd) {
         //initCommon();
         try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
             mLogger.debug("In openNextMerchantIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
             BackendOps.loginUser("admin",adminPwd);
@@ -179,28 +184,6 @@ public class AdminServices implements IBackendlessService {
             lowestBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN);
             BackendOps.saveMerchantIdBatch(tableName, lowestBatch);
 
-            // save dummy files to create directories for 'txn image' and 'txn csv data' files
-            /*
-            try {
-                String txnCsvDummyFilepath = CommonConstants.MERCHANT_TXN_ROOT_DIR +
-                        rangeId + CommonConstants.FILE_PATH_SEPERATOR +
-                        lowestBatch.getRangeBatchId() + CommonConstants.FILE_PATH_SEPERATOR +
-                        BackendConstants.DUMMY_FILENAME;
-
-                Backendless.Files.saveFile(txnCsvDummyFilepath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
-                mLogger.debug("Saved dummy txn csv file: " + txnCsvDummyFilepath);
-
-                String txnImageDummyFilepath = CommonConstants.MERCHANT_TXN_IMAGE_ROOT_DIR +
-                        rangeId + CommonConstants.FILE_PATH_SEPERATOR +
-                        lowestBatch.getRangeBatchId() + CommonConstants.FILE_PATH_SEPERATOR +
-                        BackendConstants.DUMMY_FILENAME;
-
-                Backendless.Files.saveFile(txnImageDummyFilepath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
-                mLogger.debug("Saved dummy txn image file: " + txnImageDummyFilepath);
-            } catch(Exception e) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create txn directories");
-            }*/
-
             // logout admin user
             BackendOps.logoutUser();
 
@@ -215,6 +198,8 @@ public class AdminServices implements IBackendlessService {
     public void createCardIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         //initCommon();
         try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
             mLogger.debug("In createCardBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
             BackendOps.loginUser("admin",adminPwd);
@@ -261,6 +246,8 @@ public class AdminServices implements IBackendlessService {
     public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd) {
         //initCommon();
         try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
             BackendOps.loginUser("admin",adminPwd);
@@ -315,15 +302,6 @@ public class AdminServices implements IBackendlessService {
     /*
      * Private helper methods
      */
-    /*
-    private void initCommon() {
-        // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AdminServices");
-        mLogger = new MyLogger(logger);
-        CommonUtils.initTableToClassMappings();
-    }*/
-
 }
 
     /*

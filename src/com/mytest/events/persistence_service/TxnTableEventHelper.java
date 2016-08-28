@@ -47,17 +47,18 @@ public class TxnTableEventHelper {
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-beforeCreate";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                transaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                transaction.getTrans_id();
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getCustomer_id();
 
         try {
             //mLogger.debug("In Transaction handleBeforeCreate");
+            if(context.getUserToken()==null) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in: " + context.getUserId());
+            }
             HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
             String merchantId = merchant.getAuto_id();
 
             // Fetch customer

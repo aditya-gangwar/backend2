@@ -24,14 +24,15 @@ import java.util.List;
  */
 public class MerchantServicesNoLogin implements IBackendlessService {
 
-    private MyLogger mLogger;
-    private String[] mEdr;
+    private MyLogger mLogger = new MyLogger("services.MerchantServicesNoLogin");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     /*
      * Public methods: Backend REST APIs
      */
     public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
-        initCommon();
+
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForLogin";
@@ -51,6 +52,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // fetch merchant
             Merchants merchant = BackendOps.getMerchant(loginId, false);
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+            mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
 
             // deviceInfo format (from app): <device id>,<manufacturer>,<model>,<os version>
             // add time and otp at the end
@@ -79,7 +81,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     }
 
     public void resetMerchantPwd(String userId, String deviceId, String brandName) {
-        initCommon();
+
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMerchantPwd";
@@ -101,6 +104,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT);
             Merchants merchant = (Merchants) user.getProperty("merchant");
+            mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = ((Integer)user.getProperty("user_type")).toString();
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
@@ -163,7 +167,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     }
 
     public void sendMerchantId(String mobileNum) {
-        initCommon();
+
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "sendMerchantId";
@@ -174,6 +179,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // fetch user with the registered mobile number
             Merchants merchant = BackendOps.getMerchantByMobile(mobileNum);
+            mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             // check admin status
             CommonUtils.checkMerchantStatus(merchant);
@@ -210,13 +216,6 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
-    private void initCommon() {
-        // Init logger and utils
-        mLogger = new MyLogger("services.MerchantServicesNoLogin");
-        mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
-        //CommonUtils.initTableToClassMappings();
-    }
-
     private void handlePasswdResetImmediate(BackendlessUser user, Merchants merchant) {
         // generate password
         String passwd = CommonUtils.generateTempPassword();

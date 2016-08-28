@@ -32,12 +32,14 @@ public class AgentServices  implements IBackendlessService {
     public void registerMerchant(Merchants merchant)
     {
         //initCommon();
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerMerchant";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getName();
+        String merchantId = null;
 
         try {
             //mLogger.debug("In registerMerchant");
@@ -47,7 +49,7 @@ public class AgentServices  implements IBackendlessService {
 
             // Fetch agent
             Agents agent = (Agents) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_AGENT, mEdr);
+                    DbConstants.USER_TYPE_AGENT, mEdr, mLogger);
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -63,7 +65,7 @@ public class AgentServices  implements IBackendlessService {
             Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             mLogger.debug("Fetched merchant cnt: "+merchantCnt);
             // set merchant id
-            String merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
+            merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
             mLogger.debug("Generated merchant id: "+merchantId);
 
             merchant.setAuto_id(merchantId);
@@ -71,7 +73,7 @@ public class AgentServices  implements IBackendlessService {
             merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
             merchant.setAdmin_remarks("New registered merchant");
-            merchant.setMobile_num(CommonUtils.addMobileCC(merchant.getMobile_num()));
+            merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
             // set cashback and transaction table names
             setCbAndTransTables(merchant, merchantCnt);
@@ -139,6 +141,9 @@ public class AgentServices  implements IBackendlessService {
 
         } catch(Exception e) {
             CommonUtils.handleException(e,false,mLogger,mEdr);
+            if(merchantId!=null && !merchantId.isEmpty()) {
+                BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+            }
             throw e;
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
@@ -148,25 +153,13 @@ public class AgentServices  implements IBackendlessService {
     /*
      * Private helper methods
      */
-    /*
-    private void initCommon() {
-        // Init logger and utils
-        Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
-        Logger logger = Backendless.Logging.getLogger("com.mytest.services.AgentServices");
-        mLogger = new MyLogger(logger);
-    }*/
-
     private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin
-        //int pool_size = gSettings.getCb_table_pool_size();
-        //int pool_start = gSettings.getCb_table_pool_start();
         int pool_size = BackendConstants.CASHBACK_TABLE_POOL_SIZE;
         int pool_start = BackendConstants.CASHBACK_TABLE_POOL_START;
 
         // use last 4 numeric digits for round-robin
-        //int num = Integer.parseInt(getUser_id().substring(2));
         int table_suffix = pool_start + ((int)(regCounter % pool_size));
-        //int table_suffix = pool_start + (num % pool_size);
 
         String cbTableName = DbConstantsBackend.CASHBACK_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setCashback_table(cbTableName);
@@ -174,10 +167,6 @@ public class AgentServices  implements IBackendlessService {
 
         // use the same prefix for cashback and transaction tables
         // as there is 1-to-1 mapping in the table schema - transaction0 maps to cashback0 only
-        //pool_size = MyGlobalSettings.getGlobalSettings().getTxn_table_pool_size();
-        //pool_start = MyGlobalSettings.getGlobalSettings().getTxn_table_pool_start();
-        //table_suffix = pool_start + ((int)(mRegCounter % pool_size));
-
         String transTableName = DbConstantsBackend.TRANSACTION_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setTxn_table(transTableName);
         mLogger.debug("Generated transaction table name:" + transTableName);
@@ -189,9 +178,6 @@ public class AgentServices  implements IBackendlessService {
         // rollback to not-usable state
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         try {
-            BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
-            //BackendOps.loadMerchant(user);
-            //Merchants merchant = (Merchants)user.getProperty("merchant");
             Merchants merchant = BackendOps.getMerchant(mchntId, false);
             merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
             merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);

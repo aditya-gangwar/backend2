@@ -16,6 +16,8 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_ACC_LOCKED = "503";
     public static final String BE_ERROR_OPERATION_NOT_ALLOWED = "504";
     public static final String BE_ERROR_DUPLICATE_REQUEST = "505";
+    public static final String BE_ERROR_FIRST_LOGIN_PENDING = "506";
+    public static final String BE_ERROR_NOT_LOGGED_IN = "507";
 
     public static final String BE_ERROR_SEND_SMS_FAILED = "510";
     public static final String BE_ERROR_WRONG_INPUT_DATA = "511";
@@ -37,6 +39,7 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_NOT_TRUSTED_DEVICE = "542";
     public static final String BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD = "543";
     public static final String BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD = "544";
+    public static final String BE_ERROR_DEVICE_ALREADY_REGISTERED = "545";
 
     public static final String BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH = "550";
 

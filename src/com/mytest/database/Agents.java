@@ -6,6 +6,8 @@ import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.geo.GeoPoint;
 import com.backendless.persistence.BackendlessDataQuery;
+import com.mytest.Bootstrap;
+import com.sun.javafx.css.converters.BooleanConverter;
 
 public class Agents
 {
@@ -21,6 +23,15 @@ public class Agents
   private String ownerId;
   private String admin_remarks;
   private Boolean first_login_ok;
+  private Boolean debugLogs;
+
+  public Boolean getDebugLogs() {
+    return debugLogs;
+  }
+
+  public void setDebugLogs(Boolean debugLogs) {
+    this.debugLogs = debugLogs;
+  }
 
   public Boolean getFirst_login_ok() {
     return first_login_ok;

@@ -22,14 +22,14 @@ import com.mytest.utilities.MyLogger;
 
 public class CommonServices implements IBackendlessService {
 
-    private MyLogger mLogger;
-    private String[] mEdr;
+    private MyLogger mLogger = new MyLogger("services.CommonServices");;
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     /*
      * Public methods: Backend REST APIs
      */
     public void changePassword(String userId, String oldPasswd, String newPasswd) {
-        initCommon();
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "changePassword";
@@ -102,10 +102,4 @@ public class CommonServices implements IBackendlessService {
     /*
      * Private helper methods
      */
-    private void initCommon() {
-        // Init logger and utils
-        mLogger = new MyLogger("services.CommonServices");
-        mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
-        //CommonUtils.initTableToClassMappings();
-    }
 }

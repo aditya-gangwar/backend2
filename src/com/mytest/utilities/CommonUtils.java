@@ -86,6 +86,16 @@ public class CommonUtils {
         return CommonConstants.TRANSACTION_ID_PREFIX + new String(id);
     }
 
+    public static String generateLogId() {
+        // random alphanumeric string
+        Random random = new Random();
+        char[] id = new char[BackendConstants.LOG_ID_LEN];
+        for (int i = 0; i < BackendConstants.LOG_ID_LEN; i++) {
+            id[i] = BackendConstants.pwdChars[random.nextInt(BackendConstants.pwdChars.length)];
+        }
+        return new String(id);
+    }
+
     public static void checkMerchantStatus(Merchants merchant) {
         String errorCode = null;
         String errorMsg = null;
@@ -438,46 +448,36 @@ public class CommonUtils {
                 merchantId;
     }
 
-    public static String removeMobileCC(String mobileNum) {
-        // assuming 2 digit mobile country code - 91 for india
-        //return mobileNum.substring(2);
-        return mobileNum;
-    }
-    public static String addMobileCC(String mobileNum) {
-        //return CommonConstants.INDIA_MOBILE_COUNTRY_CODE+mobileNum;
-        return mobileNum;
-    }
-
-    public static Object fetchCurrentUser(String objectId, boolean checkStatus, Integer argUserType, String[] edr) {
+    public static Object fetchCurrentUser(String objectId, Integer argUserType, String[] edr, MyLogger logger) {
 
         BackendlessUser user = BackendOps.fetchUserByObjectId(objectId);
         edr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
-
         int userType = (Integer)user.getProperty("user_type");
+
         edr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
         if(argUserType!=null && argUserType!=userType) {
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
         }
 
-        if(checkStatus) {
-            switch (userType) {
-                case DbConstants.USER_TYPE_MERCHANT:
-                    Merchants merchant = (Merchants) user.getProperty("merchant");
-                    edr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-                    // check if merchant is enabled
-                    CommonUtils.checkMerchantStatus(merchant);
-                    return merchant;
+        switch (userType) {
+            case DbConstants.USER_TYPE_MERCHANT:
+                Merchants merchant = (Merchants) user.getProperty("merchant");
+                edr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
+                // check if merchant is enabled
+                CommonUtils.checkMerchantStatus(merchant);
+                return merchant;
 
-                case DbConstants.USER_TYPE_AGENT:
-                    Agents agent = (Agents) user.getProperty("agent");
-                    edr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
-                    // check if agent is enabled
-                    CommonUtils.checkAgentStatus(agent);
-                    return agent;
+            case DbConstants.USER_TYPE_AGENT:
+                Agents agent = (Agents) user.getProperty("agent");
+                edr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
+                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
+                // check if agent is enabled
+                CommonUtils.checkAgentStatus(agent);
+                return agent;
 
-                case DbConstants.USER_TYPE_CUSTOMER:
-                    break;
-            }
+            case DbConstants.USER_TYPE_CUSTOMER:
+                break;
         }
 
         return null;

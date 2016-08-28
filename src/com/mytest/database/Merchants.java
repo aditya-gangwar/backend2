@@ -33,6 +33,15 @@ public class Merchants
   private Integer cb_debit_limit_for_pin;
   private Integer cl_credit_limit_for_pin;
   private Boolean first_login_ok;
+  private Boolean debugLogs;
+
+  public Boolean getDebugLogs() {
+    return debugLogs;
+  }
+
+  public void setDebugLogs(Boolean debugLogs) {
+    this.debugLogs = debugLogs;
+  }
 
   public Boolean getFirst_login_ok() {
     return first_login_ok;

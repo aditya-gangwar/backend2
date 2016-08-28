@@ -4,6 +4,7 @@ import com.backendless.Backendless;
 import com.backendless.logging.Logger;
 import com.mytest.constants.BackendConstants;
 import com.mytest.constants.CommonConstants;
+import com.mytest.constants.DbConstants;
 
 /**
  * Created by adgangwa on 19-08-2016.
@@ -14,21 +15,73 @@ public class MyLogger {
     private Logger mEdrLogger;
     private StringBuilder mSb;
 
+    private String logId;
+    private String userId="";
+    private String userType="";
+    private boolean debugLogs = false;
+
     public MyLogger(String loggerName) {
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
 
         mLogger = Backendless.Logging.getLogger(loggerName);
         mEdrLogger = Backendless.Logging.getLogger("utilities.edr");
-
+        logId = CommonUtils.generateLogId();
         if(BackendConstants.DEBUG_MODE) {
             mSb = new StringBuilder();
         }
     }
 
+    public void setProperties(String userId, int userType, boolean argDebugLogs) {
+        this.userId = userId;
+        this.userType = DbConstants.userTypeDesc[userType];
+
+        if(BackendConstants.FORCED_DEBUG_LOG_MERCHANTS && userType==DbConstants.USER_TYPE_MERCHANT) {
+            debugLogs = true;
+        } else if (BackendConstants.FORCED_DEBUG_LOG_AGENTS && userType==DbConstants.USER_TYPE_AGENT) {
+            debugLogs = true;
+        } else {
+            debugLogs = argDebugLogs;
+        }
+    }
+
     public void debug(String msg) {
-        mLogger.debug(msg);
+        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        if(debugLogs) {
+            mLogger.debug(msg);
+        }
+
         if(BackendConstants.DEBUG_MODE) {
             msg = "Debug | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
+        }
+    }
+
+    public void error(String msg) {
+        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        mLogger.error(msg);
+        if(BackendConstants.DEBUG_MODE) {
+            msg = "Error | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
+        }
+    }
+
+    public void fatal(String msg) {
+        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        mLogger.fatal(msg);
+        if(BackendConstants.DEBUG_MODE) {
+            msg = "Fatal | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
+        }
+    }
+
+    public void warn(String msg) {
+        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        mLogger.warn(msg);
+        if(BackendConstants.DEBUG_MODE) {
+            msg = "Warning | "+msg;
             //System.out.println(msg);
             mSb.append("\n").append(msg);
         }
@@ -45,7 +98,7 @@ public class MyLogger {
             }
         }
 
-        String edr = "EDR | "+sbEdr.toString();
+        String edr = logId+" | EDR | "+sbEdr.toString();
         if( edrData[BackendConstants.EDR_RESULT_IDX].equals(BackendConstants.BACKEND_EDR_RESULT_NOK) ||
                 (edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX]!=null && !edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX].isEmpty()) ||
                 (edrData[BackendConstants.EDR_IGNORED_ERROR_IDX]!=null && !edrData[BackendConstants.EDR_IGNORED_ERROR_IDX].isEmpty()) ) {
@@ -55,33 +108,6 @@ public class MyLogger {
         }
         if(BackendConstants.DEBUG_MODE) {
             mSb.append("\n").append(edr);
-        }
-    }
-
-    public void error(String msg) {
-        mLogger.error(msg);
-        if(BackendConstants.DEBUG_MODE) {
-            msg = "Error | "+msg;
-            //System.out.println(msg);
-            mSb.append("\n").append(msg);
-        }
-    }
-
-    public void fatal(String msg) {
-        mLogger.fatal(msg);
-        if(BackendConstants.DEBUG_MODE) {
-            msg = "Fatal | "+msg;
-            //System.out.println(msg);
-            mSb.append("\n").append(msg);
-        }
-    }
-
-    public void warn(String msg) {
-        mLogger.warn(msg);
-        if(BackendConstants.DEBUG_MODE) {
-            msg = "Warning | "+msg;
-            //System.out.println(msg);
-            mSb.append("\n").append(msg);
         }
     }
 

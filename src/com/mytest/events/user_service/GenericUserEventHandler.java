@@ -151,9 +151,18 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             }*/
                             if(!merchant.getFirst_login_ok()) {
                                 merchant.setFirst_login_ok(true);
+                                merchant.setAdmin_remarks("Last state was new registered");
                             }
                             merchant.setTempDevId(null);
-                            BackendOps.updateMerchant(merchant);
+                            try {
+                                BackendOps.updateMerchant(merchant);
+                            } catch(BackendlessException e) {
+                                if(e.getCode().equals(BackendResponseCodes.BL_ERROR_DUPLICATE_ENTRY)) {
+                                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_DEVICE_ALREADY_REGISTERED,
+                                            deviceId+" is already registered");
+                                }
+                                throw e;
+                            }
                         }
                     }
 
@@ -203,7 +212,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 // login failed - increase count if failed due to wrong password
                 //if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
-                if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
+                //if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
+                if(result.getException().getExceptionMessage().contains("password")) {
                     mLogger.debug("Login failed for user: "+login+" due to wrong id/passwd");
                     switch(userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
@@ -211,6 +221,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             Merchants merchant = BackendOps.getMerchant(login, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                             CommonUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN);
+                            if(!merchant.getFirst_login_ok()) {
+                                // first login not done yet
+                                mLogger.debug("First login pending");
+                                positiveException = true;
+                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FIRST_LOGIN_PENDING, "");
+                            }
                             break;
 
                         case DbConstants.USER_TYPE_AGENT:
@@ -226,7 +242,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // login failed - set the exception code to the same
                 //mEdr[BackendConstants.EDR_EXP_CODE_IDX] = BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD;
                 mEdr[BackendConstants.EDR_EXP_CODE_IDX] = String.valueOf(result.getException().getCode());
-                mEdr[BackendConstants.EDR_EXP_CODE_IDX] = result.getException().getExceptionMessage();
+                mEdr[BackendConstants.EDR_EXP_MSG_IDX] = result.getException().getExceptionMessage();
             }
 
             // no exception - means function execution success

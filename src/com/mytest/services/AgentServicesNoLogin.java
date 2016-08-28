@@ -36,6 +36,9 @@ public class AgentServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForAgentLogin";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = loginId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 deviceId;
+        // debug logs for this fx. will never be written
+        // taking this as default - as dont have access to agent object
+        mLogger.setProperties(loginId, DbConstants.USER_TYPE_AGENT, false);
 
         try {
             if (deviceId == null || deviceId.isEmpty()) {
@@ -83,6 +86,7 @@ public class AgentServicesNoLogin implements IBackendlessService {
             // fetch user with the given id with related agent object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_AGENT);
             Agents agent = (Agents) user.getProperty("agent");
+            mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
             mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = ((Integer)user.getProperty("user_type")).toString();
             mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();

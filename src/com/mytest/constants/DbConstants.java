@@ -13,6 +13,12 @@ public class DbConstants {
     public static final int USER_TYPE_MERCHANT = 0;
     public static final int USER_TYPE_CUSTOMER = 1;
     public static final int USER_TYPE_AGENT = 2;
+    // user type code to text description
+    public static String userTypeDesc[] = {
+            "Merchant",
+            "Customer",
+            "Agent"
+    };
 
     // Merchant table - 'admin_status' column values
     //public static final int USER_STATUS_NEW_REGISTERED = 1;

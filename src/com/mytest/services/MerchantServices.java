@@ -32,8 +32,8 @@ public class MerchantServices implements IBackendlessService {
      * Merchant operations
      */
     public void changeMobile(String currentMobile, String newMobile, String otp) {
-        //initCommon();
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "changeMobile";
@@ -48,7 +48,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
 
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
@@ -117,8 +117,8 @@ public class MerchantServices implements IBackendlessService {
 
 
     public void updateSettings(String cbRate, boolean addClEnabled, String email) {
-        //initCommon();
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "updateSettings";
@@ -132,7 +132,7 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
 
             // update settings
             merchant.setCb_rate(cbRate);
@@ -154,15 +154,17 @@ public class MerchantServices implements IBackendlessService {
     // Taking 'merchantId' and 'merchantCbTable' values from caller is a bit of security risk
     // as it will allow any logged-in merchant - to read (not update) cb details of other merchants too
     // but ignoring this for now - to keep this API as fast as possible - as this will be most called API
-    public Cashback getCashback(String merchantId, String merchantCbTable, String customerId) {
-        //initCommon();
+    public Cashback getCashback(String merchantId, String merchantCbTable, String customerId, boolean debugLogs) {
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashback";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchantCbTable+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 customerId;
+
+        mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
 
         try {
             //mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
@@ -209,8 +211,8 @@ public class MerchantServices implements IBackendlessService {
     }
 
     public MerchantStats getMerchantStats() {
-        //initCommon();
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMerchantStats";
@@ -220,7 +222,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
             String merchantId = merchant.getAuto_id();
 
             // not checking for merchant account status
@@ -299,7 +301,8 @@ public class MerchantServices implements IBackendlessService {
     }
 
     public void archiveTxns() {
-        //initCommon();
+
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMerchantStats";
@@ -309,7 +312,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
             // not checking for merchant account status
 
             // archive txns
@@ -332,8 +335,8 @@ public class MerchantServices implements IBackendlessService {
      * Customer operations by merchant
      */
     public Cashback registerCustomer(String customerMobile, String name, String cardId) {
-        //initCommon();
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerCustomer";
@@ -347,11 +350,10 @@ public class MerchantServices implements IBackendlessService {
 
         try {
             //mLogger.debug("In registerCustomer: " + customerMobile + ": " + cardId);
-            customerMobile = CommonUtils.addMobileCC(customerMobile);
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
 
             // fetch customer card object
             card = BackendOps.getCustomerCard(cardId);
@@ -436,8 +438,8 @@ public class MerchantServices implements IBackendlessService {
     }
 
     public void execCustomerOp(String opCode, String customerId, String scannedCardId, String otp, String pin, String opParam) {
-        //initCommon();
 
+        CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "execCustomerOp";
@@ -453,7 +455,7 @@ public class MerchantServices implements IBackendlessService {
         try {
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    true, DbConstants.USER_TYPE_MERCHANT, mEdr);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
 
             // Fetch customer user
             BackendlessUser custUser = BackendOps.fetchUser(customerId, DbConstants.USER_TYPE_CUSTOMER);
@@ -540,36 +542,6 @@ public class MerchantServices implements IBackendlessService {
     /*
      * Private helper methods
      */
-    /*
-    private void initCommon() {
-        // Init logger and utils
-        mLogger = new MyLogger("services.MerchantServices");
-        CommonUtils.initTableToClassMappings();
-    }
-
-    private void handleException(Exception e, boolean positiveException) {
-        if(positiveException) {
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-        } else {
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
-            mLogger.error("Exception in "+mEdr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
-        }
-
-        mEdr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
-        if(e instanceof BackendlessException) {
-            mEdr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
-        }
-    }
-
-    private void finalHandling(long startTime) {
-        long endTime = System.currentTimeMillis();
-        long execTime = endTime - startTime;
-        mEdr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
-        mEdr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
-        mLogger.edr(mEdr);
-        mLogger.flush();
-    }*/
-
     private Customers createCustomer() {
         Customers customer = new Customers();
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
@@ -645,7 +617,7 @@ public class MerchantServices implements IBackendlessService {
         // <mobile_num>,<acc_status>,<acc_status_reason>,<acc_status_update_time>,<card_id>,<card_status>,<card_status_update_time>
 
         StringBuilder sb = new StringBuilder(128);
-        sb.append(CommonUtils.removeMobileCC(customer.getMobile_num())).append(CommonConstants.CSV_DELIMETER)
+        sb.append(customer.getMobile_num()).append(CommonConstants.CSV_DELIMETER)
                 .append(customer.getAdmin_status()).append(CommonConstants.CSV_DELIMETER)
                 .append(customer.getStatus_reason()).append(CommonConstants.CSV_DELIMETER);
 
