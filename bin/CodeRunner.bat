@@ -18,6 +18,6 @@ if %jver% LSS %MINIMAL_VERSION% (
 
 echo Starting CodeRunner
 
-java -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -cp "*;../libs/*" com.backendless.coderunner.CodeRunnerLoader
+java -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Dlogback.configurationFile=logback.xml -XX:+HeapDumpOnOutOfMemoryError -cp "*;../libs/*" com.backendless.coderunner.CodeRunnerLoader
 
 pause

@@ -1,6 +1,6 @@
 grant {
 	// only for test!
-	permission java.security.AllPermission;
+	//permission java.security.AllPermission;
 
 
     permission java.util.logging.LoggingPermission "control";
@@ -153,7 +153,7 @@ grant {
     permission java.util.PropertyPermission "com.google.appengine.runtime.environment", "read";
     permission java.util.PropertyPermission "WEBORB_LICENSE_FILE", "read";
     permission java.util.PropertyPermission "WEBORB_DEVMODE", "read";
-    permission java.io.FilePermission "weborblicense.rangeBatchId.config", "read";
+    permission java.io.FilePermission "weborblicense.key.config", "read";
     permission java.net.SocketPermission "169.254.169.254:80", "connect,resolve";
     //end WebORB
 

@@ -18,4 +18,8 @@ if [ $current_version ]; then
          exit 1
 fi
 
-java -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -cp "*":"../libs/*" com.backendless.coderunner.CodeRunnerLoader deploy $@
+JAVA_ARGS="-Duser.timezone=UTC \
+-Dfile.encoding=UTF-8 \
+-XX:+HeapDumpOnOutOfMemoryError \
+-Dlogback.configurationFile=logback.xml"
+java $JAVA_ARGS -cp "*:../libs/*" com.backendless.coderunner.CodeRunnerLoader deploy $@
