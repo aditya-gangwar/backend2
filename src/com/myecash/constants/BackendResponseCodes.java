@@ -10,6 +10,7 @@ public class BackendResponseCodes {
     public static final String BE_RESPONSE_OP_SCHEDULED = "102";
     public static final String BE_RESPONSE_OTP_GENERATED = "103";
 
+    // BE_ERROR_GENERAL should not be thrown to the client apps
     public static final String BE_ERROR_GENERAL = "500";
     public static final String BE_ERROR_NO_SUCH_USER = "501";
     public static final String BE_ERROR_ACC_DISABLED = "502";

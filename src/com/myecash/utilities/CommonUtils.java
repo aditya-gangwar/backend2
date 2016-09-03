@@ -286,13 +286,6 @@ public class CommonUtils {
         throw new BackendlessException(fault);
     }*/
 
-    public static BackendlessException getNewException(BackendlessException be) {
-        // to be removed once issue is fixed on backendless side
-        // currently for 'custom error code' getCode() always returns 0 - from event handlers
-        return new BackendlessException(be.getCode(),
-                CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode()+"/"+be.getMessage());
-    }
-
     public static int getUserType(String userdId) {
         switch(userdId.length()) {
             case CommonConstants.MERCHANT_ID_LEN:
@@ -479,6 +472,13 @@ public class CommonUtils {
         }
 
         return null;
+    }
+
+    public static BackendlessException getNewException(BackendlessException be) {
+        // to be removed once issue is fixed on backendless side
+        // currently for 'custom error code' getCode() always returns 0 - from event handlers
+        return new BackendlessException(be.getCode(),
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode()+"/"+be.getMessage());
     }
 
     public static void handleException(Exception e, boolean positiveException, MyLogger logger, String[] edr) {

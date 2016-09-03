@@ -1,6 +1,7 @@
 package com.myecash.services;
 
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
@@ -125,8 +126,8 @@ public class MerchantServices implements IBackendlessService {
 
         try {
             //mLogger.debug("In updateSettings: "+cbRate+": "+addClEnabled+": "+email);
-            //mLogger.debug("Before context: "+InvocationContext.asString());
-            //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("Before context: "+InvocationContext.asString());
+            mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
@@ -164,7 +165,9 @@ public class MerchantServices implements IBackendlessService {
         mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
 
         try {
-            //mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
+            mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
+            mLogger.debug("Before context: "+InvocationContext.asString());
+            mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
             int customerIdType = CommonUtils.customerIdMobile(customerId) ? BackendConstants.CUSTOMER_ID_MOBILE : BackendConstants.CUSTOMER_ID_CARD;
 

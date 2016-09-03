@@ -27,7 +27,7 @@ import java.util.Date;
  * object which describes all properties of the timer.
  */
 
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':900}},'timername':'MerchantPasswdReset'}")
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':300}},'timername':'MerchantPasswdReset'}")
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.MerchantPasswdResetTimer");

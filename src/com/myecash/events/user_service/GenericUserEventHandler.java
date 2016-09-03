@@ -49,7 +49,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             if(result.getException()==null) {
                 // Login is successful
                 // add user token, so as correct roles are assumed
-                HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+                if(context.getUserToken()==null) {
+                    mLogger.error("In afterLogin: RunnerContext: "+context.toString());
+                    //TODO: user token is coming null - bug with standlone backendless. Open the below check when fixed.
+                    //throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in: " + login);
+                } else {
+                    HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+                }
 
                 String userId = (String) result.getResult().get("user_id");
                 Integer userType = (Integer) result.getResult().get("user_type");
@@ -58,6 +64,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 if (userType == DbConstants.USER_TYPE_MERCHANT) {
                     // fetch merchant object
                     Merchants merchant = BackendOps.getMerchant(userId, true);
+                    mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
                     // check admin status
@@ -168,6 +175,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 } else if (userType == DbConstants.USER_TYPE_AGENT) {
                     Agents agent = BackendOps.getAgent(userId);
+                    mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
                     mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
                     // check admin status
                     CommonUtils.checkAgentStatus(agent, mLogger);
@@ -184,9 +192,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         mLogger.debug("First login case for agent user: "+userId);
                         if(deviceData.getInstanceId()==null || deviceData.getInstanceId().isEmpty()) {
                             deviceData.setInstanceId(deviceData.getTempId());
-                            // update agent state
-                            agent.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-                            agent.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+                            agent.setFirst_login_ok(true);
+                            agent.setAdmin_remarks("Last state was new registered");
                             BackendOps.updateAgent(agent);
                         } else {
                             // invalid state
@@ -248,6 +255,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
         } catch(Exception e) {
             CommonUtils.handleException(e,positiveException,mLogger,mEdr);
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);

@@ -19,7 +19,7 @@ public class GlobalSettingsConstants {
 
     // Keep it 2-5 minutes less than what is configured in GlobalSettings
     // to allow for the time between 'message request submitted' and 'message actually delivered'
-    public static int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 55;
+    public static int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 5;
 
     // Single password reset request allowed in 2 hours
     public static int MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS = 120;

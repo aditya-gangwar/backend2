@@ -47,16 +47,23 @@ public class TxnTableEventHelper {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getCustomer_id();
 
         try {
-            //mLogger.debug("In Transaction handleBeforeCreate");
-            if(context.getUserToken()==null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in: " + context.getUserId());
+            mLogger.debug("In Transaction handleBeforeCreate");
+            if(context==null) {
+                mLogger.error("Context itself is null");
+            } else if(context.getUserToken()==null) {
+                mLogger.error("In handleBeforeCreate: RunnerContext: "+context.toString());
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in");
+            } else {
+                HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
             }
-            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+
+            //mLogger.debug("Invocation context: "+InvocationContext.asString());
 
             // Fetch merchant
-            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(context.getUserId(),
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
             String merchantId = merchant.getAuto_id();
+            mLogger.setProperties(merchantId,DbConstants.USER_TYPE_MERCHANT,merchant.getDebugLogs());
 
             // Fetch customer
             Customers customer = BackendOps.getCustomer(transaction.getCustomer_id(), BackendConstants.CUSTOMER_ID_MOBILE, true);
@@ -127,6 +134,9 @@ public class TxnTableEventHelper {
 
         } catch(Exception e) {
             CommonUtils.handleException(e,false,mLogger,mEdr);
+            if(e instanceof BackendlessException) {
+                throw CommonUtils.getNewException((BackendlessException) e);
+            }
             throw e;
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);

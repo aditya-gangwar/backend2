@@ -11,8 +11,7 @@ public class BackendConstants {
     public static final boolean DEBUG_MODE = true;
     public static final boolean TESTING_SKIP_SMS = true;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
-    public static final boolean FORCED_DEBUG_LOG_MERCHANTS = false;
-    public static final boolean FORCED_DEBUG_LOG_AGENTS = false;
+    public static final boolean FORCED_DEBUG_LOGS = true;
 
 
     // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
@@ -65,7 +64,8 @@ public class BackendConstants {
     public static final int LOG_ID_LEN = 8;
 
     // used in generating temporary passwords
-    public static final char[] pwdChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+    // not using 'o','l','1','0' in pwdChars to avoid confusion
+    public static final char[] pwdChars = "abcdefghijkmnpqrstuvwxyz23456789".toCharArray();
     public static final char[] pinAndOtpChars = "0123456789".toCharArray();
     // used in generating random transaction ids, passwords and PINs
     public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();

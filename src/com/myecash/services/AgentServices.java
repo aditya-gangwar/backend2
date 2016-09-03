@@ -50,6 +50,8 @@ public class AgentServices  implements IBackendlessService {
             // Fetch agent
             Agents agent = (Agents) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_AGENT, mEdr, mLogger);
+            mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
+            mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();

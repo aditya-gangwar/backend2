@@ -15,50 +15,49 @@ public class MyLogger {
     private Logger mEdrLogger;
     private StringBuilder mSb;
 
-    private String logId;
-    private String userId="";
-    private String userType="";
-    private boolean debugLogs = false;
+    private String mLogId;
+    private String mUserId ="";
+    private String mUserType ="";
+    private boolean mDebugLogs;
 
     public MyLogger(String loggerName) {
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
 
         mLogger = Backendless.Logging.getLogger(loggerName);
         mEdrLogger = Backendless.Logging.getLogger("utilities.edr");
-        logId = CommonUtils.generateLogId();
+        mLogId = CommonUtils.generateLogId();
+        mDebugLogs = BackendConstants.FORCED_DEBUG_LOGS;
+
         if(BackendConstants.DEBUG_MODE) {
             mSb = new StringBuilder();
         }
     }
 
     public void setProperties(String userId, int userType, boolean argDebugLogs) {
-        this.userId = userId;
-        this.userType = DbConstants.userTypeDesc[userType];
-
-        if(BackendConstants.FORCED_DEBUG_LOG_MERCHANTS && userType==DbConstants.USER_TYPE_MERCHANT) {
-            this.debugLogs = true;
-        } else if (BackendConstants.FORCED_DEBUG_LOG_AGENTS && userType==DbConstants.USER_TYPE_AGENT) {
-            this.debugLogs = true;
+        mUserId = userId;
+        mUserType = DbConstants.userTypeDesc[userType];
+        if(BackendConstants.FORCED_DEBUG_LOGS) {
+            mDebugLogs = true;
         } else {
-            this.debugLogs = argDebugLogs;
+            mDebugLogs = argDebugLogs;
         }
     }
 
     public void debug(String msg) {
-        msg = logId+" | "+userId+" | "+userType+" | "+msg;
-        if(debugLogs) {
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
+        if(mDebugLogs) {
             mLogger.debug(msg);
         }
 
         if(BackendConstants.DEBUG_MODE) {
             msg = "Debug | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg);
+            mSb.append("\n").append(msg).append(",").append(mDebugLogs);
         }
     }
 
     public void error(String msg) {
-        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.error(msg);
         if(BackendConstants.DEBUG_MODE) {
             msg = "Error | "+msg;
@@ -68,7 +67,7 @@ public class MyLogger {
     }
 
     public void fatal(String msg) {
-        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.fatal(msg);
         if(BackendConstants.DEBUG_MODE) {
             msg = "Fatal | "+msg;
@@ -78,7 +77,7 @@ public class MyLogger {
     }
 
     public void warn(String msg) {
-        msg = logId+" | "+userId+" | "+userType+" | "+msg;
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.warn(msg);
         if(BackendConstants.DEBUG_MODE) {
             msg = "Warning | "+msg;
@@ -98,7 +97,7 @@ public class MyLogger {
             }
         }
 
-        String edr = logId+" | EDR | "+sbEdr.toString();
+        String edr = mLogId +" | EDR | "+sbEdr.toString();
         if( edrData[BackendConstants.EDR_RESULT_IDX].equals(BackendConstants.BACKEND_EDR_RESULT_NOK) ||
                 (edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX]!=null && !edrData[BackendConstants.EDR_SPECIAL_FLAG_IDX].isEmpty()) ||
                 (edrData[BackendConstants.EDR_IGNORED_ERROR_IDX]!=null && !edrData[BackendConstants.EDR_IGNORED_ERROR_IDX].isEmpty()) ) {

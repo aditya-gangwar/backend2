@@ -49,6 +49,8 @@ public class CommonServices implements IBackendlessService {
                     mLogger.debug("Usertype is Merchant");
                     BackendOps.loadMerchant(user);
                     Merchants merchant = (Merchants)user.getProperty("merchant");
+                    mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
+
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                     mobileNum = merchant.getMobile_num();
                     break;
@@ -57,6 +59,7 @@ public class CommonServices implements IBackendlessService {
                     mLogger.debug("Usertype is Agent");
                     BackendOps.loadAgent(user);
                     Agents agent = (Agents)user.getProperty("agent");
+                    mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
                     mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
                     mobileNum = agent.getMobile_num();
                     break;
