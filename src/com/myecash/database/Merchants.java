@@ -14,7 +14,7 @@ public class Merchants
   private java.util.Date last_txn_archive;
   private Integer admin_status;
   private java.util.Date created;
-  private String image_url;
+  private String displayImage;
   private java.util.Date updated;
   private java.util.Date status_update_time;
   private Integer status_reason;
@@ -118,14 +118,14 @@ public class Merchants
     return created;
   }
 
-  public String getImage_url()
+  public String getDisplayImage()
   {
-    return image_url;
+    return displayImage;
   }
 
-  public void setImage_url( String image_url )
+  public void setDisplayImage(String displayImage)
   {
-    this.image_url = image_url;
+    this.displayImage = displayImage;
   }
 
   public java.util.Date getUpdated()

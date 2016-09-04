@@ -125,7 +125,6 @@ public class TxnTableEventHelper {
                 transaction.setCashback(cashback);
 
             } else {
-                //TODO: add in alarms
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Txn commit: No cashback object found: "+merchantId+","+customerId);
             }
 

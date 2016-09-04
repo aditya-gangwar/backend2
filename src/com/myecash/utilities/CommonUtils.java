@@ -487,6 +487,7 @@ public class CommonUtils {
         } else {
             edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
             logger.error("Exception in "+edr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
+            logger.error(e.getStackTrace().toString());
         }
 
         edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
