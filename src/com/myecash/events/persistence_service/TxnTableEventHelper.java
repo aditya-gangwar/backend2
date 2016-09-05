@@ -82,10 +82,14 @@ public class TxnTableEventHelper {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
                         CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN, mLogger);
                         throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
+                    } else {
+                        transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
                     }
                 } else {
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId);
                 }
+            } else {
+                transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
             }
 
             // Fetch cashback record

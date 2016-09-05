@@ -91,6 +91,7 @@ public class CommonConstants {
     public static int TXN_CSV_IDX_CB_REDEEM = 10;
     public static int TXN_CSV_IDX_CB_AWARD = 11;
     public static int TXN_CSV_IDX_CB_RATE = 12;
+    public static int TXN_CSV_IDX_CUST_PIN = 13;
 
     /*
      * Other common constants

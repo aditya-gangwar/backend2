@@ -273,7 +273,7 @@ public class TxnArchiver
             /*
              * Format:
              *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
-             *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent\n
+             *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent,cpin\n
              * The sequence in format should match 'index constants' defined in CommonConstants class
              */
             sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
@@ -289,6 +289,7 @@ public class TxnArchiver
             sb.append(String.valueOf(txn.getCb_debit())).append(CommonConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCb_credit())).append(CommonConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCb_percent())).append(CommonConstants.CSV_DELIMETER);
+            sb.append(txn.getCpin()).append(CommonConstants.CSV_DELIMETER);
             sb.append(CommonConstants.CSV_NEWLINE);
         }
     }

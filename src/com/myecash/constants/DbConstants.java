@@ -79,6 +79,10 @@ public class DbConstants {
     public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
     public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
 
+    // Transactions table values
+    public static final String TXN_CUSTOMER_PIN_USED = "Yes";
+    public static final String TXN_CUSTOMER_PIN_NOT_USED = "No";
+
     // GlobalSettings table - should be exactly same as 'names' in DB
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_MINS = "merchant_passwd_reset_mins";
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_REQUEST_GAP = "merchant_passwd_reset_request_gap_mins";
