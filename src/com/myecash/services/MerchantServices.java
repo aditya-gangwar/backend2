@@ -1,5 +1,6 @@
 package com.myecash.services;
 
+import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
@@ -12,6 +13,7 @@ import com.myecash.messaging.SmsHelper;
 import com.myecash.utilities.TxnArchiver;
 import com.myecash.utilities.*;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,6 +26,10 @@ public class MerchantServices implements IBackendlessService {
 
     private MyLogger mLogger = new MyLogger("services.MerchantServices");
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+
+    // customer_id(10),cl_balance(6),cb_balance(6),total_cl_debit(6),total_cl_credit(6),
+    // total_cb_debit(6),total_cb_credit(6),total_billed(6),total_cb_billed(6)
+    private static final int CUST_CSV_RECORD_MAX_CHARS = 100;
 
     /*
      * Public methods: Backend REST APIs
@@ -253,6 +259,11 @@ public class MerchantServices implements IBackendlessService {
             if(data != null) {
                 // loop on all cashback objects and calculate stats
                 mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
+
+                StringBuilder sb = new StringBuilder(CUST_CSV_RECORD_MAX_CHARS*data.size());
+                sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
+                sb.append(CommonConstants.CSV_NEWLINE);
+
                 for (int k = 0; k < data.size(); k++) {
                     Cashback cb = data.get(k);
                     // update customer counts
@@ -274,7 +285,24 @@ public class MerchantServices implements IBackendlessService {
                     stats.cash_debit = stats.cash_debit + cb.getCl_debit();
                     stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
                     stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
+
+                    // write record as csv string
+                    // Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,
+                    // Total Cashback Debit, Total Cashback Credit,Total Billed,Total Cashback Billed
+                    sb.append(cb.getCust_private_id()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCl_credit()-cb.getCl_debit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCb_credit()-cb.getCb_debit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCl_debit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCl_credit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCb_debit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCb_credit()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getTotal_billed()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(cb.getCb_billed()).append(CommonConstants.CSV_DELIMETER);
+                    sb.append(CommonConstants.CSV_NEWLINE);
                 }
+
+                // upload data as CSV file
+                createCsvFile(sb.toString(), merchantId);
             }
 
             // save stats object - don't bother about return status
@@ -756,6 +784,18 @@ public class MerchantServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+        }
+    }
+
+    private void createCsvFile(String data, String merchantId) {
+        try {
+            String fileUrl = Backendless.Files.saveFile(CommonUtils.getMerchantCustFilePath(merchantId),
+                    data.getBytes("UTF-8"), true);
+            mLogger.debug("Customer data CSV file uploaded: " + fileUrl);
+        } catch (UnsupportedEncodingException e) {
+            mLogger.error("Customer data CSV file upload failed: "+ e.toString());
+            // For multiple days, single failure will be considered failure for all days
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create customer data CSV file: "+e.toString());
         }
     }
 }

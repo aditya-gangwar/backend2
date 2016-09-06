@@ -60,11 +60,14 @@ public class CommonConstants {
      */
     public static String FILE_PATH_SEPERATOR = "/";
     public static String MERCHANT_ROOT_DIR = "merchants"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_DISPLAY_IMAGES_DIR = MERCHANT_ROOT_DIR+"displayImages"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_LOGGING_ROOT_DIR = "logging"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TEMP_DISPLAY_IMAGES_DIR = MERCHANT_ROOT_DIR+"displayImages"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_ROOT_DIR = MERCHANT_ROOT_DIR+"txnCsvFiles"+ CommonConstants.FILE_PATH_SEPERATOR;
+    public static String MERCHANT_CUST_DATA_ROOT_DIR = MERCHANT_ROOT_DIR+"customerData"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_IMAGE_ROOT_DIR = MERCHANT_ROOT_DIR+"txnImages"+ CommonConstants.FILE_PATH_SEPERATOR;
     public static String MERCHANT_TXN_FILE_PREFIX = "txns_";
+    public static String MERCHANT_CUST_DATA_FILE_PREFIX = "customers_";
 
     public static final String CSV_DELIMETER = ",";
     public static final String CSV_FILE_EXT = ".csv";

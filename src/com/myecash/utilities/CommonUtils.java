@@ -51,7 +51,7 @@ public class CommonUtils {
         return countryCode+batch.getRangeBatchId()+String.format("%03d",serialNo);
     }
 
-        public static String generateCustomerPIN() {
+    public static String generateCustomerPIN() {
         // random numeric string
         Random random = new Random();
         char[] id = new char[CommonConstants.PIN_OTP_LEN];
@@ -424,6 +424,12 @@ public class CommonUtils {
                 merchantId.substring(0,3) + CommonConstants.FILE_PATH_SEPERATOR +
                 merchantId.substring(0,5) + CommonConstants.FILE_PATH_SEPERATOR +
                 merchantId;
+    }
+
+    public static String getMerchantCustFilePath(String merchantId) {
+        // File name: customers_<merchant_id>.csv
+        return CommonConstants.MERCHANT_CUST_DATA_ROOT_DIR +
+                CommonConstants.MERCHANT_CUST_DATA_FILE_PREFIX+merchantId+CommonConstants.CSV_FILE_EXT;
     }
 
     public static String getTxnCsvFilename(Date date, String merchantId) {

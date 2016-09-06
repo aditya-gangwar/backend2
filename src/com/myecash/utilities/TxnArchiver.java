@@ -11,6 +11,7 @@ import com.myecash.database.Transaction;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -20,7 +21,7 @@ import java.util.*;
 public class TxnArchiver
 {
     //transid(10),time(20),merchantid(6),merchantname(50),customermobile(10),customerprivid(5),amts(6x4=24),rate(2) = 115 chars = 115x2 = 250 bytes
-    private static final int CSV_RECORD_MAX_CHARS = 250;
+    private static final int TXN_CSV_RECORD_MAX_CHARS = 250;
 
     private MyLogger mLogger;
 
@@ -107,38 +108,38 @@ public class TxnArchiver
                 // TODO: encrypt CSV string sensitive params
 
                 // store CSV file in merchant directory
-                if( createCsvFiles(merchantId) ) {
-                    int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
-                    if(recordsUpdated == -1) {
-                        String error = "Failed to update txn archive status";
-                        mLogger.error( error);
-                        //TODO: raise alarm
-                        // rollback
-                        deleteCsvFiles();
-                        edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
+                createCsvFiles(merchantId);
+                // update txn status
+                int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
+                if(recordsUpdated == -1) {
+                    String error = "Failed to update txn archive status";
+                    mLogger.error( error);
+                    //TODO: raise alarm
+                    // rollback
+                    deleteCsvFiles();
+                    edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
 
-                    } else if(recordsUpdated != mLastFetchTransactions.size()) {
-                        String error = "Count of txns updated for status does not match.";
+                } else if(recordsUpdated != mLastFetchTransactions.size()) {
+                    String error = "Count of txns updated for status does not match.";
+                    //TODO: raise critical alarm
+                    // rollback
+                    if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
                         //TODO: raise critical alarm
-                        // rollback
-                        if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
-                            //TODO: raise critical alarm
-                            error = error+": "+"Txn archive timer: rollback 1 failed.";
-                        }
-                        mLogger.error(error);
-                        deleteCsvFiles();
-                        edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
-
-                    } else {
-                        // update archive date in merchant record
-                        // set to current time
-                        mLastFetchMerchant.setLast_txn_archive(mToday);
-                        // dont care even if below update fails
-                        BackendOps.updateMerchant(mLastFetchMerchant);
-                        mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
+                        error = error+": "+"Txn archive timer: rollback 1 failed.";
                     }
+                    mLogger.error(error);
+                    deleteCsvFiles();
+                    edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
+
+                } else {
+                    // update archive date in merchant record
+                    // set to current time
+                    mLastFetchMerchant.setLast_txn_archive(mToday);
+                    // dont care even if below update fails
+                    BackendOps.updateMerchant(mLastFetchMerchant);
+                    mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
                 }
             }
         }
@@ -210,7 +211,7 @@ public class TxnArchiver
         }
     }
 
-    private boolean createCsvFiles(String merchantId) {
+    private void createCsvFiles(String merchantId) {
         mCsvFiles.clear();
         // one file for each day i.e. each entry in mCsvDataMap
         for (Map.Entry<String, StringBuilder> entry : mCsvDataMap.entrySet()) {
@@ -224,14 +225,12 @@ public class TxnArchiver
                 String fileUrl = Backendless.Files.saveFile(filepath, sb.toString().getBytes("UTF-8"), true);
                 mLogger.debug("Txn CSV file uploaded: " + fileUrl);
                 mCsvFiles.put(filename,filepath);
-            } catch (Exception e) {
-                //TODO: raise alarm
+            } catch (UnsupportedEncodingException e) {
                 mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
                 // For multiple days, single failure will be considered failure for all days
-                return false;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create CSV file: "+e.toString());
             }
         }
-        return true;
     }
 
     private boolean deleteCsvFiles() {
@@ -263,7 +262,7 @@ public class TxnArchiver
             StringBuilder sb = mCsvDataMap.get(filename);
             if(sb==null) {
                 mLogger.debug("buildCsvString, new day : "+filename);
-                sb = new StringBuilder(CSV_RECORD_MAX_CHARS*size);
+                sb = new StringBuilder(TXN_CSV_RECORD_MAX_CHARS *size);
                 // new file - write first line as header
                 sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
                 sb.append(CommonConstants.CSV_NEWLINE);
