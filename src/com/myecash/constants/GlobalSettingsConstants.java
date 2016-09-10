@@ -39,4 +39,7 @@ public class GlobalSettingsConstants {
     public static int CL_DEBIT_LIMIT_FOR_PIN = 0;
     // Corresponding 'cb_debit_limit_for_pin' in GlobalSettings table
     public static int CB_DEBIT_LIMIT_FOR_PIN = 0;
+
+    // Corresponding to 'mchnt_stats_no_refresh_hours' in GlobalSettings table
+    public static int MCHNT_STATS_NO_REFRESH_HOURS = 1;
 }

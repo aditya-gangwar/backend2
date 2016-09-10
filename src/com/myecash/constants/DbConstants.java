@@ -88,7 +88,7 @@ public class DbConstants {
     public static final String SETTINGS_MERCHANT_PASSWD_RESET_REQUEST_GAP = "merchant_passwd_reset_request_gap_mins";
     public static final String SETTINGS_MERCHANT_WRONG_ATTEMPTS = "merchant_wrong_attempts";
     public static final String SETTINGS_MERCHANT_ACCOUNT_BLOCK_HRS = "merchant_account_block_hrs";
-    public static final String SETTINGS_DASHBOARD_NO_REFRESH_HRS = "dashboard_no_refresh_hours";
+    public static final String SETTINGS_DASHBOARD_NO_REFRESH_HRS = "mchnt_stats_no_refresh_hours";
 
     public static final String SETTINGS_CL_CREDIT_LIMIT_FOR_PIN = "cl_credit_limit_for_pin";
     public static final String SETTINGS_CL_DEBIT_LIMIT_FOR_PIN = "cl_debit_limit_for_pin";

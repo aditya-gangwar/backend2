@@ -23,7 +23,6 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_SEND_SMS_FAILED = "510";
     public static final String BE_ERROR_WRONG_INPUT_DATA = "511";
     public static final String BE_ERROR_DUPLICATE_USER = "512";
-    public static final String BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED = "513";
 
     public static final String BE_ERROR_OTP_GENERATE_FAILED = "520";
     public static final String BE_ERROR_WRONG_OTP = "521";

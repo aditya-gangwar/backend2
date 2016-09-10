@@ -14,7 +14,8 @@ public class BackendConstants {
     public static final boolean FORCED_DEBUG_LOGS = true;
 
 
-    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,<cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
+    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,
+    // <cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
     public static final int BACKEND_EDR_MAX_SIZE = 500;
     public static final String BACKEND_EDR_DELIMETER = ",";
@@ -26,6 +27,7 @@ public class BackendConstants {
     // special flags
     public static final String BACKEND_EDR_MANUAL_CHECK = "ManualCheck";
     public static final String BACKEND_EDR_SECURITY_BREACH = "SecurityBreach";
+    public static final String BACKEND_EDR_OLD_STATS_RETURNED = "OldStatsReturned";
     // ignored error scenarios
     public static final String BACKEND_ERROR_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
     public static final String BACKEND_ERROR_MOBILE_NUM_NA = "MobileNumNotAvailable";
@@ -60,7 +62,6 @@ public class BackendConstants {
     public static final int CASHBACK_TABLE_POOL_SIZE = 2;
 
     public static final int PASSWORD_LEN = 5;
-    public static final int CUSTOMER_PRIVATE_ID_LEN = 6;
     public static final int LOG_ID_LEN = 8;
 
     // used in generating temporary passwords

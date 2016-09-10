@@ -292,7 +292,7 @@ public class CommonUtils {
                 return DbConstants.USER_TYPE_MERCHANT;
             case CommonConstants.AGENT_ID_LEN:
                 return DbConstants.USER_TYPE_AGENT;
-            case CommonConstants.CUSTOMER_ID_LEN:
+            case CommonConstants.MOBILE_NUM_LENGTH:
                 return DbConstants.USER_TYPE_CUSTOMER;
             default:
                 return -1;
@@ -322,8 +322,17 @@ public class CommonUtils {
         return false;
     }
 
-    public static boolean customerIdMobile(String id) {
-        return id.length()==CommonConstants.CUSTOMER_ID_LEN;
+    public static int getCustomerIdType(String id) {
+        switch (id.length()) {
+            case CommonConstants.MOBILE_NUM_LENGTH:
+                return BackendConstants.CUSTOMER_ID_MOBILE;
+            case CommonConstants.CUSTOMER_CARDID_LEN:
+                return BackendConstants.CUSTOMER_ID_CARD;
+            case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
+                return BackendConstants.CUSTOMER_ID_PRIVATE_ID;
+            default:
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid customer ID: "+id);
+        }
     }
 
     // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
@@ -493,7 +502,7 @@ public class CommonUtils {
         } else {
             edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
             logger.error("Exception in "+edr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
-            logger.error(e.getStackTrace().toString());
+            logger.error(stackTraceStr(e));
         }
 
         edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
@@ -509,6 +518,14 @@ public class CommonUtils {
         edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
         logger.edr(edr);
         logger.flush();
+    }
+
+    public static String stackTraceStr(Exception e) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement e1 : e.getStackTrace()) {
+            sb.append("\t at ").append(e1.toString()).append("\n");
+        }
+        return sb.toString();
     }
 
     public static void writeEdr(MyLogger logger, String[] mEdr) {

@@ -1,17 +1,19 @@
 package com.myecash.utilities;
 
 import com.myecash.constants.BackendConstants;
+import com.myecash.constants.CommonConstants;
 
 /**
  * Created by adgangwa on 08-04-2016.
  */
-public class Base61 {
+public class Base35 {
     // 0 to be used as filler
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+    // capital O not used to avoid confusion with 0
+    private static final String ALPHABET = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
 
     private static final int BASE = ALPHABET.length();
 
-    private Base61() {}
+    private Base35() {}
 
     public static String fromBase10(long i) {
         StringBuilder sb = new StringBuilder("");
@@ -22,7 +24,7 @@ public class Base61 {
         sb.reverse();
 
         // add 0 as filler
-        for (int toAppend = (BackendConstants.CUSTOMER_PRIVATE_ID_LEN-sb.length()); toAppend>0; toAppend--) {
+        for (int toAppend = (CommonConstants.CUSTOMER_INTERNAL_ID_LEN-sb.length()); toAppend>0; toAppend--) {
             sb.append('0');
         }
         return sb.toString();

@@ -31,28 +31,31 @@ public class CommonConstants {
     public static final String DATE_FORMAT_ONLY_DATE_DISPLAY = "dd MMM, yy";
     // used to specify 'date with no time' to the backend, like in where clause
     public static final String DATE_FORMAT_ONLY_DATE_BACKEND = "dd-MMM-yyyy";
+    // used to specify 'date with no time' in the CSV report generated
+    public static final String DATE_FORMAT_ONLY_DATE_CSV = "dd/MM/yyyy";
     // used in reports etc where both date and time is to be shown
     public static final String DATE_FORMAT_WITH_TIME = "dd/MM/yyyy HH:mm:ss";
     // date format to be used in filename
     public static final String DATE_FORMAT_ONLY_DATE_FILENAME = "ddMMMyy";
     // format to show only time in 12 hr format
-    public static final String DATE_FORMAT_ONLY_TIME_12 = "h:mm a";
+    public static final String DATE_FORMAT_ONLY_TIME_12 = "hh:mm a";
+    // format to show only time in CSV file
+    public static final String DATE_FORMAT_ONLY_TIME_24_CSV = "HH:mm:ss";
 
     /*
      * Size, Length and Limits
      */
+    public static final int MOBILE_NUM_LENGTH = 10;
     public static final int MERCHANT_ID_LEN = 8;
     public static final int AGENT_ID_LEN = 7;
-    public static final int CUSTOMER_ID_LEN = 10; // 10 digit mobile number
+    public static final int CUSTOMER_INTERNAL_ID_LEN = 6;
     public static final int CUSTOMER_CARDID_LEN = 11;
-
     // DOB in format 'DDMMYYYY'
     public static final int DOB_SECRET_LEN = 8; //mobile number
-
-    public static final int PIN_OTP_LEN = 5;
     public static final int TRANSACTION_ID_LEN = 10;
+    public static final int PIN_OTP_LEN = 5;
+
     public static final int MAX_DEVICES_PER_MERCHANT = 3;
-    public static final int MOBILE_NUM_LENGTH = 10;
     public static final int dbQueryMaxPageSize = 100;
 
     /*
@@ -70,6 +73,7 @@ public class CommonConstants {
     public static String MERCHANT_CUST_DATA_FILE_PREFIX = "customers_";
 
     public static final String CSV_DELIMETER = ",";
+    public static final String CSV_SUB_DELIMETER = ":";
     public static final String CSV_FILE_EXT = ".csv";
     public static final String CSV_NEWLINE = "\n";
 
@@ -95,6 +99,51 @@ public class CommonConstants {
     public static int TXN_CSV_IDX_CB_AWARD = 11;
     public static int TXN_CSV_IDX_CB_RATE = 12;
     public static int TXN_CSV_IDX_CUST_PIN = 13;
+
+    /*
+     * Index of various parameters in Cashback CSV records (stored in CustData CSV files)
+     * Format:
+     * <Total Account Credit>,<Total Account Debit>,
+     * <Total Cashback Credit>,<Total Cashback Debit>,
+     * <Total Billed>,<Total Cashback Billed>,
+     * <create time>,<update time>
+     * Records with double bracket '<<>>' are only sent to 'customer care' users
+     */
+    public static int CB_CSV_CUST_PVT_ID = 0;
+    public static int CB_CSV_MCHNT_ID = 1;
+    public static int CB_CSV_ACC_CR = 2;
+    public static int CB_CSV_ACC_DB = 3;
+    public static int CB_CSV_CR = 4;
+    public static int CB_CSV_DB = 5;
+    public static int CB_CSV_TOTAL_BILL = 6;
+    public static int CB_CSV_BILL = 7;
+    public static int CB_CSV_CREATE_TIME = 8;
+    public static int CB_CSV_UPDATE_TIME = 9;
+    public static int CB_CSV_CUST_DETAILS = 10;
+    public static int CB_CSV_TOTAL_FIELDS = 11;
+
+    /*
+     * Index of various parameters in CustomerDetails CSV records (rcvd as part of cashback object)
+     * Format:
+     * <private id>,<mobile_num>,<<name>>,<<first login ok>>,<<cust create time>>
+     * <acc_status>,<acc_status_reason>,<acc_status_update_time>,<<admin remarks>>
+     *     -- membership card data follows --
+     * <card_id>,<card_status>,<card_status_update_time>
+     * Records with double bracket '<<>>' are only sent to 'customer care' users
+     */
+    public static int CUST_CSV_PRIVATE_ID = 0;
+    public static int CUST_CSV_MOBILE_NUM = 1;
+    public static int CUST_CSV_NAME = 2;
+    public static int CUST_CSV_FIRST_LOGIN_OK = 3;
+    public static int CUST_CSV_CUST_CREATE_TIME = 4;
+    public static int CUST_CSV_ACC_STATUS = 5;
+    public static int CUST_CSV_STATUS_REASON = 6;
+    public static int CUST_CSV_STATUS_UPDATE_TIME = 7;
+    public static int CUST_CSV_ADMIN_REMARKS = 8;
+    public static int CUST_CSV_CARD_ID = 9;
+    public static int CUST_CSV_CARD_STATUS = 10;
+    public static int CUST_CSV_CARD_STATUS_UPDATE_TIME = 11;
+    public static int CUST_CSV_TOTAL_FIELDS = 12;
 
     /*
      * Other common constants

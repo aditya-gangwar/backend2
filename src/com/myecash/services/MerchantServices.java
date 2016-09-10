@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.TimeZone;
 
 /**
@@ -170,27 +171,37 @@ public class MerchantServices implements IBackendlessService {
 
         mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
 
+        boolean positiveException = false;
+        int customerIdType = CommonUtils.getCustomerIdType(customerId);
         try {
             mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
             mLogger.debug("Before context: "+InvocationContext.asString());
             mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
-            int customerIdType = CommonUtils.customerIdMobile(customerId) ? BackendConstants.CUSTOMER_ID_MOBILE : BackendConstants.CUSTOMER_ID_CARD;
-
-            // TODO: see how to avoid fetching customer in common scenario - i.e. when cb object is available and customer status is active
-            // one way is to put all mandatory info about customer in cb object only
-
             // Fetch customer using mobile or cardId
+            // Required as we need the private id of the customer to fetch the cashback
             Customers customer = BackendOps.getCustomer(customerId, customerIdType, true);
+            if(customer==null) {
+                if(customerIdType!=BackendConstants.CUSTOMER_ID_PRIVATE_ID) {
+                    // it may not be positive exception
+                    // but using it to avoid getting this logged as 'error edr'
+                    // as this will happen always in case of 'user registration' etc
+                    positiveException = true;
+                }
+                String errorMsg = "No user found: "+customerId;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            }
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
 
             // Fetch cashback record
             // Create where clause to fetch cashback
             String whereClause = "rowid = '" + customer.getPrivate_id()+merchantId + "'";
-            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchantCbTable);
+            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchantCbTable, false, false);
             Cashback cashback = null;
             if(data == null) {
-                cashback = handleCashbackCreate(merchantId, merchantCbTable, customer);
+                Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                        DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                cashback = handleCashbackCreate(merchant, customer);
             } else {
                 cashback = data.get(0);
                 mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = cashback.getMerchant_id();
@@ -201,7 +212,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Add 'customer details' in the cashback object to be returned
             // these details are not stored in DB along with cashback object
-            cashback.setCustomer_details(buildCustomerDetails(customer));
+            cashback.setCustomer_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
             stripCashback(cashback);
 
             // no exception - means function execution success
@@ -209,7 +220,7 @@ public class MerchantServices implements IBackendlessService {
             return cashback;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
@@ -233,7 +244,7 @@ public class MerchantServices implements IBackendlessService {
 
             // not checking for merchant account status
 
-            // create new stats object
+            boolean calculateAgain = true;
             // fetch merchant stat object, if exists
             MerchantStats stats = BackendOps.fetchMerchantStats(merchantId);
             // create object if not already available
@@ -241,79 +252,85 @@ public class MerchantServices implements IBackendlessService {
                 mLogger.debug("Creating new stats object");
                 stats = new MerchantStats();
                 stats.setMerchant_id(merchantId);
+            } else {
+                // return old object, if last updated within configured hours
+                Date updateTime = stats.getUpdated();
+                if(updateTime==null) {
+                    updateTime = stats.getCreated();
+                }
+                long updated = updateTime.getTime();
+                long now = (new Date()).getTime();
+                if( (now - updated) < (GlobalSettingsConstants.MCHNT_STATS_NO_REFRESH_HOURS*60*60*1000) ) {
+                    // return old object - dont calculate again
+                    calculateAgain = false;
+                }
             }
-            //reset all stats to 0
-            stats.setBill_amt_no_cb(0);
-            stats.setBill_amt_total(0);
-            stats.setCash_credit(0);
-            stats.setCb_credit(0);
-            stats.setCash_debit(0);
-            stats.setCb_debit(0);
-            stats.setCust_cnt_cash(0);
-            stats.setCust_cnt_cb(0);
-            stats.setCust_cnt_cb_and_cash(0);
-            stats.setCust_cnt_no_balance(0);
 
-            // fetch all CB records for this merchant
-            ArrayList<Cashback> data = BackendOps.fetchCashback("merchant_id = '" + merchantId + "'", merchant.getCashback_table());
-            if(data != null) {
-                // loop on all cashback objects and calculate stats
-                mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
+            if(calculateAgain) {
+                //reset all stats to 0
+                stats.setBill_amt_no_cb(0);
+                stats.setBill_amt_total(0);
+                stats.setCash_credit(0);
+                stats.setCb_credit(0);
+                stats.setCash_debit(0);
+                stats.setCb_debit(0);
+                stats.setCust_cnt_cash(0);
+                stats.setCust_cnt_cb(0);
+                stats.setCust_cnt_cb_and_cash(0);
+                stats.setCust_cnt_no_balance(0);
 
-                StringBuilder sb = new StringBuilder(CUST_CSV_RECORD_MAX_CHARS*data.size());
-                sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
-                sb.append(CommonConstants.CSV_NEWLINE);
+                // fetch all CB records for this merchant
+                ArrayList<Cashback> data = BackendOps.fetchCashback("merchant_id = '" + merchantId + "'",
+                        merchant.getCashback_table(), true, false);
+                if (data != null) {
+                    // loop on all cashback objects and calculate stats
+                    mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
 
-                for (int k = 0; k < data.size(); k++) {
-                    Cashback cb = data.get(k);
-                    // update customer counts
-                    // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
-                    if (cb.getCb_credit() > 0 && cb.getCl_credit() > 0) {
-                        stats.cust_cnt_cb_and_cash++;
-                    } else if (cb.getCb_credit() > 0) {
-                        stats.cust_cnt_cb++;
-                    } else if (cb.getCl_credit() > 0) {
-                        stats.cust_cnt_cash++;
-                    } else {
-                        stats.cust_cnt_no_balance++;
+                    StringBuilder sb = new StringBuilder(CUST_CSV_RECORD_MAX_CHARS * data.size());
+                    //sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
+                    //sb.append(CommonConstants.CSV_NEWLINE);
+
+                    for (int k = 0; k < data.size(); k++) {
+                        Cashback cb = data.get(k);
+                        // update customer counts
+                        // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
+                        if (cb.getCb_credit() > 0 && cb.getCl_credit() > 0) {
+                            stats.cust_cnt_cb_and_cash++;
+                        } else if (cb.getCb_credit() > 0) {
+                            stats.cust_cnt_cb++;
+                        } else if (cb.getCl_credit() > 0) {
+                            stats.cust_cnt_cash++;
+                        } else {
+                            stats.cust_cnt_no_balance++;
+                        }
+
+                        // update amounts
+                        stats.cb_credit = stats.cb_credit + cb.getCb_credit();
+                        stats.cb_debit = stats.cb_debit + cb.getCb_debit();
+                        stats.cash_credit = stats.cash_credit + cb.getCl_credit();
+                        stats.cash_debit = stats.cash_debit + cb.getCl_debit();
+                        stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
+                        stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
+
+                        // write record as csv string
+                        sb.append(buildCashbackDetails(cb, false)).append(CommonConstants.CSV_NEWLINE);
                     }
 
-                    // update amounts
-                    stats.cb_credit = stats.cb_credit + cb.getCb_credit();
-                    stats.cb_debit = stats.cb_debit + cb.getCb_debit();
-                    stats.cash_credit = stats.cash_credit + cb.getCl_credit();
-                    stats.cash_debit = stats.cash_debit + cb.getCl_debit();
-                    stats.bill_amt_total = stats.bill_amt_total + cb.getTotal_billed();
-                    stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
-
-                    // write record as csv string
-                    // Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,
-                    // Total Cashback Debit, Total Cashback Credit,Total Billed,Total Cashback Billed
-                    sb.append(cb.getCust_private_id()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCl_credit()-cb.getCl_debit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCb_credit()-cb.getCb_debit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCl_debit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCl_credit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCb_debit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCb_credit()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getTotal_billed()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(cb.getCb_billed()).append(CommonConstants.CSV_DELIMETER);
-                    sb.append(CommonConstants.CSV_NEWLINE);
+                    // upload data as CSV file
+                    createCsvFile(sb.toString(), merchantId);
                 }
 
-                // upload data as CSV file
-                createCsvFile(sb.toString(), merchantId);
-            }
-
-            // save stats object - don't bother about return status
-            // This is just for our own reporting purpose,
-            // as for merchant stats anyways are calculated fresh each time from cashback objects
-            try {
-                stats.setUpdate_time(new Date());
-                BackendOps.saveMerchantStats(stats);
-            } catch (Exception e) {
-                // ignore the exception
-                mLogger.error("Exception while saving merchantStats object: "+e.toString());
+                // save stats object - don't bother about return status
+                // This is just for our own reporting purpose,
+                // as for merchant stats anyways are calculated fresh each time from cashback objects
+                try {
+                    stats = BackendOps.saveMerchantStats(stats);
+                } catch (Exception e) {
+                    // ignore the exception
+                    mLogger.error("Exception while saving merchantStats object: " + e.toString());
+                }
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_OLD_STATS_RETURNED;
             }
 
             // no exception - means function execution success
@@ -418,11 +435,21 @@ public class MerchantServices implements IBackendlessService {
             customerUser.setProperty("customer", customer);
 
             customerUser = BackendOps.registerUser(customerUser);
+            Cashback cashback = null;
             try {
                 customer = (Customers) customerUser.getProperty("customer");
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
                 // assign custom role to it
                 BackendOps.assignRole(customerMobile, BackendConstants.ROLE_CUSTOMER);
+
+                // create cashback also - to avoid another call to 'getCashback' from merchant
+                cashback = createCbObject(merchant, customer);
+                // Add 'customer details' in the cashback object to be returned
+                // these details are not stored in DB along with cashback object
+                cashback.setCustomer_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
+                // remove 'not needed sensitive' fields from cashback object
+                stripCashback(cashback);
+
             } catch(Exception e) {
                 // TODO: add as 'Major' alarm - user to be removed later manually
                 // rollback to not-usable state
@@ -440,22 +467,9 @@ public class MerchantServices implements IBackendlessService {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             }
 
-            try {
-                // create cashback also - to avoid another call to 'getCashback' from merchant
-                Cashback cashback = createCbObject(merchant.getAuto_id(), customer);
-                // Add 'customer details' in the cashback object to be returned
-                // these details are not stored in DB along with cashback object
-                cashback.setCustomer_details(buildCustomerDetails(customer));
-                // remove 'not needed sensitive' fields from cashback object
-                stripCashback(cashback);
-
-                // no exception - means function execution success
-                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-                return cashback;
-
-            } catch(Exception e) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_REGISTER_SUCCESS_CREATE_CB_FAILED, "");
-            }
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return cashback;
 
         } catch(Exception e) {
             CommonUtils.handleException(e,false,mLogger,mEdr);
@@ -578,7 +592,7 @@ public class MerchantServices implements IBackendlessService {
 
         // get customer counter value and encode the same to get customer private id
         Long customerCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
-        String private_id = Base61.fromBase10(customerCnt);
+        String private_id = Base35.fromBase10(customerCnt);
         mLogger.debug("Generated private id: "+private_id);
         customer.setPrivate_id(private_id);
 
@@ -590,42 +604,44 @@ public class MerchantServices implements IBackendlessService {
         return customer;
     }
 
-    private Cashback handleCashbackCreate(String merchantId, String merchantCbTable, Customers customer) {
+    private Cashback handleCashbackCreate(Merchants merchant, Customers customer) {
         // Add cashback table name (of this merchant's) in customer record, if not already added (by some other merchant)
-        boolean cbTableUpdated = false;
+        //boolean cbTableUpdated = false;
         String currCbTables = customer.getCashback_table();
         if(currCbTables==null || currCbTables.isEmpty()) {
-            mLogger.debug("Setting new CB tables for customer: "+merchantCbTable+","+currCbTables);
-            customer.setCashback_table(merchantCbTable);
-            cbTableUpdated = true;
+            mLogger.debug("Setting new CB tables for customer: "+merchant.getCashback_table()+","+currCbTables);
+            customer.setCashback_table(merchant.getCashback_table());
+            //cbTableUpdated = true;
 
-        } else if(!currCbTables.contains(merchantCbTable)) {
-            String newCbTables = currCbTables+","+merchantCbTable;
+        } else if(!currCbTables.contains(merchant.getCashback_table())) {
+            String newCbTables = currCbTables+","+merchant.getCashback_table();
             mLogger.debug("Setting new CB tables for customer: "+newCbTables+","+currCbTables);
             customer.setCashback_table(newCbTables);
-            cbTableUpdated = true;
+            //cbTableUpdated = true;
         }
 
-        // update customer
+        // not updating customer - as the same will be automatically done
+        // along with cashback save in 'createCbObject' method
+        /*
         if(cbTableUpdated) {
             BackendOps.updateCustomer(customer);
-        }
+        }*/
 
         // create new cashback object
         // intentionally doing it after updating customer for cashback table name
-        return createCbObject(merchantId, customer);
+        return createCbObject(merchant, customer);
     }
 
-    private Cashback createCbObject(String merchantId, Customers customer) {
+    private Cashback createCbObject(Merchants merchant, Customers customer) {
         Cashback cashback = new Cashback();
 
         // rowid_card - "customer card id"+"merchant id"+"terminal id"
-        String cardId = customer.getMembership_card().getCard_id();
+        //String cardId = customer.getMembership_card().getCard_id();
         //cashback.setRowid_card(cardId + merchantId);
         // rowid - "customer mobile no"+"merchant id"+"terminal id"
-        cashback.setRowid(customer.getPrivate_id() + merchantId);
+        cashback.setRowid(customer.getPrivate_id() + merchant.getAuto_id());
 
-        cashback.setMerchant_id(merchantId);
+        cashback.setMerchant_id(merchant.getAuto_id());
         cashback.setCust_private_id(customer.getPrivate_id());
 
         cashback.setCb_credit(0);
@@ -635,16 +651,82 @@ public class MerchantServices implements IBackendlessService {
         cashback.setTotal_billed(0);
         cashback.setCb_billed(0);
 
-        // not setting 'merchant' or 'customer'
-        return BackendOps.saveCashback(cashback);
+        cashback.setMerchant(merchant);
+        cashback.setCustomer(customer);
+
+        return BackendOps.saveCashback(cashback, merchant.getCashback_table());
     }
 
-    private String buildCustomerDetails(Customers customer) {
-        // Build customer detail in below CSV format
-        // size = 10 + 16 + 1 + 1 + 20 + 1 + 20 = 70 (round off to 128)
-        // <mobile_num>,<acc_status>,<acc_status_reason>,<acc_status_update_time>,<card_id>,<card_status>,<card_status_update_time>
+    private String buildCashbackDetails(Cashback cb, boolean addCustCareData) {
 
-        StringBuilder sb = new StringBuilder(128);
+        // Build cashback data as CSV record
+        // <Account Balance>,<Total Account Credit>,<Total Account Debit>,
+        // <Cashback Balance>,<Total Cashback Credit>,<Total Cashback Debit>,
+        // <Total Billed>,<Total Cashback Billed>,
+        // <create time>,<update time>
+        String[] csvFields = new String[CommonConstants.CB_CSV_TOTAL_FIELDS];
+        csvFields[CommonConstants.CB_CSV_CUST_PVT_ID] = String.valueOf(cb.getCust_private_id()) ;
+        csvFields[CommonConstants.CB_CSV_MCHNT_ID] = String.valueOf(cb.getMerchant_id()) ;
+        //csvFields[CommonConstants.CB_CSV_ACC_BAL] = String.valueOf(cb.getCl_credit() - cb.getCl_debit()) ;
+        csvFields[CommonConstants.CB_CSV_ACC_CR] = String.valueOf(cb.getCl_credit()) ;
+        csvFields[CommonConstants.CB_CSV_ACC_DB] = String.valueOf(cb.getCl_debit()) ;
+        //csvFields[CommonConstants.CB_CSV_BAL] = String.valueOf(cb.getCb_credit() - cb.getCb_debit()) ;
+        csvFields[CommonConstants.CB_CSV_CR] = String.valueOf(cb.getCb_credit()) ;
+        csvFields[CommonConstants.CB_CSV_DB] = String.valueOf(cb.getCb_debit()) ;
+        csvFields[CommonConstants.CB_CSV_TOTAL_BILL] = String.valueOf(cb.getTotal_billed()) ;
+        csvFields[CommonConstants.CB_CSV_BILL] = String.valueOf(cb.getCb_billed()) ;
+        csvFields[CommonConstants.CB_CSV_CREATE_TIME] = String.valueOf(cb.getCreated().getTime()) ;
+        csvFields[CommonConstants.CB_CSV_UPDATE_TIME] = String.valueOf(cb.getUpdated().getTime()) ;
+        if(cb.getCustomer()!=null) {
+            csvFields[CommonConstants.CB_CSV_CUST_DETAILS] = buildCustomerDetails(cb.getCustomer(), addCustCareData, CommonConstants.CSV_SUB_DELIMETER);
+        }
+
+        // combine to single string
+        StringJoiner sj = new StringJoiner(CommonConstants.CSV_DELIMETER);
+        for(String s:csvFields) sj.add(s);
+
+        mLogger.debug("Generated cashback details: "+sj.toString());
+        return sj.toString();
+    }
+
+    private String buildCustomerDetails(Customers customer, boolean addCustCareData, String delim) {
+
+        // Build customer detail in below CSV format
+        // size = 10+10+50+5+10+10+1+1+10+50+11+1+10 = ~180 (round off to 256)
+        // <private id>,<mobile_num>,<<name>>,<<first login ok>>,<<cust_create_time>>,
+        // <acc_status>,<acc_status_reason>,<acc_status_update_time>,<<admin remarks>>
+        // <card_id>,<card_status>,<card_status_update_time>
+        // records with double bracket '<<>>' are only sent to 'customer care' users
+
+        CustomerCards card = customer.getMembership_card();
+        String[] csvFields = new String[CommonConstants.CUST_CSV_TOTAL_FIELDS];
+        csvFields[CommonConstants.CUST_CSV_PRIVATE_ID] = customer.getPrivate_id() ;
+        csvFields[CommonConstants.CUST_CSV_MOBILE_NUM] = customer.getMobile_num() ;
+        csvFields[CommonConstants.CUST_CSV_ACC_STATUS] = String.valueOf(customer.getAdmin_status()) ;
+        csvFields[CommonConstants.CUST_CSV_STATUS_REASON] = String.valueOf(customer.getStatus_reason()) ;
+        csvFields[CommonConstants.CUST_CSV_STATUS_UPDATE_TIME] = String.valueOf(customer.getStatus_update_time().getTime()) ;
+        csvFields[CommonConstants.CUST_CSV_CARD_ID] = card.getCard_id() ;
+        csvFields[CommonConstants.CUST_CSV_CARD_STATUS] = String.valueOf(card.getStatus()) ;
+        if(addCustCareData) {
+            csvFields[CommonConstants.CUST_CSV_NAME] = customer.getName() ;
+            csvFields[CommonConstants.CUST_CSV_FIRST_LOGIN_OK] = String.valueOf(customer.getFirst_login_ok()) ;
+            csvFields[CommonConstants.CUST_CSV_CUST_CREATE_TIME] = String.valueOf(customer.getCreated().getTime()) ;
+            csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = customer.getAdmin_remarks() ;
+            csvFields[CommonConstants.CUST_CSV_CARD_STATUS_UPDATE_TIME] = String.valueOf(card.getStatus_update_time().getTime()) ;
+        } else {
+            csvFields[CommonConstants.CUST_CSV_NAME] = "";
+            csvFields[CommonConstants.CUST_CSV_FIRST_LOGIN_OK] = "";
+            csvFields[CommonConstants.CUST_CSV_CUST_CREATE_TIME] = "";
+            csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = "";
+            csvFields[CommonConstants.CUST_CSV_CARD_STATUS_UPDATE_TIME] = "";
+        }
+
+        // combine to single string
+        StringJoiner sj = new StringJoiner(delim);
+        for(String s:csvFields) sj.add(s);
+
+        /*
+        StringBuilder sb = new StringBuilder(256);
         sb.append(customer.getMobile_num()).append(CommonConstants.CSV_DELIMETER)
                 .append(customer.getAdmin_status()).append(CommonConstants.CSV_DELIMETER)
                 .append(customer.getStatus_reason()).append(CommonConstants.CSV_DELIMETER);
@@ -656,17 +738,17 @@ public class MerchantServices implements IBackendlessService {
         CustomerCards card = customer.getMembership_card();
         sb.append(card.getCard_id()).append(CommonConstants.CSV_DELIMETER)
                 .append(card.getStatus()).append(CommonConstants.CSV_DELIMETER)
-                .append(sdf.format(card.getStatus_update_time()));
+                .append(sdf.format(card.getStatus_update_time()));*/
 
-        mLogger.debug("Generated customer details: "+sb.toString());
-        return sb.toString();
+        mLogger.debug("Generated customer details: "+sj.toString());
+        return sj.toString();
     }
 
     // Strip cashback object for information not needed by merchant app
     private void stripCashback(Cashback cashback) {
         cashback.setCust_private_id(null);
-        //cashback.setCustomer(null);
-        //cashback.setMerchant(null);
+        cashback.setCustomer(null);
+        cashback.setMerchant(null);
         cashback.setRowid(null);
         //cashback.setRowid_card(null);
     }

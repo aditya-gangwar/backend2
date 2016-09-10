@@ -95,7 +95,7 @@ public class TxnTableEventHelper {
             // Fetch cashback record
             String whereClause = "rowid = '" + customer.getPrivate_id() + merchantId + "'";
             Cashback cashback = null;
-            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchant.getCashback_table());
+            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchant.getCashback_table(), false, false);
             if (data != null) {
                 cashback = data.get(0);
 

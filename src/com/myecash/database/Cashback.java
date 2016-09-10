@@ -22,7 +22,28 @@ public class Cashback
   private String customer_details;
   private String merchant_id;
   private Integer cb_billed;
+  private Customers customer;
+  private Merchants merchant;
 
+  public Customers getCustomer()
+  {
+    return customer;
+  }
+
+  public void setCustomer( Customers customer )
+  {
+    this.customer = customer;
+  }
+
+  public Merchants getMerchant()
+  {
+    return merchant;
+  }
+
+  public void setMerchant( Merchants merchant )
+  {
+    this.merchant = merchant;
+  }
   public Integer getCb_billed() {
     return cb_billed;
   }

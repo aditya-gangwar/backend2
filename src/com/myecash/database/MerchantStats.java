@@ -24,15 +24,6 @@ public class MerchantStats
   public Integer cust_cnt_cb_and_cash;
   private String ownerId;
   public Integer cust_cnt_cb;
-  private java.util.Date update_time;
-
-  public Date getUpdate_time() {
-    return update_time;
-  }
-
-  public void setUpdate_time(Date update_time) {
-    this.update_time = update_time;
-  }
 
   public Integer getCust_cnt_no_balance()
   {

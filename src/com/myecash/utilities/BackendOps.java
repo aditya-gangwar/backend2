@@ -221,8 +221,8 @@ public class BackendOps {
 
         BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
         if( user.getTotalObjects() == 0) {
-            String errorMsg = "No user found: "+custId;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            // No customer found is not an error
+            return null;
         } else {
             if(fetchCard && user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;
@@ -267,7 +267,9 @@ public class BackendOps {
     /*
      * Cashback operations
      */
-    public static ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable) {
+    public static ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable,
+                                                    boolean customerData, boolean mchntData) {
+
         Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -275,6 +277,16 @@ public class BackendOps {
         dataQuery.setPageSize(1);
         //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
         dataQuery.setWhereClause(whereClause);
+
+        QueryOptions queryOptions = new QueryOptions();
+        if(customerData) {
+            queryOptions.addRelated("customer");
+            queryOptions.addRelated("customer.membership_card");
+        }
+        if(mchntData) {
+            queryOptions.addRelated("merchant");
+        }
+        dataQuery.setQueryOptions(queryOptions);
 
         BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
 
@@ -297,7 +309,8 @@ public class BackendOps {
         }
     }
 
-    public static Cashback saveCashback(Cashback cb) {
+    public static Cashback saveCashback(Cashback cb, String tableName) {
+        Backendless.Data.mapTableToClass(tableName, Cashback.class);
         return Backendless.Persistence.save( cb );
     }
 
