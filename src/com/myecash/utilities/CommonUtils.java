@@ -23,6 +23,12 @@ public class CommonUtils {
     private static final SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
     private static final SimpleDateFormat mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
+    /*
+    public class CurrentUser {
+        public Object dataObject;
+        public int userType;
+    }*/
+
     public static String getHalfVisibleId(String userId) {
         // build half visible userid : XXXXX91535
         StringBuilder halfVisibleUserid = new StringBuilder();
@@ -454,14 +460,14 @@ public class CommonUtils {
                 merchantId;
     }
 
-    public static Object fetchCurrentUser(String objectId, Integer argUserType, String[] edr, MyLogger logger) {
+    public static Object fetchCurrentUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger) {
 
         BackendlessUser user = BackendOps.fetchUserByObjectId(objectId);
         edr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
         int userType = (Integer)user.getProperty("user_type");
 
         edr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
-        if(argUserType!=null && argUserType!=userType) {
+        if(allowedUserType!=null && allowedUserType!=userType) {
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
         }
 
@@ -481,6 +487,9 @@ public class CommonUtils {
                 // check if agent is enabled
                 CommonUtils.checkAgentStatus(agent, logger);
                 return agent;
+
+            case DbConstants.USER_TYPE_CC:
+                break;
 
             case DbConstants.USER_TYPE_CUSTOMER:
                 break;

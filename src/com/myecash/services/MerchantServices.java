@@ -227,7 +227,7 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public MerchantStats getMerchantStats() {
+    public MerchantStats getMerchantStats(String mchntId) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
@@ -237,9 +237,22 @@ public class MerchantServices implements IBackendlessService {
         try {
             //mLogger.debug("In getMerchantStats");
 
-            // Fetch merchant
-            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+            // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            Merchants merchant = null;
+            if(userType==DbConstants.USER_TYPE_MERCHANT) {
+                merchant = (Merchants) userObj;
+            } else if(userType==DbConstants.USER_TYPE_CC) {
+                // fetch merchant
+                merchant = BackendOps.getMerchant(mchntId, false);
+            } else {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+            }
+
             String merchantId = merchant.getAuto_id();
 
             // not checking for merchant account status

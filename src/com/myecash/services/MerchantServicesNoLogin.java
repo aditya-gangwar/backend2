@@ -97,10 +97,14 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT);
+            int userType = (Integer)user.getProperty("user_type");
+            if(userType != DbConstants.USER_TYPE_MERCHANT) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,userId+" is not a merchant.");
+            }
             Merchants merchant = (Merchants) user.getProperty("merchant");
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
-            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = ((Integer)user.getProperty("user_type")).toString();
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             // check admin status
