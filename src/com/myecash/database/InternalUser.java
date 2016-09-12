@@ -5,7 +5,7 @@ import com.backendless.BackendlessCollection;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.persistence.BackendlessDataQuery;
 
-public class Agents
+public class InternalUser
 {
   private java.util.Date updated;
   private String mobile_num;
@@ -128,12 +128,12 @@ public class Agents
   }
 
                                                     
-  public Agents save()
+  public InternalUser save()
   {
-    return Backendless.Data.of( Agents.class ).save( this );
+    return Backendless.Data.of( InternalUser.class ).save( this );
   }
 
-  public Future<Agents> saveAsync()
+  public Future<InternalUser> saveAsync()
   {
     if( Backendless.isAndroid() )
     {
@@ -141,21 +141,21 @@ public class Agents
     }
     else
     {
-      Future<Agents> future = new Future<Agents>();
-      Backendless.Data.of( Agents.class ).save( this, future );
+      Future<InternalUser> future = new Future<InternalUser>();
+      Backendless.Data.of( InternalUser.class ).save( this, future );
 
       return future;
     }
   }
 
-  public void saveAsync( AsyncCallback<Agents> callback )
+  public void saveAsync( AsyncCallback<InternalUser> callback )
   {
-    Backendless.Data.of( Agents.class ).save( this, callback );
+    Backendless.Data.of( InternalUser.class ).save( this, callback );
   }
 
   public Long remove()
   {
-    return Backendless.Data.of( Agents.class ).remove( this );
+    return Backendless.Data.of( InternalUser.class ).remove( this );
   }
 
   public Future<Long> removeAsync()
@@ -167,7 +167,7 @@ public class Agents
     else
     {
       Future<Long> future = new Future<Long>();
-      Backendless.Data.of( Agents.class ).remove( this, future );
+      Backendless.Data.of( InternalUser.class ).remove( this, future );
 
       return future;
     }
@@ -175,40 +175,15 @@ public class Agents
 
   public void removeAsync( AsyncCallback<Long> callback )
   {
-    Backendless.Data.of( Agents.class ).remove( this, callback );
+    Backendless.Data.of( InternalUser.class ).remove( this, callback );
   }
 
-  public static Agents findById( String id )
+  public static InternalUser findById(String id )
   {
-    return Backendless.Data.of( Agents.class ).findById( id );
+    return Backendless.Data.of( InternalUser.class ).findById( id );
   }
 
-  public static Future<Agents> findByIdAsync( String id )
-  {
-    if( Backendless.isAndroid() )
-    {
-      throw new UnsupportedOperationException( "Using this method is restricted in Android" );
-    }
-    else
-    {
-      Future<Agents> future = new Future<Agents>();
-      Backendless.Data.of( Agents.class ).findById( id, future );
-
-      return future;
-    }
-  }
-
-  public static void findByIdAsync( String id, AsyncCallback<Agents> callback )
-  {
-    Backendless.Data.of( Agents.class ).findById( id, callback );
-  }
-
-  public static Agents findFirst()
-  {
-    return Backendless.Data.of( Agents.class ).findFirst();
-  }
-
-  public static Future<Agents> findFirstAsync()
+  public static Future<InternalUser> findByIdAsync(String id )
   {
     if( Backendless.isAndroid() )
     {
@@ -216,24 +191,24 @@ public class Agents
     }
     else
     {
-      Future<Agents> future = new Future<Agents>();
-      Backendless.Data.of( Agents.class ).findFirst( future );
+      Future<InternalUser> future = new Future<InternalUser>();
+      Backendless.Data.of( InternalUser.class ).findById( id, future );
 
       return future;
     }
   }
 
-  public static void findFirstAsync( AsyncCallback<Agents> callback )
+  public static void findByIdAsync( String id, AsyncCallback<InternalUser> callback )
   {
-    Backendless.Data.of( Agents.class ).findFirst( callback );
+    Backendless.Data.of( InternalUser.class ).findById( id, callback );
   }
 
-  public static Agents findLast()
+  public static InternalUser findFirst()
   {
-    return Backendless.Data.of( Agents.class ).findLast();
+    return Backendless.Data.of( InternalUser.class ).findFirst();
   }
 
-  public static Future<Agents> findLastAsync()
+  public static Future<InternalUser> findFirstAsync()
   {
     if( Backendless.isAndroid() )
     {
@@ -241,24 +216,24 @@ public class Agents
     }
     else
     {
-      Future<Agents> future = new Future<Agents>();
-      Backendless.Data.of( Agents.class ).findLast( future );
+      Future<InternalUser> future = new Future<InternalUser>();
+      Backendless.Data.of( InternalUser.class ).findFirst( future );
 
       return future;
     }
   }
 
-  public static void findLastAsync( AsyncCallback<Agents> callback )
+  public static void findFirstAsync( AsyncCallback<InternalUser> callback )
   {
-    Backendless.Data.of( Agents.class ).findLast( callback );
+    Backendless.Data.of( InternalUser.class ).findFirst( callback );
   }
 
-  public static BackendlessCollection<Agents> find( BackendlessDataQuery query )
+  public static InternalUser findLast()
   {
-    return Backendless.Data.of( Agents.class ).find( query );
+    return Backendless.Data.of( InternalUser.class ).findLast();
   }
 
-  public static Future<BackendlessCollection<Agents>> findAsync( BackendlessDataQuery query )
+  public static Future<InternalUser> findLastAsync()
   {
     if( Backendless.isAndroid() )
     {
@@ -266,15 +241,40 @@ public class Agents
     }
     else
     {
-      Future<BackendlessCollection<Agents>> future = new Future<BackendlessCollection<Agents>>();
-      Backendless.Data.of( Agents.class ).find( query, future );
+      Future<InternalUser> future = new Future<InternalUser>();
+      Backendless.Data.of( InternalUser.class ).findLast( future );
 
       return future;
     }
   }
 
-  public static void findAsync( BackendlessDataQuery query, AsyncCallback<BackendlessCollection<Agents>> callback )
+  public static void findLastAsync( AsyncCallback<InternalUser> callback )
   {
-    Backendless.Data.of( Agents.class ).find( query, callback );
+    Backendless.Data.of( InternalUser.class ).findLast( callback );
+  }
+
+  public static BackendlessCollection<InternalUser> find(BackendlessDataQuery query )
+  {
+    return Backendless.Data.of( InternalUser.class ).find( query );
+  }
+
+  public static Future<BackendlessCollection<InternalUser>> findAsync(BackendlessDataQuery query )
+  {
+    if( Backendless.isAndroid() )
+    {
+      throw new UnsupportedOperationException( "Using this method is restricted in Android" );
+    }
+    else
+    {
+      Future<BackendlessCollection<InternalUser>> future = new Future<BackendlessCollection<InternalUser>>();
+      Backendless.Data.of( InternalUser.class ).find( query, future );
+
+      return future;
+    }
+  }
+
+  public static void findAsync( BackendlessDataQuery query, AsyncCallback<BackendlessCollection<InternalUser>> callback )
+  {
+    Backendless.Data.of( InternalUser.class ).find( query, callback );
   }
 }

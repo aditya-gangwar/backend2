@@ -63,7 +63,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 if (userType == DbConstants.USER_TYPE_MERCHANT) {
                     // fetch merchant object
-                    Merchants merchant = BackendOps.getMerchant(userId, true);
+                    Merchants merchant = BackendOps.getMerchant(userId, true, false);
                     mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
@@ -173,28 +173,30 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                     // device is in trusted list - nothing to be done
 
-                } else if (userType == DbConstants.USER_TYPE_AGENT) {
-                    Agents agent = BackendOps.getAgent(userId);
-                    mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
-                    mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
+                } else if (userType == DbConstants.USER_TYPE_AGENT ||
+                        userType == DbConstants.USER_TYPE_CC ||
+                        userType == DbConstants.USER_TYPE_CCNT) {
+                    InternalUser internalUser = BackendOps.getInternalUser(userId);
+                    mLogger.setProperties(internalUser.getId(), userType, internalUser.getDebugLogs());
+                    mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
                     // check admin status
-                    CommonUtils.checkAgentStatus(agent, mLogger);
+                    CommonUtils.checkInternalUserStatus(internalUser);
 
                     // fetch device data
                     InternalUserDevice deviceData = BackendOps.fetchInternalUserDevice(userId);
                     if(deviceData==null || deviceData.getTempId()==null || deviceData.getTempId().isEmpty()) {
                         // TODO : Raise critical alarm
-                        mLogger.fatal("In afterLogin for agent: Temp instance id not available: "+userId);
+                        mLogger.fatal("In afterLogin for internal user: Temp instance id not available: "+userId);
                         throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode1");
                     }
                     // If first login after register - store the provided 'instanceId' as trusted
-                    if(!agent.getFirst_login_ok()) {
+                    if(!internalUser.getFirst_login_ok()) {
                         mLogger.debug("First login case for agent user: "+userId);
                         if(deviceData.getInstanceId()==null || deviceData.getInstanceId().isEmpty()) {
                             deviceData.setInstanceId(deviceData.getTempId());
-                            agent.setFirst_login_ok(true);
-                            agent.setAdmin_remarks("Last state was new registered");
-                            BackendOps.updateAgent(agent);
+                            internalUser.setFirst_login_ok(true);
+                            internalUser.setAdmin_remarks("Last state was new registered");
+                            BackendOps.updateInternalUser(internalUser);
                         } else {
                             // invalid state
                             mLogger.fatal("In afterLogin for agent: Invalid state: "+userId);
@@ -223,7 +225,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     switch(userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
-                            Merchants merchant = BackendOps.getMerchant(login, false);
+                            Merchants merchant = BackendOps.getMerchant(login, false, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                             CommonUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
                             if(!merchant.getFirst_login_ok()) {
@@ -234,11 +236,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             }
                             break;
 
+                        case DbConstants.USER_TYPE_CC:
+                        case DbConstants.USER_TYPE_CCNT:
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
-                            Agents agent = BackendOps.getAgent(login);
-                            mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
-                            CommonUtils.handleWrongAttempt(login, agent, DbConstants.USER_TYPE_AGENT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
+                            InternalUser internalUser = BackendOps.getInternalUser(login);
+                            mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
+                            CommonUtils.handleWrongAttempt(login, internalUser, userType, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
                             break;
                     }
                 } else {

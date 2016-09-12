@@ -49,7 +49,7 @@ public class SmsConstants {
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family !! Your Merchant ID for login is %s. Happy Customers to you.";
-    public static String SMS_REG_AGENT = "Dear Agent - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
+    public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
     public static String SMS_MOBILE_CHANGE_CUSTOMER = "Dear Customer - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";

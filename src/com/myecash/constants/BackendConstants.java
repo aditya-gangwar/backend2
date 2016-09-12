@@ -14,7 +14,7 @@ public class BackendConstants {
     public static final boolean FORCED_DEBUG_LOGS = true;
 
 
-    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<agent id>,
+    // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<internal user id>,
     // <cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
     public static final int BACKEND_EDR_MAX_SIZE = 500;
@@ -40,7 +40,7 @@ public class BackendConstants {
     public static final int EDR_USER_ID_IDX = 4;
     public static final int EDR_USER_TYPE_IDX = 5;
     public static final int EDR_MCHNT_ID_IDX = 6;
-    public static final int EDR_AGENT_ID_IDX = 7;
+    public static final int EDR_INTERNAL_USER_ID_IDX = 7;
     public static final int EDR_CUST_ID_IDX = 8;
     public static final int EDR_CUST_CARD_ID_IDX = 9;
     public static final int EDR_RESULT_IDX = 10;
@@ -88,6 +88,8 @@ public class BackendConstants {
     public static final String ROLE_MERCHANT = "Merchant";
     public static final String ROLE_CUSTOMER = "Customer";
     public static final String ROLE_AGENT = "Agent";
+    public static final String ROLE_CC = "CustomerCare";
+    public static final String ROLE_CCNT = "CardController";
 
     public static final int DEVICE_INFO_VALID_SECS = 300;
 

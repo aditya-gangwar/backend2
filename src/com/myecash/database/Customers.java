@@ -23,6 +23,15 @@ public class Customers
   private CustomerCards membership_card;
   private String cardId;
   private Boolean first_login_ok;
+  private Boolean debugLogs;
+
+  public Boolean getDebugLogs() {
+    return debugLogs;
+  }
+
+  public void setDebugLogs(Boolean debugLogs) {
+    this.debugLogs = debugLogs;
+  }
 
   public Boolean getFirst_login_ok() {
     return first_login_ok;

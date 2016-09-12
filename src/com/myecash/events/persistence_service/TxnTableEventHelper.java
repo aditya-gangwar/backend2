@@ -3,7 +3,6 @@ package com.myecash.events.persistence_service;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
-import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.RunnerContext;
 import com.myecash.constants.*;
 import com.myecash.database.Customers;
@@ -61,7 +60,7 @@ public class TxnTableEventHelper {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(context.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             String merchantId = merchant.getAuto_id();
             mLogger.setProperties(merchantId,DbConstants.USER_TYPE_MERCHANT,merchant.getDebugLogs());
 

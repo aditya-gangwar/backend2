@@ -23,12 +23,6 @@ public class CommonUtils {
     private static final SimpleDateFormat mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
     private static final SimpleDateFormat mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
 
-    /*
-    public class CurrentUser {
-        public Object dataObject;
-        public int userType;
-    }*/
-
     public static String getHalfVisibleId(String userId) {
         // build half visible userid : XXXXX91535
         StringBuilder halfVisibleUserid = new StringBuilder();
@@ -180,7 +174,7 @@ public class CommonUtils {
         }
     }
 
-    public static void checkAgentStatus(Agents agent, MyLogger logger) {
+    public static void checkInternalUserStatus(InternalUser agent) {
         switch (agent.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_DISABLED, "");
@@ -233,6 +227,8 @@ public class CommonUtils {
                     confMaxAttempts = GlobalSettingsConstants.CUSTOMER_WRONG_ATTEMPT_LIMIT;
                     break;
                 case DbConstants.USER_TYPE_AGENT:
+                case DbConstants.USER_TYPE_CC:
+                case DbConstants.USER_TYPE_CCNT:
                     confMaxAttempts = GlobalSettingsConstants.INTERNAL_USER_WRONG_ATTEMPT_LIMIT;
                     break;
             }
@@ -247,8 +243,10 @@ public class CommonUtils {
                         case DbConstants.USER_TYPE_CUSTOMER:
                             setCustomerStatus((Customers) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType), logger);
                             break;
+                        case DbConstants.USER_TYPE_CC:
                         case DbConstants.USER_TYPE_AGENT:
-                            setAgentStatus((Agents) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType), logger);
+                        case DbConstants.USER_TYPE_CCNT:
+                            setAgentStatus((InternalUser) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType), logger);
                             break;
                     }
                 } catch (Exception e) {
@@ -296,12 +294,20 @@ public class CommonUtils {
         switch(userdId.length()) {
             case CommonConstants.MERCHANT_ID_LEN:
                 return DbConstants.USER_TYPE_MERCHANT;
-            case CommonConstants.AGENT_ID_LEN:
-                return DbConstants.USER_TYPE_AGENT;
+            case CommonConstants.INTERNAL_USER_ID_LEN:
+                if(userdId.startsWith(CommonConstants.PREFIX_AGENT_ID)) {
+                    return DbConstants.USER_TYPE_AGENT;
+                } else if(userdId.startsWith(CommonConstants.PREFIX_CC_ID)) {
+                    return DbConstants.USER_TYPE_CC;
+                } else if(userdId.startsWith(CommonConstants.PREFIX_CCNT_ID)) {
+                    return DbConstants.USER_TYPE_CCNT;
+                } else {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Invalid user type for id: "+userdId);
+                }
             case CommonConstants.MOBILE_NUM_LENGTH:
                 return DbConstants.USER_TYPE_CUSTOMER;
             default:
-                return -1;
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Invalid user type for id: "+userdId);
         }
     }
 
@@ -389,15 +395,15 @@ public class CommonUtils {
         }
     }
 
-    public static void setAgentStatus(Agents agent, int status, int reason, MyLogger logger) {
+    public static void setAgentStatus(InternalUser agent, int status, int reason, MyLogger logger) {
         if(status == agent.getAdmin_status()) {
             return;
         }
-        // update merchant account
+        // update account
         agent.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[agent.getAdmin_status()]);
         agent.setAdmin_status(status);
         agent.setStatus_reason(reason);
-        BackendOps.updateAgent(agent);
+        BackendOps.updateInternalUser(agent);
 
         // Generate SMS to inform the same
         String smsText = getAccStatusSmsText(agent.getMobile_num(), DbConstants.USER_TYPE_AGENT, reason);
@@ -460,9 +466,9 @@ public class CommonUtils {
                 merchantId;
     }
 
-    public static Object fetchCurrentUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger) {
+    public static Object fetchCurrentUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
 
-        BackendlessUser user = BackendOps.fetchUserByObjectId(objectId);
+        BackendlessUser user = BackendOps.fetchUserByObjectId(objectId, allChild);
         edr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
         int userType = (Integer)user.getProperty("user_type");
 
@@ -475,24 +481,28 @@ public class CommonUtils {
             case DbConstants.USER_TYPE_MERCHANT:
                 Merchants merchant = (Merchants) user.getProperty("merchant");
                 edr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
+                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, merchant.getDebugLogs());
                 // check if merchant is enabled
                 CommonUtils.checkMerchantStatus(merchant, logger);
                 return merchant;
 
-            case DbConstants.USER_TYPE_AGENT:
-                Agents agent = (Agents) user.getProperty("agent");
-                edr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
-                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
-                // check if agent is enabled
-                CommonUtils.checkAgentStatus(agent, logger);
-                return agent;
-
+            case DbConstants.USER_TYPE_CCNT:
             case DbConstants.USER_TYPE_CC:
-                break;
+            case DbConstants.USER_TYPE_AGENT:
+                InternalUser internalUser = (InternalUser) user.getProperty("internalUser");
+                edr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
+                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, internalUser.getDebugLogs());
+                // check if agent is enabled
+                CommonUtils.checkInternalUserStatus(internalUser);
+                return internalUser;
 
             case DbConstants.USER_TYPE_CUSTOMER:
-                break;
+                Customers customer = (Customers) user.getProperty("customer");
+                edr[BackendConstants.EDR_MCHNT_ID_IDX] = customer.getPrivate_id();
+                logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, customer.getDebugLogs());
+                // check if merchant is enabled
+                CommonUtils.checkCustomerStatus(customer, logger);
+                return customer;
         }
 
         return null;
@@ -558,7 +568,7 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass("MerchantOps", MerchantOps.class);
         Backendless.Data.mapTableToClass("WrongAttempts", WrongAttempts.class);
         Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
-        Backendless.Data.mapTableToClass("Agents", Agents.class);
+        Backendless.Data.mapTableToClass("InternalUser", InternalUser.class);
 
         Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
 
@@ -639,7 +649,7 @@ public class CommonUtils {
                 agent.setAdmin_status(DbConstants.USER_STATUS_LOCKED);
                 agent.setStatus_reason(getAccLockedReason(attemptType));
                 //agent.setStatus_update_time(new Date());
-                if( BackendOps.updateAgent(agent)==null ) {
+                if( BackendOps.updateInternalUser(agent)==null ) {
                     //TODO: generate alarm
                 }
                 // Generate SMS to inform the same

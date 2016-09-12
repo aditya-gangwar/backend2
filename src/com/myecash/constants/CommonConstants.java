@@ -8,6 +8,9 @@ import java.util.Locale;
  */
 public class CommonConstants {
 
+    /*
+     * Prefixes
+     */
     public static final String INDIA_MOBILE_COUNTRY_CODE = "91";
     /*
      * Due to some issue in backendless - the errorCode is not correctly transmitted to app
@@ -16,6 +19,10 @@ public class CommonConstants {
      * This prefix is added to the message to signal the same.
      */
     public static final String PREFIX_ERROR_CODE_AS_MSG = "ZZ/";
+    public static final String PREFIX_AGENT_ID = "1";
+    public static final String PREFIX_CC_ID = "2";
+    public static final String PREFIX_CCNT_ID = "3";
+
     /*
      * To use int as boolean
      */
@@ -47,7 +54,7 @@ public class CommonConstants {
      */
     public static final int MOBILE_NUM_LENGTH = 10;
     public static final int MERCHANT_ID_LEN = 8;
-    public static final int AGENT_ID_LEN = 7;
+    public static final int INTERNAL_USER_ID_LEN = 7;
     public static final int CUSTOMER_INTERNAL_ID_LEN = 6;
     public static final int CUSTOMER_CARDID_LEN = 11;
     // DOB in format 'DDMMYYYY'

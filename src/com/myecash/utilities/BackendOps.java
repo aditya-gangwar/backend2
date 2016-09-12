@@ -62,15 +62,18 @@ public class BackendOps {
         query.setWhereClause("user_id = '"+userid+"'");
 
         QueryOptions queryOptions = new QueryOptions();
-        if(userType == DbConstants.USER_TYPE_CUSTOMER) {
-            queryOptions.addRelated( "customer");
-            queryOptions.addRelated( "customer.membership_card");
-
-        } else if(userType == DbConstants.USER_TYPE_MERCHANT) {
-            queryOptions.addRelated( "merchant");
-            queryOptions.addRelated("merchant.trusted_devices");
-        } else if(userType == DbConstants.USER_TYPE_AGENT) {
-            queryOptions.addRelated( "agent");
+        switch (userType) {
+            case DbConstants.USER_TYPE_CUSTOMER:
+                queryOptions.addRelated( "customer");
+                queryOptions.addRelated( "customer.membership_card");
+                break;
+            case DbConstants.USER_TYPE_MERCHANT:
+                queryOptions.addRelated( "merchant");
+                queryOptions.addRelated("merchant.trusted_devices");
+            case DbConstants.USER_TYPE_AGENT:
+            case DbConstants.USER_TYPE_CC:
+            case DbConstants.USER_TYPE_CCNT:
+                queryOptions.addRelated( "internalUser");
         }
 
         query.setQueryOptions( queryOptions );
@@ -83,12 +86,21 @@ public class BackendOps {
         }
     }
 
-
-
-    public static BackendlessUser fetchUserByObjectId(String objectId) {
+    public static BackendlessUser fetchUserByObjectId(String objectId, boolean allChilds) {
         ArrayList<String> relationProps = new ArrayList<>();
+        // add all childs
         relationProps.add("merchant");
-        relationProps.add("agent");
+        relationProps.add("customer");
+        relationProps.add("internalUser");
+
+        if(allChilds) {
+            relationProps.add("merchant.trusted_devices");
+            relationProps.add("merchant.address");
+            relationProps.add("merchant.address.city");
+            relationProps.add("merchant.buss_category");
+            relationProps.add("customer.membership_card");
+        }
+
         return Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
         //BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
 
@@ -122,15 +134,22 @@ public class BackendOps {
     public static void loadMerchant(BackendlessUser user) {
         ArrayList<String> relationProps = new ArrayList<>();
         relationProps.add("merchant");
-        //relationProps.add("merchant.trusted_devices");
         Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
     }
 
-    public static Merchants getMerchant(String userId, boolean fetchTrustedDevices) {
+    public static Merchants getMerchant(String userId, boolean onlyTrustedDevicesChild, boolean allChild) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setWhereClause("auto_id = '"+userId+"'");
 
-        if(fetchTrustedDevices) {
+        if(allChild) {
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.addRelated("trusted_devices");
+            queryOptions.addRelated("merchant.address");
+            queryOptions.addRelated("merchant.address.city");
+            queryOptions.addRelated("merchant.buss_category");
+            query.setQueryOptions(queryOptions);
+
+        } else if(onlyTrustedDevicesChild) {
             QueryOptions queryOptions = new QueryOptions();
             queryOptions.addRelated("trusted_devices");
             query.setQueryOptions(queryOptions);
@@ -591,31 +610,31 @@ public class BackendOps {
     }
 
     /*
-     * Agent operations
+     * InternalUser operations
      */
-    public static Agents getAgent(String userId) {
+    public static InternalUser getInternalUser(String userId) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setWhereClause("id = '"+userId+"'");
 
-        BackendlessCollection<Agents> user = Backendless.Data.of( Agents.class ).find(query);
+        BackendlessCollection<InternalUser> user = Backendless.Data.of( InternalUser.class ).find(query);
         if( user.getTotalObjects() == 0) {
             // no data found
-            String errorMsg = "No agent found: "+userId;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
+            String errorMsg = "No internal user found: "+userId;
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
     }
 
-    public static void loadAgent(BackendlessUser user) {
+    public static void loadInternalUser(BackendlessUser user) {
         ArrayList<String> relationProps = new ArrayList<>();
-        relationProps.add("agent");
+        relationProps.add("internalUser");
 
         Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
     }
 
-    public static Agents updateAgent(Agents agent) {
-        return Backendless.Persistence.save(agent);
+    public static InternalUser updateInternalUser(InternalUser user) {
+        return Backendless.Persistence.save(user);
     }
 
     /*

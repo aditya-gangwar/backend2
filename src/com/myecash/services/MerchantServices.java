@@ -14,11 +14,9 @@ import com.myecash.utilities.TxnArchiver;
 import com.myecash.utilities.*;
 
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.StringJoiner;
-import java.util.TimeZone;
 
 /**
  * Created by adgangwa on 15-05-2016.
@@ -53,7 +51,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
@@ -137,7 +135,7 @@ public class MerchantServices implements IBackendlessService {
             mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             // update settings
             merchant.setCb_rate(cbRate);
@@ -200,7 +198,7 @@ public class MerchantServices implements IBackendlessService {
             Cashback cashback = null;
             if(data == null) {
                 Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                        DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                        DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
                 cashback = handleCashbackCreate(merchant, customer);
             } else {
                 cashback = data.get(0);
@@ -240,7 +238,7 @@ public class MerchantServices implements IBackendlessService {
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediatly after
             Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    null, mEdr, mLogger);
+                    null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Merchants merchant = null;
@@ -248,7 +246,7 @@ public class MerchantServices implements IBackendlessService {
                 merchant = (Merchants) userObj;
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // fetch merchant
-                merchant = BackendOps.getMerchant(mchntId, false);
+                merchant = BackendOps.getMerchant(mchntId, false, false);
             } else {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
             }
@@ -370,7 +368,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             // not checking for merchant account status
 
             // archive txns
@@ -411,7 +409,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             // fetch customer card object
             card = BackendOps.getCustomerCard(cardId);
@@ -510,7 +508,7 @@ public class MerchantServices implements IBackendlessService {
         try {
             // Fetch merchant
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             // Fetch customer user
             BackendlessUser custUser = BackendOps.fetchUser(customerId, DbConstants.USER_TYPE_CUSTOMER);

@@ -44,7 +44,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
             // fetch merchant
-            Merchants merchant = BackendOps.getMerchant(loginId, false);
+            Merchants merchant = BackendOps.getMerchant(loginId, false, false);
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
 

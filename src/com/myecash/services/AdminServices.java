@@ -5,7 +5,7 @@ import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.myecash.constants.*;
-import com.myecash.database.Agents;
+import com.myecash.database.InternalUser;
 import com.myecash.database.CardIdBatches;
 import com.myecash.database.MerchantIdBatches;
 import com.myecash.messaging.SmsConstants;
@@ -23,69 +23,20 @@ import java.util.List;
 public class AdminServices implements IBackendlessService {
 
     private MyLogger mLogger = new MyLogger("services.AdminServices");
-    //private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     /*
      * Public methods: Backend REST APIs
      */
-    public void registerAgent(String userId, String mobile, String name, String dob, String pwd) {
-        //initCommon();
-        try {
-            CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
-            mLogger.debug("In registerAgent: "+userId+": "+mobile);
-            //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
+    public void registerAgent(String argUserId, String mobile, String name, String dob, String pwd) {
+        registerInternalUser(argUserId, DbConstants.USER_TYPE_AGENT, mobile, name, dob, pwd);
+    }
 
-            // login using 'admin' user
-            BackendOps.loginUser("admin",pwd);
-            //mLogger.debug("Before2: "+ HeadersManager.getInstance().getHeaders().toString());
+    public void registerCCUser(String argUserId, String mobile, String name, String dob, String pwd) {
+        registerInternalUser(argUserId, DbConstants.USER_TYPE_CC, mobile, name, dob, pwd);
+    }
 
-            // Create agent object and register
-            Agents agent = new Agents();
-            agent.setId(userId);
-            agent.setMobile_num(mobile);
-            agent.setDob(dob);
-            agent.setName(name);
-            agent.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-            agent.setStatus_reason(DbConstants.ENABLED_ACTIVE);
-
-            BackendlessUser agentUser = new BackendlessUser();
-            agentUser.setProperty("user_id", userId);
-            agentUser.setPassword(dob);
-            agentUser.setProperty("user_type", DbConstants.USER_TYPE_AGENT);
-            agentUser.setProperty("agent",agent);
-
-            // print roles - for debug purpose
-            List<String> roles = Backendless.UserService.getUserRoles();
-            mLogger.debug("Roles: "+roles.toString());
-
-            // register the user
-            agentUser = BackendOps.registerUser(agentUser);
-            mLogger.debug("Agent Registration successful");
-
-            // assign role
-            try {
-                BackendOps.assignRole(userId, BackendConstants.ROLE_AGENT);
-            } catch (Exception e) {
-                // TODO: add as 'Major' alarm - user to be removed later manually
-                throw e;
-            }
-
-            // Send sms to the customer with PIN
-            String smsText = String.format(SmsConstants.SMS_REG_AGENT, userId);
-            if (!SmsHelper.sendSMS(smsText, mobile, mLogger)) {
-                // TODO: write to alarm table for retry later
-            }
-
-            // logout admin user
-            BackendOps.logoutUser();
-
-        } catch (Exception e) {
-            mLogger.error("Exception in registerAgent: "+e.toString());
-            BackendOps.logoutUser();
-            mLogger.flush();
-            throw e;
-        }
+    public void registerCCntUser(String argUserId, String mobile, String name, String dob, String pwd) {
+        registerInternalUser(argUserId, DbConstants.USER_TYPE_CCNT, mobile, name, dob, pwd);
     }
 
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
@@ -301,6 +252,94 @@ public class AdminServices implements IBackendlessService {
     /*
      * Private helper methods
      */
+    private void registerInternalUser(String argUserId, int userType, String mobile, String name, String dob, String pwd) {
+        //initCommon();
+        try {
+            CommonUtils.initTableToClassMappings();
+            mLogger.setProperties("admin", userType, true);
+            mLogger.debug("In registerInternalUser: "+argUserId+": "+mobile);
+            //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
+
+            String prefix = null;
+            switch (userType) {
+                case DbConstants.USER_TYPE_AGENT:
+                    prefix = CommonConstants.PREFIX_AGENT_ID;
+                    break;
+                case DbConstants.USER_TYPE_CC:
+                    prefix = CommonConstants.PREFIX_CC_ID;
+                    break;
+                case DbConstants.USER_TYPE_CCNT:
+                    prefix = CommonConstants.PREFIX_CCNT_ID;
+                    break;
+            }
+            String userId = prefix+argUserId;
+            if(userId.length() != CommonConstants.INTERNAL_USER_ID_LEN) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "User ID length is wrong");
+            }
+
+            // login using 'admin' user
+            BackendOps.loginUser("admin",pwd);
+            //mLogger.debug("Before2: "+ HeadersManager.getInstance().getHeaders().toString());
+
+            // Create agent object and register
+            InternalUser internalUser = new InternalUser();
+            internalUser.setId(userId);
+            internalUser.setMobile_num(mobile);
+            internalUser.setDob(dob);
+            internalUser.setName(name);
+            internalUser.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+            internalUser.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+
+            BackendlessUser backendlessUser = new BackendlessUser();
+            backendlessUser.setProperty("user_id", userId);
+            backendlessUser.setPassword(dob);
+            backendlessUser.setProperty("user_type", userType);
+            backendlessUser.setProperty("internalUser",internalUser);
+
+            // print roles - for debug purpose
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());
+
+            // register the user
+            backendlessUser = BackendOps.registerUser(backendlessUser);
+            mLogger.debug("Internal User Registration successful");
+
+            // assign role
+            String role = null;
+            switch (userType) {
+                case DbConstants.USER_TYPE_AGENT:
+                    role = BackendConstants.ROLE_AGENT;
+                    break;
+                case DbConstants.USER_TYPE_CC:
+                    role = BackendConstants.ROLE_CC;
+                    break;
+                case DbConstants.USER_TYPE_CCNT:
+                    role = BackendConstants.ROLE_CCNT;
+                    break;
+            }
+            try {
+                BackendOps.assignRole(userId, role);
+            } catch (Exception e) {
+                // TODO: add as 'Major' alarm - user to be removed later manually
+                throw e;
+            }
+
+            // Send sms to the customer with PIN
+            String smsText = String.format(SmsConstants.SMS_REG_INTERNAL_USER, userId);
+            if (!SmsHelper.sendSMS(smsText, mobile, mLogger)) {
+                // TODO: write to alarm table for retry later
+            }
+
+            // logout admin user
+            BackendOps.logoutUser();
+
+        } catch (Exception e) {
+            mLogger.error("Exception in registerInternalUser: "+e.toString());
+            BackendOps.logoutUser();
+            mLogger.flush();
+            throw e;
+        }
+    }
 }
 
     /*

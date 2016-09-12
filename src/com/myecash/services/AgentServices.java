@@ -7,7 +7,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import com.myecash.constants.*;
-import com.myecash.database.Agents;
+import com.myecash.database.InternalUser;
 import com.myecash.database.MerchantIdBatches;
 import com.myecash.database.Merchants;
 import com.myecash.messaging.SmsConstants;
@@ -48,10 +48,10 @@ public class AgentServices  implements IBackendlessService {
             //mLogger.flush();
 
             // Fetch agent
-            Agents agent = (Agents) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_AGENT, mEdr, mLogger);
+            InternalUser agent = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
             mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
-            mEdr[BackendConstants.EDR_AGENT_ID_IDX] = agent.getId();
+            mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = agent.getId();
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -180,7 +180,7 @@ public class AgentServices  implements IBackendlessService {
         // rollback to not-usable state
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         try {
-            Merchants merchant = BackendOps.getMerchant(mchntId, false);
+            Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
             merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
             merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
             merchant.setAdmin_remarks("Registration failed");

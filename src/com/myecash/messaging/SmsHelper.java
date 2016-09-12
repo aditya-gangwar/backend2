@@ -100,7 +100,7 @@ public class SmsHelper {
         return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
     }
 
-    public static String buildAgentPwdResetSMS(String userId, String password) {
+    public static String buildPwdResetSMS(String userId, String password) {
         return String.format(SmsConstants.SMS_PASSWD,userId,password);
     }
 }
