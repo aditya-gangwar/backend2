@@ -161,7 +161,7 @@ public class TxnArchiver
 
             // https://api.backendless.com/v1/data/bulk/Transaction0?where=merchant_id+%3D+%27AA0007%27+AND+create_time+%3C+%271467138600000%27+AND+archived%3Dfalse
             // Building URL without URI
-            StringBuffer sb = new StringBuffer("https://api.backendless.com/v1/data/bulk/");
+            StringBuffer sb = new StringBuffer(BackendConstants.BULK_API_URL);
             sb.append(txnTableName);
             sb.append("?where=");
             sb.append(whereClause);

@@ -6,6 +6,8 @@ package com.myecash.constants;
  */
 public class BackendConstants {
 
+    public static final String BULK_API_URL  = "http://52.66.158.227:8080/api/v1/data/bulk/";
+
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = true;
@@ -97,6 +99,10 @@ public class BackendConstants {
     public static final int CUSTOMER_ID_MOBILE = 0;
     public static final int CUSTOMER_ID_CARD = 1;
     public static final int CUSTOMER_ID_PRIVATE_ID = 2;
+
+    // Merchant id type to fetch record
+    public static final int MERCHANT_ID_MOBILE = 0;
+    public static final int MERCHANT_ID_AUTO_ID = 1;
 
     // Merchant id constants
     public static final int MERCHANT_ID_MAX_BATCH_ID_PER_RANGE = 99; // 2 digit batchId

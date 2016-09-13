@@ -347,6 +347,17 @@ public class CommonUtils {
         }
     }
 
+    public static int getMerchantIdType(String id) {
+        switch (id.length()) {
+            case CommonConstants.MOBILE_NUM_LENGTH:
+                return BackendConstants.MERCHANT_ID_MOBILE;
+            case CommonConstants.MERCHANT_ID_LEN:
+                return BackendConstants.MERCHANT_ID_AUTO_ID;
+            default:
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid Merchant ID: "+id);
+        }
+    }
+
     // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
     // like from 'USER_STATUS_NEW_REGISTERED' -> 'USER_STATUS_ACTIVE'
     public static void setMerchantStatus(Merchants merchant, int status, int reason, MyLogger logger) {
@@ -505,7 +516,7 @@ public class CommonUtils {
                 return customer;
         }
 
-        return null;
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Operation not allowed to this user");
     }
 
     public static BackendlessException getNewException(BackendlessException be) {
@@ -569,6 +580,9 @@ public class CommonUtils {
         Backendless.Data.mapTableToClass("WrongAttempts", WrongAttempts.class);
         Backendless.Data.mapTableToClass("MerchantDevice", MerchantDevice.class);
         Backendless.Data.mapTableToClass("InternalUser", InternalUser.class);
+        Backendless.Data.mapTableToClass("BusinessCategories", BusinessCategories.class);
+        Backendless.Data.mapTableToClass("Address", Address.class);
+        Backendless.Data.mapTableToClass("Cities", Cities.class);
 
         Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
 

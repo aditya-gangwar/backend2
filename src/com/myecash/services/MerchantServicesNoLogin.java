@@ -164,7 +164,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         }
     }
 
-    public void sendMerchantId(String mobileNum) {
+    public void sendMerchantId(String mobileNum, String deviceId) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
@@ -176,13 +176,21 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mLogger.debug("In sendMerchantId: " + mobileNum);
 
             // fetch user with the registered mobile number
-            Merchants merchant = BackendOps.getMerchantByMobile(mobileNum);
+            //Merchants merchant = BackendOps.getMerchantByMobile(mobileNum);
+            Merchants merchant = BackendOps.getMerchant(mobileNum, true, false);
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             // check admin status
             CommonUtils.checkMerchantStatus(merchant, mLogger);
 
-            // Not checking for trusted device
+            // Check if from trusted device
+            // don't check for first time after merchant is registered
+            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+            if (merchant.getFirst_login_ok()) {
+                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                }
+            }
 
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();

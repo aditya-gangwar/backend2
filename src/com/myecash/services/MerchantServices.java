@@ -16,6 +16,7 @@ import com.myecash.utilities.*;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -34,7 +35,7 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Merchant operations
      */
-    public void changeMobile(String currentMobile, String newMobile, String otp) {
+    public Merchants changeMobile(String currentMobile, String newMobile, String otp) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
@@ -47,11 +48,11 @@ public class MerchantServices implements IBackendlessService {
         boolean positiveException = false;
 
         try {
-            //mLogger.debug("In changeMobile: " + currentMobile + "," + newMobile);
+            mLogger.debug("In changeMobile: " + currentMobile + "," + newMobile);
 
-            // Fetch merchant
+            // Fetch merchant with all child - as the same instance is to be returned too
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
 
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
@@ -109,6 +110,7 @@ public class MerchantServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return merchant;
 
         } catch(Exception e) {
             CommonUtils.handleException(e,positiveException,mLogger,mEdr);
@@ -119,7 +121,7 @@ public class MerchantServices implements IBackendlessService {
     }
 
 
-    public void updateSettings(String cbRate, boolean addClEnabled, String email) {
+    public Merchants updateSettings(String cbRate, boolean addClEnabled, String email) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
@@ -134,17 +136,64 @@ public class MerchantServices implements IBackendlessService {
             mLogger.debug("Before context: "+InvocationContext.asString());
             mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
+            // Fetch merchant with all child - as the same instance is to be returned too
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
 
             // update settings
             merchant.setCb_rate(cbRate);
             merchant.setCl_add_enable(addClEnabled);
             merchant.setEmail(email);
-            BackendOps.updateMerchant(merchant);
+            merchant = BackendOps.updateMerchant(merchant);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return merchant;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public Merchants deleteTrustedDevice(String deviceId) {
+        CommonUtils.initTableToClassMappings();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "deleteTrustedDevice";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = deviceId;
+
+        try {
+            mLogger.debug("In changeMobile: " + deviceId);
+
+            // Fetch merchant with all child - as the same instance is to be returned too
+            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
+
+            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+            if(trustedDevices.size() <= 1) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "You are not allowed to delete last device");
+            }
+
+            // find matching object
+            MerchantDevice matched = null;
+            for (MerchantDevice device : trustedDevices) {
+                if (device.getDevice_id().equals(deviceId)) {
+                    matched = device;
+                }
+            }
+            // delete device
+            if(matched!=null){
+                BackendOps.deleteMchntDevice(matched);
+            } else {
+                throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, "No such trusted device: "+deviceId);
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return merchant;
 
         } catch(Exception e) {
             CommonUtils.handleException(e,false,mLogger,mEdr);
@@ -167,7 +216,27 @@ public class MerchantServices implements IBackendlessService {
                 merchantCbTable+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 customerId;
 
-        mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
+        //mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
+        // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
+        // But check immediately after
+        Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                null, mEdr, mLogger, false);
+        int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+        Merchants merchant = null;
+        if(userType==DbConstants.USER_TYPE_MERCHANT) {
+            merchant = (Merchants) userObj;
+            // check to ensure that merchant is request CB for itself only
+            if (!merchant.getAuto_id().equals(merchantId)) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,"Invalid merchant id provided: " + merchantId);
+            }
+            merchantCbTable = merchant.getCashback_table();
+
+        } else if(userType==DbConstants.USER_TYPE_CC) {
+            // use provided merchant values
+        } else {
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+        }
 
         boolean positiveException = false;
         int customerIdType = CommonUtils.getCustomerIdType(customerId);
@@ -197,12 +266,12 @@ public class MerchantServices implements IBackendlessService {
             ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchantCbTable, false, false);
             Cashback cashback = null;
             if(data == null) {
-                Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                        DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+                //Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                //        DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
                 cashback = handleCashbackCreate(merchant, customer);
             } else {
                 cashback = data.get(0);
-                mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = cashback.getMerchant_id();
+                //mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = cashback.getMerchant_id();
             }
 
             // Cashback details to be returned - even if customer account/card is disabled/locked

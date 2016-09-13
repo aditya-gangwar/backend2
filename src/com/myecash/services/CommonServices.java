@@ -124,7 +124,8 @@ public class CommonServices implements IBackendlessService {
             } else if (userType == DbConstants.USER_TYPE_CC ||
                     userType == DbConstants.USER_TYPE_AGENT) {
                 // fetch merchant
-                merchant = BackendOps.getMerchant(merchantId, false, true);
+                merchant = BackendOps.getMerchant(merchantId, true, true);
+                mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             } else {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
             }

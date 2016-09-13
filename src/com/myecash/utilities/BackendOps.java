@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.myecash.utilities.CommonUtils.getMerchantIdType;
+
 /**
  * Created by adgangwa on 15-05-2016.
  */
@@ -139,14 +141,19 @@ public class BackendOps {
 
     public static Merchants getMerchant(String userId, boolean onlyTrustedDevicesChild, boolean allChild) {
         BackendlessDataQuery query = new BackendlessDataQuery();
-        query.setWhereClause("auto_id = '"+userId+"'");
+
+        if(getMerchantIdType(userId)==BackendConstants.MERCHANT_ID_AUTO_ID) {
+            query.setWhereClause("auto_id = '"+userId+"'");
+        } else {
+            query.setWhereClause("mobile_num = '"+userId+"'");
+        }
 
         if(allChild) {
             QueryOptions queryOptions = new QueryOptions();
             queryOptions.addRelated("trusted_devices");
-            queryOptions.addRelated("merchant.address");
-            queryOptions.addRelated("merchant.address.city");
-            queryOptions.addRelated("merchant.buss_category");
+            queryOptions.addRelated("address");
+            queryOptions.addRelated("address.city");
+            queryOptions.addRelated("buss_category");
             query.setQueryOptions(queryOptions);
 
         } else if(onlyTrustedDevicesChild) {
@@ -164,6 +171,7 @@ public class BackendOps {
         }
     }
 
+    /*
     public static Merchants getMerchantByMobile(String mobileNum) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setWhereClause("mobile_num = '"+mobileNum+"'");
@@ -175,7 +183,7 @@ public class BackendOps {
         } else {
             return user.getData().get(0);
         }
-    }
+    }*/
 
     public static ArrayList<Merchants> fetchMerchants(String whereClause) {
         BackendlessDataQuery query = new BackendlessDataQuery();
@@ -468,6 +476,10 @@ public class BackendOps {
             BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
             throw new BackendlessException(fault);
         }
+    }
+
+    public static void deleteMchntDevice(MerchantDevice device) {
+        Backendless.Persistence.of( MerchantDevice.class ).remove( device );
     }
 
     /*
