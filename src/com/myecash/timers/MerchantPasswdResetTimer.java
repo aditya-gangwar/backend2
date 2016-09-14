@@ -4,7 +4,6 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.logging.Logger;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import com.myecash.constants.*;
 import com.myecash.database.MerchantOps;
@@ -80,7 +79,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
     private void handlePasswdReset(MerchantOps op) {
         // fetch user with the given id with related merchant object
-        BackendlessUser user = BackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT);
+        BackendlessUser user = BackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT, false);
         Merchants merchant = (Merchants) user.getProperty("merchant");
         // check admin status
         CommonUtils.checkMerchantStatus(merchant, mLogger);

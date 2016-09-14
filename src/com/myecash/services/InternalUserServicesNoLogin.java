@@ -82,7 +82,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
 
             // fetch user with the given id with related object
             // taking USER_TYPE_AGENT default - doesnt matter as such
-            BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_AGENT);
+            BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_AGENT, false);
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_AGENT &&
                     userType != DbConstants.USER_TYPE_CC &&

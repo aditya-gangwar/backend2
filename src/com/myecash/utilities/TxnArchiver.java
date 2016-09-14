@@ -271,7 +271,7 @@ public class TxnArchiver
 
             /*
              * Format:
-             *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,
+             *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,used_card_id
              *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent,cpin\n
              * The sequence in format should match 'index constants' defined in CommonConstants class
              */
@@ -281,6 +281,7 @@ public class TxnArchiver
             sb.append(mLastFetchMerchant.getName()).append(CommonConstants.CSV_DELIMETER);
             sb.append(txn.getCustomer_id()).append(CommonConstants.CSV_DELIMETER);
             sb.append(txn.getCust_private_id()).append(CommonConstants.CSV_DELIMETER);
+            sb.append(txn.getUsedCardId()).append(CommonConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getTotal_billed())).append(CommonConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCb_billed())).append(CommonConstants.CSV_DELIMETER);
             sb.append(String.valueOf(txn.getCl_debit())).append(CommonConstants.CSV_DELIMETER);

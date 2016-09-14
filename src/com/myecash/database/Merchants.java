@@ -34,6 +34,15 @@ public class Merchants
   private Integer cl_credit_limit_for_pin;
   private Boolean first_login_ok;
   private Boolean debugLogs;
+  private java.util.Date lastLogin;
+
+  public java.util.Date getLastLogin() {
+    return lastLogin;
+  }
+
+  public void setLastLogin(java.util.Date lastLogin) {
+    this.lastLogin = lastLogin;
+  }
 
   public Boolean getDebugLogs() {
     return debugLogs;

@@ -59,7 +59,7 @@ public class BackendOps {
         return Backendless.UserService.update( user );
     }
 
-    public static BackendlessUser fetchUser(String userid, int userType) {
+    public static BackendlessUser fetchUser(String userid, int userType, boolean allChilds) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setWhereClause("user_id = '"+userid+"'");
 
@@ -72,6 +72,11 @@ public class BackendOps {
             case DbConstants.USER_TYPE_MERCHANT:
                 queryOptions.addRelated( "merchant");
                 queryOptions.addRelated("merchant.trusted_devices");
+                if(allChilds) {
+                    queryOptions.addRelated("merchant.address");
+                    queryOptions.addRelated("merchant.address.city");
+                    queryOptions.addRelated("merchant.buss_category");
+                }
             case DbConstants.USER_TYPE_AGENT:
             case DbConstants.USER_TYPE_CC:
             case DbConstants.USER_TYPE_CCNT:

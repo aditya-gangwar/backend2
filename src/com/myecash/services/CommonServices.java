@@ -14,6 +14,8 @@ import com.myecash.utilities.BackendOps;
 import com.myecash.utilities.CommonUtils;
 import com.myecash.utilities.MyLogger;
 
+import java.util.Date;
+
 /**
  * Created by adgangwa on 19-07-2016.
  */
@@ -123,8 +125,11 @@ public class CommonServices implements IBackendlessService {
                 }
             } else if (userType == DbConstants.USER_TYPE_CC ||
                     userType == DbConstants.USER_TYPE_AGENT) {
-                // fetch merchant
-                merchant = BackendOps.getMerchant(merchantId, true, true);
+                // fetching merchant user instead of direct merchant object - for lastLogin value
+                BackendlessUser user = BackendOps.fetchUser(merchantId, DbConstants.USER_TYPE_MERCHANT, true);
+                merchant = (Merchants)user.getProperty("merchant");
+                merchant.setLastLogin((Date)user.getProperty("lastLogin"));
+                //merchant = BackendOps.getMerchant(merchantId, true, true);
                 mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             } else {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");

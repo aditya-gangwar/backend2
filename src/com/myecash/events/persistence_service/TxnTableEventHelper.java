@@ -70,10 +70,6 @@ public class TxnTableEventHelper {
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerId;
             // check if customer is enabled
             CommonUtils.checkCustomerStatus(customer, mLogger);
-            // check that card is not blocked
-            // TODO: check this if this is really required - if not, avoid fetching card object also
-            mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = customer.getCardId();
-            CommonUtils.checkCardForUse(customer.getMembership_card());
 
             // verify PIN
             if(CommonUtils.customerPinRequired(merchant, transaction)) {
@@ -90,6 +86,22 @@ public class TxnTableEventHelper {
             } else {
                 transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
             }
+
+            // check if card required and provided and matches
+            if(CommonUtils.customerCardRequired(transaction)) {
+                if(transaction.getUsedCardId()!=null) {
+                    if(!transaction.getUsedCardId().equals(customer.getCardId())) {
+                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Card Mismatch: " + customerId);
+                    }
+                } else {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Card Missing: " + customerId);
+                }
+            }
+
+            // check that card is not blocked
+            // TODO: check this if this is really required - if not, avoid fetching card object also
+            mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = customer.getCardId();
+            CommonUtils.checkCardForUse(customer.getMembership_card());
 
             // Fetch cashback record
             String whereClause = "rowid = '" + customer.getPrivate_id() + merchantId + "'";

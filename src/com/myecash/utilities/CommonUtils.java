@@ -321,6 +321,11 @@ public class CommonUtils {
                 || txn.getCb_debit() > cb_debit_threshold );
     }
 
+    public static boolean customerCardRequired(Transaction txn) {
+        return ( (txn.getCl_debit()>0 && GlobalSettingsConstants.ACC_DEBIT_CARD_REQ>0) ||
+                (txn.getCb_debit()>0 && GlobalSettingsConstants.ACC_DEBIT_CARD_REQ>0) );
+    }
+
     public static boolean isTrustedDevice(String deviceId, List<MerchantDevice> trustedDevices) {
         //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
         if (trustedDevices != null &&
@@ -491,6 +496,7 @@ public class CommonUtils {
         switch (userType) {
             case DbConstants.USER_TYPE_MERCHANT:
                 Merchants merchant = (Merchants) user.getProperty("merchant");
+                merchant.setLastLogin((Date)user.getProperty("lastLogin"));
                 edr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                 logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, merchant.getDebugLogs());
                 // check if merchant is enabled

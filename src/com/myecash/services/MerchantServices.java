@@ -580,7 +580,7 @@ public class MerchantServices implements IBackendlessService {
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             // Fetch customer user
-            BackendlessUser custUser = BackendOps.fetchUser(customerId, DbConstants.USER_TYPE_CUSTOMER);
+            BackendlessUser custUser = BackendOps.fetchUser(customerId, DbConstants.USER_TYPE_CUSTOMER, false);
             Customers customer = (Customers) custUser.getProperty("customer");
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
             String cardId = customer.getMembership_card().getCard_id();
