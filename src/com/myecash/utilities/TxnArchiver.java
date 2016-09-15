@@ -167,6 +167,7 @@ public class TxnArchiver
             sb.append(whereClause);
 
             URL url = new URL(sb.toString());
+            mLogger.debug("Txn status bulk URL: "+url.toString());
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);

@@ -108,9 +108,9 @@ public class DbConstants {
 
     // GlobalSettings table - 'txn_image_capture_mode' column values
     public static final int TXN_IMAGE_CAPTURE_ALWAYS = 0;
-    public static final int TXN_IMAGE_CAPTURE_NO_PIN = 1;
-    public static final int TXN_IMAGE_CAPTURE_ALL_DEBIT = 2;
-    public static final int TXN_IMAGE_CAPTURE_NEVER = 3;
+    // only when 'card is mandatory' based on txn type and amounts
+    public static final int TXN_IMAGE_CAPTURE_CARD_REQUIRED = 1;
+    public static final int TXN_IMAGE_CAPTURE_NEVER = 2;
 
     // GlobalSettings table - 'value_datatype' column values
     public static final int DATATYPE_INT = 1;

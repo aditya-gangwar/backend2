@@ -6,7 +6,10 @@ package com.myecash.constants;
  */
 public class BackendConstants {
 
-    public static final String BULK_API_URL  = "http://52.66.158.227:8080/api/v1/data/bulk/";
+    public static final String BULK_API_URL  = "http://52.66.91.209:8080/api/v1/data/bulk/";
+    public static final String APP_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
+    public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
+    //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
 
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
@@ -76,10 +79,6 @@ public class BackendConstants {
 
     public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 10;
     public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 50;
-
-    public static final String APP_ID = "09667F8B-98A7-E6B9-FFEB-B2B6EE831A00";
-    public static final String SECRET_KEY = "95971CBD-BADD-C61D-FF32-559664AE4F00";
-    //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
 
     public static final int LOG_POLICY_NUM_MSGS = 1;
     public static final int LOG_POLICY_FREQ_SECS = 0;

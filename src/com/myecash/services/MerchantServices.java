@@ -224,6 +224,7 @@ public class MerchantServices implements IBackendlessService {
         int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
         Merchants merchant = null;
+        boolean byCCUser = false;
         if(userType==DbConstants.USER_TYPE_MERCHANT) {
             merchant = (Merchants) userObj;
             // check to ensure that merchant is request CB for itself only
@@ -234,6 +235,7 @@ public class MerchantServices implements IBackendlessService {
 
         } else if(userType==DbConstants.USER_TYPE_CC) {
             // use provided merchant values
+            byCCUser = true;
         } else {
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
         }
@@ -279,7 +281,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Add 'customer details' in the cashback object to be returned
             // these details are not stored in DB along with cashback object
-            cashback.setCustomer_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
+            cashback.setCustomer_details(buildCustomerDetails(customer, byCCUser, CommonConstants.CSV_SUB_DELIMETER));
             stripCashback(cashback);
 
             // no exception - means function execution success

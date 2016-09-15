@@ -3,18 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="2787f8a4-2254-4a73-9b45-f8008f85f2a3" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/runner.properties" afterPath="$PROJECT_DIR$/bin/runner.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java" afterPath="$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/database/Merchants.java" afterPath="$PROJECT_DIR$/src/com/myecash/database/Merchants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/database/Transaction.java" afterPath="$PROJECT_DIR$/src/com/myecash/database/Transaction.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/events/persistence_service/TxnTableEventHelper.java" afterPath="$PROJECT_DIR$/src/com/myecash/events/persistence_service/TxnTableEventHelper.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/services/CommonServices.java" afterPath="$PROJECT_DIR$/src/com/myecash/services/CommonServices.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/services/InternalUserServicesNoLogin.java" afterPath="$PROJECT_DIR$/src/com/myecash/services/InternalUserServicesNoLogin.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java" afterPath="$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java" afterPath="$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java" afterPath="$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/services/MerchantServicesNoLogin.java" afterPath="$PROJECT_DIR$/src/com/myecash/services/MerchantServicesNoLogin.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/timers/MerchantPasswdResetTimer.java" afterPath="$PROJECT_DIR$/src/com/myecash/timers/MerchantPasswdResetTimer.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/utilities/BackendOps.java" afterPath="$PROJECT_DIR$/src/com/myecash/utilities/BackendOps.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java" afterPath="$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/myecash/utilities/TxnArchiver.java" afterPath="$PROJECT_DIR$/src/com/myecash/utilities/TxnArchiver.java" />
     </list>
     <ignored path="backend2.iws" />
@@ -37,84 +28,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="MerchantServices.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5614">
-              <caret line="583" column="28" selection-start-line="583" selection-start-column="28" selection-end-line="583" selection-end-column="28" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BackendResponseCodes.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendResponseCodes.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="278">
-              <caret line="31" column="50" selection-start-line="31" selection-start-column="31" selection-end-line="31" selection-end-column="50" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BackendOps.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/BackendOps.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="127">
-              <caret line="61" column="43" selection-start-line="61" selection-start-column="34" selection-end-line="61" selection-end-column="43" />
-              <folding>
-                <element signature="e#8602#8603#0" expanded="true" />
-                <element signature="e#8663#8664#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MerchantServicesNoLogin.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/services/MerchantServicesNoLogin.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="573">
-              <caret line="192" column="13" selection-start-line="187" selection-start-column="12" selection-end-line="192" selection-end-column="13" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CommonUtils.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="412">
-              <caret line="323" column="46" selection-start-line="323" selection-start-column="26" selection-end-line="323" selection-end-column="46" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GlobalSettingsConstants.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CommonServices.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/services/CommonServices.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="287">
-              <caret line="115" column="51" selection-start-line="115" selection-start-column="51" selection-end-line="115" selection-end-column="51" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AdminServices.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/myecash/services/AdminServices.java">
+      <file leaf-file-name="BackendConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="170">
-              <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+              <caret line="10" column="81" selection-start-line="10" selection-start-column="81" selection-end-line="10" selection-end-column="81" />
               <folding />
             </state>
           </provider>
@@ -123,8 +41,8 @@
       <file leaf-file-name="TxnArchiver.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/TxnArchiver.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="274" column="94" selection-start-line="274" selection-start-column="89" selection-end-line="274" selection-end-column="94" />
+            <state relative-caret-position="327">
+              <caret line="275" column="19" selection-start-line="275" selection-start-column="19" selection-end-line="275" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -183,7 +101,6 @@
         <option value="$PROJECT_DIR$/src/com/myecash/database/Agents.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/database/InternalUser.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/constants/CommonConstants.java" />
-        <option value="$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/messaging/SmsConstants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/services/AdminServices.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/database/Customers.java" />
@@ -192,8 +109,6 @@
         <option value="$PROJECT_DIR$/src/com/myecash/messaging/SmsHelper.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/services/InternalUserServicesNoLogin.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/services/MerchantServicesNoLogin.java" />
-        <option value="$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java" />
-        <option value="$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/utilities/BackendOps.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/database/Merchants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/services/CommonServices.java" />
@@ -201,7 +116,10 @@
         <option value="$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/events/persistence_service/TxnTableEventHelper.java" />
+        <option value="$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java" />
+        <option value="$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java" />
         <option value="$PROJECT_DIR$/src/com/myecash/utilities/TxnArchiver.java" />
+        <option value="$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java" />
       </list>
     </option>
   </component>
@@ -798,13 +716,6 @@
       <option name="presentableId" value="Default" />
       <updated>1461006506427</updated>
     </task>
-    <task id="LOCAL-00006" summary="22 May">
-      <created>1464031703850</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1464031703850</updated>
-    </task>
     <task id="LOCAL-00007" summary="22 May">
       <created>1464298859780</created>
       <option name="number" value="00007" />
@@ -1141,7 +1052,14 @@
       <option name="project" value="LOCAL" />
       <updated>1473805197133</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="15 Sep">
+      <created>1473890708361</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1473890708362</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -1214,7 +1132,6 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="31 May" />
     <MESSAGE value="2 June" />
     <MESSAGE value="6 June" />
     <MESSAGE value="10 June" />
@@ -1239,7 +1156,8 @@
     <MESSAGE value="06 Sep" />
     <MESSAGE value="09 Sep" />
     <MESSAGE value="13 Sep" />
-    <option name="LAST_COMMIT_MESSAGE" value="13 Sep" />
+    <MESSAGE value="15 Sep" />
+    <option name="LAST_COMMIT_MESSAGE" value="15 Sep" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1555,18 +1473,34 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java">
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/DbConstantsBackend.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="44" column="28" selection-start-line="44" selection-start-column="28" selection-end-line="44" selection-end-column="28" />
+        <state relative-caret-position="267">
+          <caret line="19" column="56" selection-start-line="19" selection-start-column="31" selection-end-line="19" selection-end-column="56" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/services/AdminServices.java">
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+        <state relative-caret-position="446">
+          <caret line="284" column="36" selection-start-line="284" selection-start-column="36" selection-end-line="284" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="573">
+          <caret line="113" column="0" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendResponseCodes.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="278">
+          <caret line="31" column="50" selection-start-line="31" selection-start-column="31" selection-end-line="31" selection-end-column="50" />
           <folding />
         </state>
       </provider>
@@ -1582,14 +1516,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/database/Merchants.java">
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="45" column="0" selection-start-line="36" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
-          <folding>
-            <element signature="e#1313#1314#0" expanded="true" />
-            <element signature="e#1349#1350#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="204">
+          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1601,79 +1532,58 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/DbConstantsBackend.java">
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/services/AdminServices.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="267">
-          <caret line="19" column="56" selection-start-line="19" selection-start-column="31" selection-end-line="19" selection-end-column="56" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/database/Transaction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="522">
-          <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
-          <folding>
-            <element signature="e#909#910#0" expanded="true" />
-            <element signature="e#936#937#0" expanded="true" />
-            <element signature="e#986#987#0" expanded="true" />
-            <element signature="e#1024#1025#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/DbConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="556">
-          <caret line="115" column="40" selection-start-line="115" selection-start-column="28" selection-end-line="115" selection-end-column="40" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/GlobalSettingsConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="412">
-          <caret line="323" column="46" selection-start-line="323" selection-start-column="26" selection-end-line="323" selection-end-column="46" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/services/MerchantServices.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5614">
-          <caret line="583" column="28" selection-start-line="583" selection-start-column="28" selection-end-line="583" selection-end-column="28" />
+        <state relative-caret-position="170">
+          <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/myecash/events/persistence_service/TxnTableEventHelper.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1428">
-          <caret line="103" column="0" selection-start-line="103" selection-start-column="0" selection-end-line="103" selection-end-column="0" />
+        <state relative-caret-position="12">
+          <caret line="63" column="6" selection-start-line="63" selection-start-column="6" selection-end-line="63" selection-end-column="6" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendResponseCodes.java">
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/CommonUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="278">
-          <caret line="31" column="50" selection-start-line="31" selection-start-column="31" selection-end-line="31" selection-end-column="50" />
+        <state relative-caret-position="242">
+          <caret line="323" column="26" selection-start-line="323" selection-start-column="26" selection-end-line="323" selection-end-column="26" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/database/Merchants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="36" column="32" selection-start-line="36" selection-start-column="32" selection-end-line="36" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/database/Transaction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="14" column="32" selection-start-line="14" selection-start-column="17" selection-end-line="14" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/myecash/constants/BackendConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="81" selection-start-line="10" selection-start-column="81" selection-end-line="10" selection-end-column="81" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/myecash/utilities/TxnArchiver.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="274" column="94" selection-start-line="274" selection-start-column="89" selection-end-line="274" selection-end-column="94" />
+        <state relative-caret-position="327">
+          <caret line="275" column="19" selection-start-line="275" selection-start-column="19" selection-end-line="275" selection-end-column="19" />
           <folding />
         </state>
       </provider>
