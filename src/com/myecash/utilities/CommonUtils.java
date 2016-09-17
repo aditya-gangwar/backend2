@@ -316,9 +316,12 @@ public class CommonUtils {
         int cl_debit_threshold = merchant.getCl_debit_limit_for_pin()==null ? GlobalSettingsConstants.CL_DEBIT_LIMIT_FOR_PIN : merchant.getCl_debit_limit_for_pin();
         int cb_debit_threshold = merchant.getCb_debit_limit_for_pin()==null ? GlobalSettingsConstants.CB_DEBIT_LIMIT_FOR_PIN : merchant.getCb_debit_limit_for_pin();
 
-        return (txn.getCl_credit() > cl_credit_threshold
-                || txn.getCl_debit() > cl_debit_threshold
-                || txn.getCb_debit() > cb_debit_threshold );
+        int higher_debit_threshold = Math.max(cl_debit_threshold, cb_debit_threshold);
+
+        return (txn.getCl_credit() > cl_credit_threshold ||
+                txn.getCl_debit() > cl_debit_threshold ||
+                txn.getCb_debit() > cb_debit_threshold ||
+                (cb_debit_threshold+cl_debit_threshold) > higher_debit_threshold);
     }
 
     public static boolean customerCardRequired(Transaction txn) {
@@ -496,7 +499,7 @@ public class CommonUtils {
         switch (userType) {
             case DbConstants.USER_TYPE_MERCHANT:
                 Merchants merchant = (Merchants) user.getProperty("merchant");
-                merchant.setLastLogin((Date)user.getProperty("lastLogin"));
+                //merchant.setLastLogin((Date)user.getProperty("lastLogin"));
                 edr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                 logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, merchant.getDebugLogs());
                 // check if merchant is enabled

@@ -37,11 +37,11 @@ public class GlobalSettingsConstants {
     public static final int CUSTOMER_CASH_MAX_LIMIT = 500;
 
     // Corresponding 'cl_credit_limit_for_pin' in GlobalSettings table
-    public static final int CL_CREDIT_LIMIT_FOR_PIN = 0;
+    public static final int CL_CREDIT_LIMIT_FOR_PIN = 10;
     // Corresponding 'cl_debit_limit_for_pin' in GlobalSettings table
-    public static final int CL_DEBIT_LIMIT_FOR_PIN = 0;
+    public static final int CL_DEBIT_LIMIT_FOR_PIN = 10;
     // Corresponding 'cb_debit_limit_for_pin' in GlobalSettings table
-    public static final int CB_DEBIT_LIMIT_FOR_PIN = 0;
+    public static final int CB_DEBIT_LIMIT_FOR_PIN = 50;
 
     // Corresponding to 'mchnt_stats_no_refresh_hours' in GlobalSettings table
     public static final int MCHNT_STATS_NO_REFRESH_HOURS = 1;

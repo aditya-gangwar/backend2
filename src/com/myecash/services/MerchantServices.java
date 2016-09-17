@@ -432,7 +432,7 @@ public class MerchantServices implements IBackendlessService {
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMerchantStats";
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "archiveTxns";
 
         try {
             //mLogger.debug("In archiveTxns");

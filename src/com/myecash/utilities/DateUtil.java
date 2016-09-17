@@ -28,12 +28,21 @@ public class DateUtil {
         this(new Date());
     }
 
+    public DateUtil(String tz) {
+        this(new Date(), TimeZone.getTimeZone(tz));
+    }
+
     /** Inizialize a new instance with the given date */
     public DateUtil(Date d) {
         cal = Calendar.getInstance();
         cal.setTime(d);
     }
 
+    public DateUtil(Date d, TimeZone tz) {
+        cal = Calendar.getInstance();
+        cal.setTimeZone(tz);
+        cal.setTime(d);
+    }
     //---------------------------------------------------------- Public methods
 
     /** Set a new time */

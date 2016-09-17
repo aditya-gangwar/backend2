@@ -128,7 +128,7 @@ public class CommonServices implements IBackendlessService {
                 // fetching merchant user instead of direct merchant object - for lastLogin value
                 BackendlessUser user = BackendOps.fetchUser(merchantId, DbConstants.USER_TYPE_MERCHANT, true);
                 merchant = (Merchants)user.getProperty("merchant");
-                merchant.setLastLogin((Date)user.getProperty("lastLogin"));
+                //merchant.setLastLogin((Date)user.getProperty("lastLogin"));
                 //merchant = BackendOps.getMerchant(merchantId, true, true);
                 mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             } else {

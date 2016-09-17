@@ -301,8 +301,8 @@ public class TxnArchiver
         // for particular merchant
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
-        DateUtil todayMidnight = new DateUtil();
-        todayMidnight.toTZ(BackendConstants.TIMEZONE);
+        DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
+        //todayMidnight.toTZ(BackendConstants.TIMEZONE);
         todayMidnight.toMidnight();
 
         // all txns older than today 00:00 hrs - the timer runs 1 AM each day
