@@ -15,13 +15,25 @@ public class DbConstantsBackend {
     public static String MERCHANT_ID_BATCH_TABLE_NAME = "MerchantIdBatches";
     public static String CARD_ID_BATCH_TABLE_NAME = "CardIdBatches";
 
-    // MerchantOps table - 'opcode' column values
+    /*
+     * MerchantOps table
+     */
+    // 'opcode' column values
     public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
     public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
-    // MerchantOps table - 'status' column values
-    public static final String MERCHANT_OP_STATUS_PENDING = "pending";
-    public static final String MERCHANT_OP_STATUS_LOCKED = "locked";
-    public static final String MERCHANT_OP_STATUS_COMPLETE = "complete";
+    public static final String MERCHANT_OP_DISABLE_ACC = "Disable Account";
+    public static final String MERCHANT_OP_ENABLE_ACC = "Enable Account";
+    // 'status' column values
+    public static final String MERCHANT_OP_STATUS_PENDING = "Pending";
+    public static final String MERCHANT_OP_STATUS_LOCKED = "In progress";
+    public static final String MERCHANT_OP_STATUS_COMPLETE = "Completed";
+    // 'initiatedBy' column values
+    public static final String MERCHANT_OP_INITBY_MCHNT = "Merchant";
+    public static final String MERCHANT_OP_INITBY_CC = "MyeCash Admin";
+    // 'initiatedVia' column values - valid when initiated by merchant
+    public static final String MERCHANT_OP_INITVIA_APP = "App";
+    public static final String MERCHANT_OP_INITVIA_CC = "Call to Customer Care";
+    public static final String MERCHANT_OP_INITVIA_IVR = "Call to IVR";
 
     // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
     public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";

@@ -59,7 +59,7 @@ public class CommonConstants {
     public static final int CUSTOMER_CARDID_LEN = 11;
     // DOB in format 'DDMMYYYY'
     public static final int DOB_SECRET_LEN = 8; //mobile number
-    public static final int TRANSACTION_ID_LEN = 10;
+    public static final int TRANSACTION_ID_LEN = 12;
     public static final int PIN_OTP_LEN = 5;
 
     public static final int MAX_DEVICES_PER_MERCHANT = 3;
@@ -106,6 +106,7 @@ public class CommonConstants {
     public static int TXN_CSV_IDX_CB_AWARD = 11;
     public static int TXN_CSV_IDX_CB_RATE = 12;
     public static int TXN_CSV_IDX_CUST_PIN = 13;
+    public static int TXN_CSV_IDX_IMG_FILE = 14;
 
     /*
      * Index of various parameters in Cashback CSV records (stored in CustData CSV files)

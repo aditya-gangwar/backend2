@@ -72,6 +72,7 @@ public class CommonUtils {
     }
 
     public static String generateTxnId(String merchantId) {
+        /*
         char[] id = new char[CommonConstants.TRANSACTION_ID_LEN];
         // unique id is base 32
         // seed = merchant id + curr time in secs
@@ -81,7 +82,16 @@ public class CommonUtils {
         for (int i = 0;  i < CommonConstants.TRANSACTION_ID_LEN;  i++) {
             id[i] = BackendConstants.txnChars[r.nextInt(BackendConstants.txnChars.length)];
         }
-        return CommonConstants.TRANSACTION_ID_PREFIX + new String(id);
+        return CommonConstants.TRANSACTION_ID_PREFIX + new String(id);*/
+
+        String timeSecs = String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        // 8 digit merchant id + 10 digit epoch time in secs = 18 digit number
+        // unsigned long can store full extent of 19 digit number (i.e. 19 times 9) and some extent of 20 digit number
+        // so 18 digit number can be safely stored in long
+        // which is then converted into Base35 number - generating 12 digit id
+        // Algo to be revisited - when multi-terminal support is added
+        long txnIdLong = Long.parseUnsignedLong(merchantId+timeSecs);
+        return Base35.fromBase10(txnIdLong, CommonConstants.TRANSACTION_ID_LEN);
     }
 
     public static String generateLogId() {

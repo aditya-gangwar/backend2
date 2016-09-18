@@ -19,6 +19,7 @@ public class BackendResponseCodes {
     public static final String BE_ERROR_DUPLICATE_REQUEST = "505";
     public static final String BE_ERROR_FIRST_LOGIN_PENDING = "506";
     public static final String BE_ERROR_NOT_LOGGED_IN = "507";
+    public static final String BE_ERROR_CUST_NOT_REG_WITH_MCNT = "508";
 
     public static final String BE_ERROR_SEND_SMS_FAILED = "510";
     public static final String BE_ERROR_WRONG_INPUT_DATA = "511";

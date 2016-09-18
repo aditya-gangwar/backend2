@@ -28,6 +28,15 @@ public class Transaction
   private Cashback cashback;
   private String merchant_name;
   private String usedCardId;
+  private String imgFileName;
+
+  public String getImgFileName() {
+    return imgFileName;
+  }
+
+  public void setImgFileName(String imgFileName) {
+    this.imgFileName = imgFileName;
+  }
 
   public String getUsedCardId() {
     return usedCardId;

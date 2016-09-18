@@ -145,6 +145,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 op.setMobile_num(merchant.getMobile_num());
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD);
                 op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_PENDING);
+                op.setInitiatedBy(DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
+                op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_APP);
 
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
@@ -157,7 +159,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);

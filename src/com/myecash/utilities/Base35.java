@@ -8,14 +8,14 @@ import com.myecash.constants.CommonConstants;
  */
 public class Base35 {
     // 0 to be used as filler
-    // capital O not used to avoid confusion with 0
+    // 'capital O' not used to avoid confusion with 0
     private static final String ALPHABET = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
 
     private static final int BASE = ALPHABET.length();
 
     private Base35() {}
 
-    public static String fromBase10(long i) {
+    public static String fromBase10(long i, int idLen) {
         StringBuilder sb = new StringBuilder("");
         while (i > 0) {
             i = fromBase10(i, sb);
@@ -24,14 +24,14 @@ public class Base35 {
         sb.reverse();
 
         // add 0 as filler
-        for (int toAppend = (CommonConstants.CUSTOMER_INTERNAL_ID_LEN-sb.length()); toAppend>0; toAppend--) {
+        for (int toAppend = (idLen-sb.length()); toAppend>0; toAppend--) {
             sb.append('0');
         }
         return sb.toString();
     }
 
     private static long fromBase10(long i, final StringBuilder sb) {
-        int rem = (int)i % BASE;
+        int rem = (int)(i % BASE);
         sb.append(ALPHABET.charAt(rem));
         return i / BASE;
     }

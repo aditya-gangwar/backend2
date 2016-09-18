@@ -493,11 +493,12 @@ public class BackendOps {
     public static ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause(whereClause);
         dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
-        // TODO: check if putting index on cust_private_id improves performance
-        // or using rowid_qr in where clause improves performance
-        dataQuery.setWhereClause(whereClause);
+        QueryOptions options = new QueryOptions();
+        options.addSortByOption("created DESC");
+        dataQuery.setQueryOptions(options);
 
         BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
 
@@ -605,8 +606,8 @@ public class BackendOps {
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         // sorted by create time
-        QueryOptions queryOptions = new QueryOptions("create_time");
-        dataQuery.setQueryOptions(queryOptions);
+        //QueryOptions queryOptions = new QueryOptions("create_time");
+        //dataQuery.setQueryOptions(queryOptions);
         dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
         dataQuery.setWhereClause(whereClause);
 

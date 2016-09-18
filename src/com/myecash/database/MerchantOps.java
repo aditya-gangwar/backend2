@@ -10,24 +10,17 @@ public class MerchantOps
   private String ownerId;
   private String mobile_num;
   private String op_code;
+  private String initiatedBy;
+  private String initiatedVia;
+  private String extra_op_params;
   private String objectId;
   private java.util.Date created;
+  private String ticketNum;
   private String merchant_id;
   private java.util.Date updated;
   private String otp;
   private String op_status;
-  private String extra_op_params;
-
-  public String getExtra_op_params()
-  {
-    return extra_op_params;
-  }
-
-  public void setExtra_op_params( String extra_op_params )
-  {
-    this.extra_op_params = extra_op_params;
-  }
-
+  private String remarks;
   public String getOwnerId()
   {
     return ownerId;
@@ -53,6 +46,36 @@ public class MerchantOps
     this.op_code = op_code;
   }
 
+  public String getInitiatedBy()
+  {
+    return initiatedBy;
+  }
+
+  public void setInitiatedBy( String initiatedBy )
+  {
+    this.initiatedBy = initiatedBy;
+  }
+
+  public String getInitiatedVia()
+  {
+    return initiatedVia;
+  }
+
+  public void setInitiatedVia( String initiatedVia )
+  {
+    this.initiatedVia = initiatedVia;
+  }
+
+  public String getExtra_op_params()
+  {
+    return extra_op_params;
+  }
+
+  public void setExtra_op_params( String extra_op_params )
+  {
+    this.extra_op_params = extra_op_params;
+  }
+
   public String getObjectId()
   {
     return objectId;
@@ -61,6 +84,16 @@ public class MerchantOps
   public java.util.Date getCreated()
   {
     return created;
+  }
+
+  public String getTicketNum()
+  {
+    return ticketNum;
+  }
+
+  public void setTicketNum( String ticketNum )
+  {
+    this.ticketNum = ticketNum;
   }
 
   public String getMerchant_id()
@@ -98,7 +131,17 @@ public class MerchantOps
     this.op_status = op_status;
   }
 
-                                                    
+  public String getRemarks()
+  {
+    return remarks;
+  }
+
+  public void setRemarks( String remarks )
+  {
+    this.remarks = remarks;
+  }
+
+
   public MerchantOps save()
   {
     return Backendless.Data.of( MerchantOps.class ).save( this );
