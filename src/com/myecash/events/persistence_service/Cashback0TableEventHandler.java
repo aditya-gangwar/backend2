@@ -29,7 +29,7 @@ public class Cashback0TableEventHandler extends com.backendless.servercode.exten
         // beforeUpdate is not called, if update is done from server code
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "cashback-beforeUpdate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cashback.getRowid();
-        CommonUtils.writeEdr(mLogger, mEdr);
+        CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
     }
 }

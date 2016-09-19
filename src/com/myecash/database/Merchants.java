@@ -17,8 +17,8 @@ public class Merchants
   private String displayImage;
   private java.util.Date updated;
   private java.util.Date status_update_time;
-  private Integer status_reason;
-  private String admin_remarks;
+  //private Integer status_reason;
+  //private String admin_remarks;
   private String cashback_table;
   private String mobile_num;
   private String email;
@@ -34,6 +34,25 @@ public class Merchants
   private Integer cl_credit_limit_for_pin;
   private Boolean first_login_ok;
   private Boolean debugLogs;
+  private String dob;
+  private String agentId;
+
+  public String getAgentId() {
+    return agentId;
+  }
+
+  public void setAgentId(String agentId) {
+    this.agentId = agentId;
+  }
+
+  public String getDob() {
+    return dob;
+  }
+
+  public void setDob(String dob) {
+    this.dob = dob;
+  }
+
   /*
   private java.util.Date lastLogin;
 
@@ -154,6 +173,7 @@ public class Merchants
     this.status_update_time = status_update_time;
   }
 
+  /*
   public Integer getStatus_reason()
   {
     return status_reason;
@@ -173,6 +193,7 @@ public class Merchants
   {
     this.admin_remarks = admin_remarks;
   }
+  */
 
   public String getCashback_table()
   {

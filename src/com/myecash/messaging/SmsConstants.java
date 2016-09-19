@@ -56,4 +56,8 @@ public class SmsConstants {
     public static String SMS_MOBILE_CHANGE_MERCHANT = "Dear Merchant - Registered mobile number of your account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
+    // Account enable/disable
+    public static String SMS_USER_ACC_DISABLE = "Dear User - Your account number '%s' is Disabled now. You can call us for further help.";
+    public static String SMS_MCHNT_LOGIN_RESET = "Dear Merchant - As per request, the login access for account '%s' is reset successfully. Pls use 'Forgot Password' link to restore your access.";
+    public static String SMS_MCHNT_MOBILE_CHANGE_ADMIN = "Dear Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Pls use 'Forgot Password' link to restore your access.";
 }

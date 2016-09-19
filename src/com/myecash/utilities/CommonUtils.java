@@ -8,7 +8,6 @@ import com.myecash.database.*;
 import com.myecash.messaging.SmsConstants;
 import com.myecash.messaging.SmsHelper;
 
-import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -193,6 +192,64 @@ public class CommonUtils {
         }
     }
 
+    public static void internalUserPwdResetImmediate(BackendlessUser user, InternalUser internalUser, String[] edr, MyLogger logger) {
+        // generate password
+        String passwd = CommonUtils.generateTempPassword();
+        // update user account for the password
+        user.setPassword(passwd);
+        user = BackendOps.updateUser(user);
+        logger.debug("Updated internal user for password reset: "+internalUser.getId());
+
+        // Send SMS through HTTP
+        String smsText = SmsHelper.buildPwdResetSMS(internalUser.getId(), passwd);
+        if( SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), logger) ){
+            edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+        } else {
+            edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+        };
+        logger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());
+    }
+
+    public static void resetMchntPasswdImmediate(BackendlessUser user, Merchants merchant, String[] edr, MyLogger logger) {
+        // generate password
+        String passwd = CommonUtils.generateTempPassword();
+        // update user account for the password
+        user.setPassword(passwd);
+        BackendOps.updateUser(user);
+        //TODO: remove printing passwd
+        logger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
+
+        // Send SMS through HTTP
+        String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
+        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num(), logger) ){
+            if(edr!=null) {
+                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            }
+        } else {
+            if(edr!=null) {
+                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+        };
+        logger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
+    }
+
+    public static String mchntPwdResetWhereClause(String merchantId) {
+        StringBuilder whereClause = new StringBuilder();
+
+        // Single password reset request allowed in every 2 hours
+
+        // for particular merchant
+        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
+        // greater than configured period
+        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS * 60 * 1000);
+        whereClause.append(" AND created > ").append(time);
+        return whereClause.toString();
+    }
+
+
     public static void checkCardForUse(CustomerCards card) {
         switch(card.getStatus()) {
             /*
@@ -238,7 +295,7 @@ public class CommonUtils {
                     break;
                 case DbConstants.USER_TYPE_AGENT:
                 case DbConstants.USER_TYPE_CC:
-                case DbConstants.USER_TYPE_CCNT:
+                case DbConstants.USER_TYPE_CNT:
                     confMaxAttempts = GlobalSettingsConstants.INTERNAL_USER_WRONG_ATTEMPT_LIMIT;
                     break;
             }
@@ -255,7 +312,7 @@ public class CommonUtils {
                             break;
                         case DbConstants.USER_TYPE_CC:
                         case DbConstants.USER_TYPE_AGENT:
-                        case DbConstants.USER_TYPE_CCNT:
+                        case DbConstants.USER_TYPE_CNT:
                             setAgentStatus((InternalUser) userObject, DbConstants.USER_STATUS_LOCKED, DbConstantsBackend.attemptTypeToAccLockedReason.get(attemptType), logger);
                             break;
                     }
@@ -285,21 +342,6 @@ public class CommonUtils {
         }
     }
 
-    /*
-    public static void throwException(Logger logger, String errorCode, String errorMsg, boolean isNormalResponse) {
-        if(isNormalResponse) {
-            logger.info("Sending response as exception: "+errorCode+", "+errorMsg);
-        } else {
-            logger.error("Raising exception: "+errorCode+", "+errorMsg);
-        }
-
-        // to be removed once issue is fixed on backendless side
-        errorMsg = CommonConstants.PREFIX_ERROR_CODE_AS_MSG + errorCode;
-        BackendlessFault fault = new BackendlessFault(errorCode,errorMsg);
-        //Backendless.Logging.flush();
-        throw new BackendlessException(fault);
-    }*/
-
     public static int getUserType(String userdId) {
         switch(userdId.length()) {
             case CommonConstants.MERCHANT_ID_LEN:
@@ -310,10 +352,11 @@ public class CommonUtils {
                 } else if(userdId.startsWith(CommonConstants.PREFIX_CC_ID)) {
                     return DbConstants.USER_TYPE_CC;
                 } else if(userdId.startsWith(CommonConstants.PREFIX_CCNT_ID)) {
-                    return DbConstants.USER_TYPE_CCNT;
+                    return DbConstants.USER_TYPE_CNT;
                 } else {
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Invalid user type for id: "+userdId);
                 }
+            case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
             case CommonConstants.MOBILE_NUM_LENGTH:
                 return DbConstants.USER_TYPE_CUSTOMER;
             default:
@@ -383,10 +426,11 @@ public class CommonUtils {
             return;
         }
         // update merchant account
+        /*
         merchant.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[merchant.getAdmin_status()]
-                + ", and status time was "+mSdfDateWithTime.format(merchant.getStatus_update_time()));
+                + ", and status time was "+mSdfDateWithTime.format(merchant.getStatus_update_time()));*/
         merchant.setAdmin_status(status);
-        merchant.setStatus_reason(reason);
+        //merchant.setStatus_reason(reason);
         merchant.setStatus_update_time(new Date());
         BackendOps.updateMerchant(merchant);
 
@@ -516,7 +560,7 @@ public class CommonUtils {
                 CommonUtils.checkMerchantStatus(merchant, logger);
                 return merchant;
 
-            case DbConstants.USER_TYPE_CCNT:
+            case DbConstants.USER_TYPE_CNT:
             case DbConstants.USER_TYPE_CC:
             case DbConstants.USER_TYPE_AGENT:
                 InternalUser internalUser = (InternalUser) user.getProperty("internalUser");
@@ -577,7 +621,7 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static void writeEdr(MyLogger logger, String[] mEdr) {
+    public static void writeOpNotAllowedEdr(MyLogger logger, String[] mEdr) {
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(System.currentTimeMillis());
         mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
         mEdr[BackendConstants.EDR_EXP_CODE_IDX] = BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED;

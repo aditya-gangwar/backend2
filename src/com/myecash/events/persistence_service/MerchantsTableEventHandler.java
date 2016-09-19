@@ -24,13 +24,27 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     @Override
+    public void beforeUpdate( RunnerContext context, Merchants merchant ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.MerchantsTableEventHandler");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+
+        // update not allowed from app - return exception
+        // beforeUpdate is not called, if update is done from server code
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeUpdate";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id();
+        CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
+    }
+
+    @Override
     public void beforeFirst( RunnerContext context ) throws Exception
     {
         // block for not-authenticated user
         // this event handler does not get called, if find done from servercode
         if(context.getUserToken()==null) {
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
@@ -43,7 +57,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         if(context.getUserToken()==null) {
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFind";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
@@ -55,7 +69,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         // this event handler does not get called, if find done from servercode
         if(context.getUserToken()==null) {
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }

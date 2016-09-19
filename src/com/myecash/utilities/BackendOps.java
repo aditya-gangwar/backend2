@@ -63,27 +63,29 @@ public class BackendOps {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setWhereClause("user_id = '"+userid+"'");
 
-        QueryOptions queryOptions = new QueryOptions();
-        switch (userType) {
-            case DbConstants.USER_TYPE_CUSTOMER:
-                queryOptions.addRelated( "customer");
-                queryOptions.addRelated( "customer.membership_card");
-                break;
-            case DbConstants.USER_TYPE_MERCHANT:
-                queryOptions.addRelated( "merchant");
-                queryOptions.addRelated("merchant.trusted_devices");
-                if(allChilds) {
-                    queryOptions.addRelated("merchant.address");
-                    queryOptions.addRelated("merchant.address.city");
-                    queryOptions.addRelated("merchant.buss_category");
-                }
-            case DbConstants.USER_TYPE_AGENT:
-            case DbConstants.USER_TYPE_CC:
-            case DbConstants.USER_TYPE_CCNT:
-                queryOptions.addRelated( "internalUser");
+        if(userType != -1) {
+            QueryOptions queryOptions = new QueryOptions();
+            switch (userType) {
+                case DbConstants.USER_TYPE_CUSTOMER:
+                    queryOptions.addRelated("customer");
+                    queryOptions.addRelated("customer.membership_card");
+                    break;
+                case DbConstants.USER_TYPE_MERCHANT:
+                    queryOptions.addRelated("merchant");
+                    queryOptions.addRelated("merchant.trusted_devices");
+                    if (allChilds) {
+                        queryOptions.addRelated("merchant.address");
+                        queryOptions.addRelated("merchant.address.city");
+                        queryOptions.addRelated("merchant.buss_category");
+                    }
+                case DbConstants.USER_TYPE_AGENT:
+                case DbConstants.USER_TYPE_CC:
+                case DbConstants.USER_TYPE_CNT:
+                    queryOptions.addRelated("internalUser");
+            }
+            query.setQueryOptions(queryOptions);
         }
 
-        query.setQueryOptions( queryOptions );
         BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+userid;
@@ -525,6 +527,10 @@ public class BackendOps {
 
     public static MerchantOps saveMerchantOp(MerchantOps op) {
         return Backendless.Persistence.save( op );
+    }
+
+    public static void deleteMerchantOp(MerchantOps op) {
+        Backendless.Persistence.of( MerchantOps.class ).remove( op );
     }
 
     /*

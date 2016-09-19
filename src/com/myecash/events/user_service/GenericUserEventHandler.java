@@ -107,7 +107,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // Check for max devices allowed per user
                             int deviceCnt = (merchant.getTrusted_devices()!=null) ? merchant.getTrusted_devices().size() : 0;
                             if (deviceCnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
-                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Device data is old");
+                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached");
                             }
                             // Generate OTP
                             AllOtp newOtp = new AllOtp();
@@ -156,7 +156,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             }*/
                             if(!merchant.getFirst_login_ok()) {
                                 merchant.setFirst_login_ok(true);
-                                merchant.setAdmin_remarks("Last state was new registered");
+                                //merchant.setAdmin_remarks("Last state was new registered");
                             }
                             merchant.setTempDevId(null);
                             try {
@@ -175,7 +175,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 } else if (userType == DbConstants.USER_TYPE_AGENT ||
                         userType == DbConstants.USER_TYPE_CC ||
-                        userType == DbConstants.USER_TYPE_CCNT) {
+                        userType == DbConstants.USER_TYPE_CNT) {
                     InternalUser internalUser = BackendOps.getInternalUser(userId);
                     mLogger.setProperties(internalUser.getId(), userType, internalUser.getDebugLogs());
                     mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
@@ -237,7 +237,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             break;
 
                         case DbConstants.USER_TYPE_CC:
-                        case DbConstants.USER_TYPE_CCNT:
+                        case DbConstants.USER_TYPE_CNT:
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
                             InternalUser internalUser = BackendOps.getInternalUser(login);

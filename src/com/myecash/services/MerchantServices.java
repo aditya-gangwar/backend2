@@ -489,7 +489,7 @@ public class MerchantServices implements IBackendlessService {
                 // remove sensitive fields - from in-memory objects
                 for (MerchantOps op: ops) {
                     op.setTicketNum("");
-                    op.setRemarks("");
+                    op.setReason("");
                     op.setOtp("");
                     op.setOp_status("");
                 }

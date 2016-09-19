@@ -48,7 +48,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 transaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 transaction.getTrans_id();
-        CommonUtils.writeEdr(mLogger, mEdr);
+        CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
     }
     /*

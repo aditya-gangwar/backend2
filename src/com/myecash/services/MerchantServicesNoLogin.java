@@ -74,7 +74,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         }
     }
 
-    public void resetMerchantPwd(String userId, String deviceId, String brandName) {
+    public void resetMerchantPwd(String userId, String deviceId, String dob) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
@@ -82,7 +82,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMerchantPwd";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 deviceId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                brandName;
+                dob;
         boolean positiveException = false;
 
         try {
@@ -91,7 +91,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // check if any request already pending
-            if( BackendOps.fetchMerchantOps(buildPwdResetWhereClause(userId)) != null) {
+            if( BackendOps.fetchMerchantOps(CommonUtils.mchntPwdResetWhereClause(userId)) != null) {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
             }
 
@@ -118,25 +118,17 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
                 }
             }
-            /*
-            if (merchant.getAdmin_status() != DbConstants.USER_STATUS_NEW_REGISTERED &&
-                    trustedDevices!=null &&
-                    !trustedDevices.isEmpty() ) {
-                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
-                }
-            }*/
 
             // check for 'extra verification'
-            String name = merchant.getName();
-            if (name == null || !name.equalsIgnoreCase(brandName)) {
+            String storedDob = merchant.getDob();
+            if (storedDob == null || !storedDob.equalsIgnoreCase(dob)) {
                 CommonUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
             // For new registered merchant - send the password immediately
             if (!merchant.getFirst_login_ok()) {
-                handlePasswdResetImmediate(user, merchant);
+                CommonUtils.resetMchntPasswdImmediate(user, merchant, mEdr, mLogger);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
             } else {
                 // create row in MerchantOps table
@@ -224,39 +216,4 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
-    private void handlePasswdResetImmediate(BackendlessUser user, Merchants merchant) {
-        // generate password
-        String passwd = CommonUtils.generateTempPassword();
-        // update user account for the password
-        user.setPassword(passwd);
-        BackendOps.updateUser(user);
-        //TODO: remove printing passwd
-        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
-
-        // Send SMS through HTTP
-        String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger) ){
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-        } else {
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        };
-        mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
-    }
-
-    private String buildPwdResetWhereClause(String merchantId) {
-        StringBuilder whereClause = new StringBuilder();
-
-        // Single password reset request allowed in every 2 hours
-
-        // for particular merchant
-        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
-        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
-        // greater than configured period
-        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS * 60 * 1000);
-        whereClause.append(" AND created > ").append(time);
-
-        mLogger.debug("where clause: "+whereClause.toString());
-        return whereClause.toString();
-    }
 }

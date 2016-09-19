@@ -9,6 +9,7 @@ import com.backendless.servercode.InvocationContext;
 import com.myecash.constants.*;
 import com.myecash.database.InternalUser;
 import com.myecash.database.MerchantIdBatches;
+import com.myecash.database.MerchantOps;
 import com.myecash.database.Merchants;
 import com.myecash.messaging.SmsConstants;
 import com.myecash.messaging.SmsHelper;
@@ -21,7 +22,7 @@ import java.util.Date;
 /**
  * Created by adgangwa on 12-08-2016.
  */
-public class AgentServices  implements IBackendlessService {
+public class InternalUserServices implements IBackendlessService {
 
     private MyLogger mLogger = new MyLogger("services.AgentServicesNoLogin");
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
@@ -31,7 +32,6 @@ public class AgentServices  implements IBackendlessService {
      */
     public void registerMerchant(Merchants merchant)
     {
-        //initCommon();
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -50,8 +50,6 @@ public class AgentServices  implements IBackendlessService {
             // Fetch agent
             InternalUser agent = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
-            mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
-            mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = agent.getId();
 
             // get open merchant id batch
             String countryCode = merchant.getAddress().getCity().getCountryCode();
@@ -72,11 +70,12 @@ public class AgentServices  implements IBackendlessService {
 
             merchant.setAuto_id(merchantId);
             merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-            merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+            //merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
-            merchant.setAdmin_remarks("New registered merchant");
+            //merchant.setAdmin_remarks("New registered merchant");
             merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
+            merchant.setAgentId(agent.getId());
             // set cashback and transaction table names
             setCbAndTransTables(merchant, merchantCnt);
 
@@ -152,6 +151,85 @@ public class AgentServices  implements IBackendlessService {
         }
     }
 
+    public void disableMerchant(String merchantId, String ticketNum, String reason) {
+        CommonUtils.initTableToClassMappings();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "disableMerchant";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                reason;
+
+        try {
+            // Fetch customer care user
+            InternalUser internalUser = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT
+                    ) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+            }
+
+            // Fetch merchant
+            Merchants merchant = BackendOps.getMerchant(merchantId, false, false);
+
+            // Add merchant op first - then update status
+            MerchantOps op = new MerchantOps();
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_code(DbConstantsBackend.MERCHANT_OP_DISABLE_ACC);
+            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setAgentId(internalUser.getId());
+            op.setInitiatedBy( (userType==DbConstants.USER_TYPE_CC)?
+                    DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT:
+                    DbConstantsBackend.MERCHANT_OP_INITBY_ADMIN);
+            if(userType==DbConstants.USER_TYPE_CC) {
+                op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_CC);
+            }
+            BackendOps.saveMerchantOp(op);
+
+            // Update status
+            try {
+                merchant.setAdmin_status(DbConstants.USER_STATUS_DISABLED);
+                merchant.setStatus_update_time(new Date());
+                BackendOps.updateMerchant(merchant);
+            } catch(Exception e) {
+                mLogger.error("disableMerchant: Exception while updating merchant status: "+merchantId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("disableMerchant: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // send SMS with user id
+            String smsText = String.format(SmsConstants.SMS_USER_ACC_DISABLE, CommonUtils.getHalfVisibleId(merchantId));
+            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+
+    }
+
     /*
      * Private helper methods
      */
@@ -182,8 +260,8 @@ public class AgentServices  implements IBackendlessService {
         try {
             Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
             merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-            merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
-            merchant.setAdmin_remarks("Registration failed");
+            //merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+            //merchant.setAdmin_remarks("Registration failed");
             //user.setProperty("merchant", merchant);
             //BackendOps.updateUser(user);
             BackendOps.updateMerchant(merchant);

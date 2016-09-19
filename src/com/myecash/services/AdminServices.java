@@ -5,13 +5,10 @@ import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.myecash.constants.*;
-import com.myecash.database.InternalUser;
-import com.myecash.database.CardIdBatches;
-import com.myecash.database.MerchantIdBatches;
+import com.myecash.database.*;
 import com.myecash.messaging.SmsConstants;
 import com.myecash.messaging.SmsHelper;
 import com.myecash.utilities.BackendOps;
-import com.myecash.utilities.Base35;
 import com.myecash.utilities.CommonUtils;
 import com.myecash.utilities.MyLogger;
 
@@ -23,7 +20,10 @@ import java.util.List;
  */
 public class AdminServices implements IBackendlessService {
 
+    private static final String ADMIN_LOGINID = "admin";
+    
     private MyLogger mLogger = new MyLogger("services.AdminServices");
+    private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
     /*
      * Public methods: Backend REST APIs
@@ -37,17 +37,172 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void registerCCntUser(String argUserId, String mobile, String name, String dob, String pwd) {
-        registerInternalUser(argUserId, DbConstants.USER_TYPE_CCNT, mobile, name, dob, pwd);
+        registerInternalUser(argUserId, DbConstants.USER_TYPE_CNT, mobile, name, dob, pwd);
+    }
+
+    /*
+     * Performs either of below two operations
+     *
+     * 1) only reset login data i.e.
+     * Delete all trusted devices, and set status to indicate that 'forget password' is allowed from
+     * non-trusted devices also - first time only - just like in case of first login.
+     *
+     * 2) Change mobile number
+     * This involves above 'reset login data' operation also.
+     *
+     * These ops are always done - upon manual submission of application and documents.
+     */
+    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String newMobileNum, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            CommonUtils.initTableToClassMappings();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMchntLoginOrChangeMob";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    newMobileNum;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // just for easier comparisons later on - change empty string to null
+            if(newMobileNum!=null && newMobileNum.isEmpty()) {
+                newMobileNum = null;
+            }
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // fetch user with the given id with related merchant object
+            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+            // merchant should be in disabled state
+            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_DISABLED) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Merchant account is not disabled yet");
+            }
+
+            // Add merchant op first - then update status
+            MerchantOps op = new MerchantOps();
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setAgentId(ADMIN_LOGINID);
+            op.setInitiatedBy( DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_MANUAL);
+            if(newMobileNum==null) {
+                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_LOGIN_DATA);
+            } else {
+                op.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
+                op.setExtra_op_params(newMobileNum);
+            }
+            BackendOps.saveMerchantOp(op);
+
+            // update merchant status (and mobile num, if required)
+            int oldStatus = merchant.getAdmin_status();
+            Date oldUpdateTime = merchant.getStatus_update_time();
+            String oldMobile = merchant.getMobile_num();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+            try {
+                merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
+                merchant.setStatus_update_time(new Date());
+                if(newMobileNum!=null) {
+                    merchant.setMobile_num(newMobileNum);
+                }
+                merchant = BackendOps.updateMerchant(merchant);
+
+            } catch(Exception e) {
+                mLogger.error("resetMchntLoginOrChangeMob: Exception while updating merchant status: "+merchantId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // Delete all trusted devices
+            try {
+                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                int i = 0;
+                if (trustedDevices.size() > 0) {
+                    mLogger.debug("Available devices: " + trustedDevices.size());
+                    // iterate and delete one by one
+                    for (MerchantDevice device : trustedDevices) {
+                        BackendOps.deleteMchntDevice(device);
+                        i++;
+                    }
+                }
+                mLogger.debug("Deleted devices: " + i);
+            } catch(Exception e) {
+                mLogger.error("resetMchntLoginOrChangeMob: Exception while deleting trusted devices: "+merchantId);
+                // Rollback - delete merchant op added, and rollback merchant status
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                    merchant.setAdmin_status(oldStatus);
+                    merchant.setStatus_update_time(oldUpdateTime);
+                    if(newMobileNum!=null) {
+                        merchant.setMobile_num(oldMobile);
+                    }
+                    BackendOps.updateMerchant(merchant);
+                } catch(Exception ex) {
+                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // send SMS
+            String smsText = null;
+            if(newMobileNum==null) {
+                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, CommonUtils.getHalfVisibleId(merchantId));
+            } else {
+                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, CommonUtils.getHalfVisibleId(merchantId), newMobileNum);
+            }
+
+            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+        }
     }
 
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
-        //initCommon();
+        long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "createMerchantIdBatches";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    rangeId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    batchCnt;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
             mLogger.debug("In createMerchantIdBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             String tableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
             // get highest 'batch id' from already created batches - for given range id
@@ -78,25 +233,33 @@ public class AdminServices implements IBackendlessService {
                 BackendOps.saveMerchantIdBatch(tableName, batch);
             }
 
-            // logout admin user
-            BackendOps.logoutUser();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            mLogger.error("Exception in createMerchantIdBatches: "+e.toString());
-            BackendOps.logoutUser();
-            mLogger.flush();
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void openNextMerchantIdBatch(String countryCode, String rangeId, String adminPwd) {
-        //initCommon();
+        long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "openNextMerchantIdBatch";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    rangeId;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
             mLogger.debug("In openNextMerchantIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             String tableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
 
@@ -135,25 +298,33 @@ public class AdminServices implements IBackendlessService {
             lowestBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN);
             BackendOps.saveMerchantIdBatch(tableName, lowestBatch);
 
-            // logout admin user
-            BackendOps.logoutUser();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            mLogger.error("Exception in openNextMerchantIdBatch: "+e.toString());
-            mLogger.flush();
-            BackendOps.logoutUser();
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void createCardIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
-        //initCommon();
+        long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "createCardIdBatches";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    rangeId;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
             mLogger.debug("In createCardBatches: "+countryCode+": "+rangeId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             String tableName = DbConstantsBackend.CARD_ID_BATCH_TABLE_NAME+countryCode;
             // get highest 'batch id' from already created batches - for given range id
@@ -183,25 +354,33 @@ public class AdminServices implements IBackendlessService {
                 BackendOps.saveCardIdBatch(tableName, batch);
             }
 
-            // logout admin user
-            BackendOps.logoutUser();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            mLogger.error("Exception in createCardIdBatches: "+e.toString());
-            BackendOps.logoutUser();
-            mLogger.flush();
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd) {
-        //initCommon();
+        long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", DbConstants.USER_TYPE_AGENT, true);
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "openNextCardIdBatch";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    rangeId;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             String tableName = DbConstantsBackend.CARD_ID_BATCH_TABLE_NAME+countryCode;
 
@@ -239,14 +418,15 @@ public class AdminServices implements IBackendlessService {
             lowestBatch.setStatus(DbConstantsBackend.CARD_ID_BATCH_STATUS_OPEN);
             BackendOps.saveCardIdBatch(tableName, lowestBatch);
 
-            // logout admin user
-            BackendOps.logoutUser();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            mLogger.error("Exception in openNextCardIdBatch: "+e.toString());
-            mLogger.flush();
-            BackendOps.logoutUser();
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -254,10 +434,20 @@ public class AdminServices implements IBackendlessService {
      * Private helper methods
      */
     private void registerInternalUser(String argUserId, int userType, String mobile, String name, String dob, String pwd) {
-        //initCommon();
+        long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
-            mLogger.setProperties("admin", userType, true);
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerInternalUser";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = argUserId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    userType+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    mobile+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    name+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    dob;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
             mLogger.debug("In registerInternalUser: "+argUserId+": "+mobile);
             //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
@@ -269,7 +459,7 @@ public class AdminServices implements IBackendlessService {
                 case DbConstants.USER_TYPE_CC:
                     prefix = CommonConstants.PREFIX_CC_ID;
                     break;
-                case DbConstants.USER_TYPE_CCNT:
+                case DbConstants.USER_TYPE_CNT:
                     prefix = CommonConstants.PREFIX_CCNT_ID;
                     break;
             }
@@ -279,7 +469,7 @@ public class AdminServices implements IBackendlessService {
             }
 
             // login using 'admin' user
-            BackendOps.loginUser("admin",pwd);
+            BackendOps.loginUser(ADMIN_LOGINID,pwd);
             //mLogger.debug("Before2: "+ HeadersManager.getInstance().getHeaders().toString());
 
             // Create agent object and register
@@ -314,7 +504,7 @@ public class AdminServices implements IBackendlessService {
                 case DbConstants.USER_TYPE_CC:
                     role = BackendConstants.ROLE_CC;
                     break;
-                case DbConstants.USER_TYPE_CCNT:
+                case DbConstants.USER_TYPE_CNT:
                     role = BackendConstants.ROLE_CCNT;
                     break;
             }
@@ -331,14 +521,15 @@ public class AdminServices implements IBackendlessService {
                 // TODO: write to alarm table for retry later
             }
 
-            // logout admin user
-            BackendOps.logoutUser();
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
-        } catch (Exception e) {
-            mLogger.error("Exception in registerInternalUser: "+e.toString());
-            BackendOps.logoutUser();
-            mLogger.flush();
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
             throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 }
@@ -349,7 +540,7 @@ public class AdminServices implements IBackendlessService {
         try {
             mLogger.debug("In openMerchantIdBatch: "+countryCode+","+rangeId+","+batchId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             // make sure batch is not already open
             String tableNameMerchantIds = "MerchantIds"+countryCode+rangeId;
@@ -421,7 +612,7 @@ public class AdminServices implements IBackendlessService {
         try {
             mLogger.debug("In openCardIdRange: "+countryCode+": "+rangeId);
             // login using 'admin' user
-            BackendOps.loginUser("admin",adminPwd);
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             String tableName = DbConstantsBackend.CARD_ID_BATCH_TABLE_NAME+countryCode;
 

@@ -31,7 +31,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //initCommon();
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeFirst";
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
@@ -47,7 +47,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeFind";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
@@ -62,7 +62,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //initCommon();
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeLast";
-            CommonUtils.writeEdr(mLogger, mEdr);
+            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
         }
     }
