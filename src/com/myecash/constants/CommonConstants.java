@@ -147,11 +147,11 @@ public class CommonConstants {
     public static int CUST_CSV_ACC_STATUS = 5;
     public static int CUST_CSV_STATUS_REASON = 6;
     public static int CUST_CSV_STATUS_UPDATE_TIME = 7;
-    public static int CUST_CSV_ADMIN_REMARKS = 8;
-    public static int CUST_CSV_CARD_ID = 9;
-    public static int CUST_CSV_CARD_STATUS = 10;
-    public static int CUST_CSV_CARD_STATUS_UPDATE_TIME = 11;
-    public static int CUST_CSV_TOTAL_FIELDS = 12;
+    //public static int CUST_CSV_ADMIN_REMARKS = 8;
+    public static int CUST_CSV_CARD_ID = 8;
+    public static int CUST_CSV_CARD_STATUS = 9;
+    public static int CUST_CSV_CARD_STATUS_UPDATE_TIME = 10;
+    public static int CUST_CSV_TOTAL_FIELDS = 11;
 
     /*
      * Other common constants

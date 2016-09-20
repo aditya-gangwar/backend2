@@ -15,6 +15,31 @@ public class DbConstantsBackend {
     public static String MERCHANT_ID_BATCH_TABLE_NAME = "MerchantIdBatches";
     public static String CARD_ID_BATCH_TABLE_NAME = "CardIdBatches";
 
+    // Merchant table - 'status_reason' column values
+    // Same for 'reason' column in MerchantOps table too
+    //public static final int ENABLED_NEW_USER = 1;
+    public static final String ENABLED_ACTIVE = "enabled";
+    public static final String DISABLED_AUTO_BY_SYSTEM = "";
+    public static final String DISABLED_ON_USER_REQUEST = "";
+    public static final String LOCKED_WRONG_PASSWORD_LIMIT_RCHD = "Wrong password limit reached";
+    public static final String LOCKED_WRONG_PIN_LIMIT_RCHD = "Wrong PIN attempts limit reached";
+    public static final String LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD = "Wrong forgot password attempts limit reached";
+    public static final String LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD = "Wrong forgot user id attempts limit reached";
+    public static final String REG_ERROR_ROLE_ASSIGN_FAILED = "Error in registration";
+
+    // Map int status values to corresponding descriptions
+    /*
+    public static String statusReasonDescriptions[] = {
+            "",
+            "User is active",
+            "By system for security purpose. Will be re-activated after verification.",
+            "On user request.",
+            "Wrong password attempts limit reached.",
+            "Wrong PIN attempts limit reached.",
+            "Wrong 'password reset' attempts limit reached.",
+            ""
+    };*/
+
     /*
      * MerchantOps table
      */
@@ -49,15 +74,15 @@ public class DbConstantsBackend {
     public static final String ATTEMPT_TYPE_USER_LOGIN = "userLogin";
     public static final String ATTEMPT_TYPE_USER_PIN = "userPin";
 
-    public static final Map<String, Integer> attemptTypeToAccLockedReason;
+    public static final Map<String, String> attemptTypeToAccLockedReason;
     static {
-        Map<String, Integer> aMap = new HashMap<>(10);
+        Map<String, String> aMap = new HashMap<>(10);
 
         // my own backend response codes
-        aMap.put(ATTEMPT_TYPE_FORGOT_USERID, DbConstants.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_PASSWORD_RESET, DbConstants.LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_USER_LOGIN, DbConstants.LOCKED_WRONG_PASSWORD_LIMIT_RCHD);
-        aMap.put(ATTEMPT_TYPE_USER_PIN, DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_FORGOT_USERID, LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_PASSWORD_RESET, LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_USER_LOGIN, LOCKED_WRONG_PASSWORD_LIMIT_RCHD);
+        aMap.put(ATTEMPT_TYPE_USER_PIN, LOCKED_WRONG_PIN_LIMIT_RCHD);
 
         attemptTypeToAccLockedReason = Collections.unmodifiableMap(aMap);
     }

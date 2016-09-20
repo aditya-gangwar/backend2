@@ -9,7 +9,7 @@ public class InternalUser
 {
   private java.util.Date updated;
   private String mobile_num;
-  private Integer status_reason;
+  private String status_reason;
   private String objectId;
   private java.util.Date created;
   private String name;
@@ -52,12 +52,12 @@ public class InternalUser
     this.mobile_num = mobile_num;
   }
 
-  public Integer getStatus_reason()
+  public String getStatus_reason()
   {
     return status_reason;
   }
 
-  public void setStatus_reason( Integer status_reason )
+  public void setStatus_reason( String status_reason )
   {
     this.status_reason = status_reason;
   }

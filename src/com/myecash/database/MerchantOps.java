@@ -22,6 +22,15 @@ public class MerchantOps
   private String op_status;
   private String reason;
   private String agentId;
+  private String remarks;
+
+  public String getRemarks() {
+    return remarks;
+  }
+
+  public void setRemarks(String remarks) {
+    this.remarks = remarks;
+  }
 
   public String getAgentId() {
     return agentId;

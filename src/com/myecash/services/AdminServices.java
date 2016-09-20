@@ -52,7 +52,7 @@ public class AdminServices implements IBackendlessService {
      *
      * These ops are always done - upon manual submission of application and documents.
      */
-    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String newMobileNum, String adminPwd) {
+    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks, String newMobileNum, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
             CommonUtils.initTableToClassMappings();
@@ -83,6 +83,11 @@ public class AdminServices implements IBackendlessService {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Merchant account is not disabled yet");
             }
 
+            int oldStatus = merchant.getAdmin_status();
+            Date oldUpdateTime = merchant.getStatus_update_time();
+            String oldMobile = merchant.getMobile_num();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+
             // Add merchant op first - then update status
             MerchantOps op = new MerchantOps();
             op.setMerchant_id(merchant.getAuto_id());
@@ -90,6 +95,7 @@ public class AdminServices implements IBackendlessService {
             op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
+            op.setRemarks(remarks);
             op.setAgentId(ADMIN_LOGINID);
             op.setInitiatedBy( DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
             op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_MANUAL);
@@ -97,15 +103,14 @@ public class AdminServices implements IBackendlessService {
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_LOGIN_DATA);
             } else {
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
-                op.setExtra_op_params(newMobileNum);
+                // set extra params in presentable format
+                String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
+                op.setExtra_op_params(extraParams);
+                //op.setExtra_op_params(newMobileNum);
             }
             BackendOps.saveMerchantOp(op);
 
             // update merchant status (and mobile num, if required)
-            int oldStatus = merchant.getAdmin_status();
-            Date oldUpdateTime = merchant.getStatus_update_time();
-            String oldMobile = merchant.getMobile_num();
-            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
             try {
                 merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
                 merchant.setStatus_update_time(new Date());
@@ -479,7 +484,7 @@ public class AdminServices implements IBackendlessService {
             internalUser.setDob(dob);
             internalUser.setName(name);
             internalUser.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-            internalUser.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+            internalUser.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
 
             BackendlessUser backendlessUser = new BackendlessUser();
             backendlessUser.setProperty("user_id", userId);

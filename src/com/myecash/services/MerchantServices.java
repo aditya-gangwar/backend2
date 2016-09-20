@@ -53,6 +53,7 @@ public class MerchantServices implements IBackendlessService {
             // Fetch merchant with all child - as the same instance is to be returned too
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
+            String oldMobile = merchant.getMobile_num();
 
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
@@ -78,12 +79,7 @@ public class MerchantServices implements IBackendlessService {
                 BackendOps.validateOtp(merchant.getAuto_id(), otp);
                 mLogger.debug("OTP matched for given merchant operation: " + merchant.getAuto_id());
 
-                // Update with new mobile number
-                String oldMobile = merchant.getMobile_num();
-                merchant.setMobile_num(newMobile);
-                merchant = BackendOps.updateMerchant(merchant);
-
-                // add record in merchant ops table
+                // first add record in merchant ops table
                 MerchantOps merchantops = new MerchantOps();
                 merchantops.setMerchant_id(merchant.getAuto_id());
                 merchantops.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
@@ -94,11 +90,24 @@ public class MerchantServices implements IBackendlessService {
                 // set extra params in presentable format
                 String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobile;
                 merchantops.setExtra_op_params(extraParams);
+                BackendOps.saveMerchantOp(merchantops);
+
+                // Update with new mobile number
                 try {
-                    BackendOps.saveMerchantOp(merchantops);
+                    merchant.setMobile_num(newMobile);
+                    merchant = BackendOps.updateMerchant(merchant);
                 } catch(Exception e) {
-                    // ignore error
-                    mLogger.error("changeMobile: Exception while adding merchant operation: "+e.toString());
+                    mLogger.error("changeMobile: Exception while updating merchant status: "+merchant.getAuto_id());
+                    // Rollback - delete merchant op added
+                    try {
+                        BackendOps.deleteMerchantOp(merchantops);
+                    } catch(Exception ex) {
+                        mLogger.fatal("changeMobile: Failed to rollback: merchant op deletion failed: "+merchant.getAuto_id());
+                        // Rollback also failed
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                        throw ex;
+                    }
+                    throw e;
                 }
 
                 mLogger.debug("Processed mobile change for: " + merchant.getAuto_id());
@@ -123,7 +132,6 @@ public class MerchantServices implements IBackendlessService {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
-
 
     public Merchants updateSettings(String cbRate, boolean addClEnabled, String email) {
 
@@ -749,7 +757,7 @@ public class MerchantServices implements IBackendlessService {
     private Customers createCustomer() {
         Customers customer = new Customers();
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-        customer.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+        customer.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
         customer.setStatus_update_time(new Date());
 
         // get customer counter value and encode the same to get customer private id
@@ -873,13 +881,13 @@ public class MerchantServices implements IBackendlessService {
             csvFields[CommonConstants.CUST_CSV_NAME] = customer.getName() ;
             csvFields[CommonConstants.CUST_CSV_FIRST_LOGIN_OK] = String.valueOf(customer.getFirst_login_ok()) ;
             csvFields[CommonConstants.CUST_CSV_CUST_CREATE_TIME] = String.valueOf(customer.getCreated().getTime()) ;
-            csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = customer.getAdmin_remarks() ;
+            //csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = customer.getAdmin_remarks() ;
             csvFields[CommonConstants.CUST_CSV_CARD_STATUS_UPDATE_TIME] = String.valueOf(card.getStatus_update_time().getTime()) ;
         } else {
             csvFields[CommonConstants.CUST_CSV_NAME] = "";
             csvFields[CommonConstants.CUST_CSV_FIRST_LOGIN_OK] = "";
             csvFields[CommonConstants.CUST_CSV_CUST_CREATE_TIME] = "";
-            csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = "";
+            //csvFields[CommonConstants.CUST_CSV_ADMIN_REMARKS] = "";
             csvFields[CommonConstants.CUST_CSV_CARD_STATUS_UPDATE_TIME] = "";
         }
 
@@ -928,8 +936,8 @@ public class MerchantServices implements IBackendlessService {
 
             Customers customer = BackendOps.getCustomer(custId, BackendConstants.CUSTOMER_ID_MOBILE, false);
             customer.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-            customer.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
-            customer.setAdmin_remarks("Registration failed");
+            customer.setStatus_reason(DbConstantsBackend.REG_ERROR_ROLE_ASSIGN_FAILED);
+            //customer.setAdmin_remarks("Registration failed");
             customer.setMembership_card(null);
             BackendOps.updateCustomer(customer);
 

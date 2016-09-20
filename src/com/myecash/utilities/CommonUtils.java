@@ -125,7 +125,7 @@ public class CommonUtils {
 
                     if (timeDiff > allowedDuration) {
                         try {
-                            setMerchantStatus(merchant, DbConstants.USER_STATUS_ACTIVE, DbConstants.ENABLED_ACTIVE, logger);
+                            setMerchantStatus(merchant, DbConstants.USER_STATUS_ACTIVE, DbConstantsBackend.ENABLED_ACTIVE, logger);
                         } catch (Exception e) {
                             // Failed to auto unlock the account
                             // Ignore for now - and let the operation proceed - but raise alarm for manual correction
@@ -165,7 +165,7 @@ public class CommonUtils {
 
                     if (timeDiff > allowedDuration) {
                         try {
-                            setCustomerStatus(customer, DbConstants.USER_STATUS_ACTIVE, DbConstants.ENABLED_ACTIVE, logger);
+                            setCustomerStatus(customer, DbConstants.USER_STATUS_ACTIVE, DbConstantsBackend.ENABLED_ACTIVE, logger);
                         } catch (Exception e) {
                             // Failed to auto unlock the account
                             // Ignore for now - and let the operation proceed - but raise alarm for manual correction
@@ -365,16 +365,16 @@ public class CommonUtils {
     }
 
     public static boolean customerPinRequired(Merchants merchant, Transaction txn) {
-        int cl_credit_threshold = merchant.getCl_credit_limit_for_pin()==null ? GlobalSettingsConstants.CL_CREDIT_LIMIT_FOR_PIN : merchant.getCl_credit_limit_for_pin();
-        int cl_debit_threshold = merchant.getCl_debit_limit_for_pin()==null ? GlobalSettingsConstants.CL_DEBIT_LIMIT_FOR_PIN : merchant.getCl_debit_limit_for_pin();
-        int cb_debit_threshold = merchant.getCb_debit_limit_for_pin()==null ? GlobalSettingsConstants.CB_DEBIT_LIMIT_FOR_PIN : merchant.getCb_debit_limit_for_pin();
+        int cl_credit_threshold = (merchant.getCl_credit_limit_for_pin()<0) ? GlobalSettingsConstants.CL_CREDIT_LIMIT_FOR_PIN : merchant.getCl_credit_limit_for_pin();
+        int cl_debit_threshold = (merchant.getCl_debit_limit_for_pin()<0) ? GlobalSettingsConstants.CL_DEBIT_LIMIT_FOR_PIN : merchant.getCl_debit_limit_for_pin();
+        int cb_debit_threshold = (merchant.getCb_debit_limit_for_pin()<0) ? GlobalSettingsConstants.CB_DEBIT_LIMIT_FOR_PIN : merchant.getCb_debit_limit_for_pin();
 
         int higher_debit_threshold = Math.max(cl_debit_threshold, cb_debit_threshold);
 
         return (txn.getCl_credit() > cl_credit_threshold ||
                 txn.getCl_debit() > cl_debit_threshold ||
                 txn.getCb_debit() > cb_debit_threshold ||
-                (cb_debit_threshold+cl_debit_threshold) > higher_debit_threshold);
+                (txn.getCl_debit()+txn.getCb_debit()) > higher_debit_threshold);
     }
 
     public static boolean customerCardRequired(Transaction txn) {
@@ -421,7 +421,7 @@ public class CommonUtils {
 
     // Dont use this fx. for internal status updates - i.e. ones not relevant for end user.
     // like from 'USER_STATUS_NEW_REGISTERED' -> 'USER_STATUS_ACTIVE'
-    public static void setMerchantStatus(Merchants merchant, int status, int reason, MyLogger logger) {
+    public static void setMerchantStatus(Merchants merchant, int status, String reason, MyLogger logger) {
         if(status == merchant.getAdmin_status()) {
             return;
         }
@@ -430,7 +430,7 @@ public class CommonUtils {
         merchant.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[merchant.getAdmin_status()]
                 + ", and status time was "+mSdfDateWithTime.format(merchant.getStatus_update_time()));*/
         merchant.setAdmin_status(status);
-        //merchant.setStatus_reason(reason);
+        merchant.setStatus_reason(reason);
         merchant.setStatus_update_time(new Date());
         BackendOps.updateMerchant(merchant);
 
@@ -445,13 +445,13 @@ public class CommonUtils {
         }
     }
 
-    public static void setCustomerStatus(Customers customer, int status, int reason, MyLogger logger) {
+    public static void setCustomerStatus(Customers customer, int status, String reason, MyLogger logger) {
         if(status == customer.getAdmin_status()) {
             return;
         }
         // update merchant account
-        customer.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[customer.getAdmin_status()]
-                + ", and status time was "+mSdfDateWithTime.format(customer.getStatus_update_time()));
+        /*customer.setAdmin_remarks("Last status was "+DbConstants.userStatusDesc[customer.getAdmin_status()]
+                + ", and status time was "+mSdfDateWithTime.format(customer.getStatus_update_time()));*/
         customer.setAdmin_status(status);
         customer.setStatus_reason(reason);
         customer.setStatus_update_time(new Date());
@@ -468,7 +468,7 @@ public class CommonUtils {
         }
     }
 
-    public static void setAgentStatus(InternalUser agent, int status, int reason, MyLogger logger) {
+    public static void setAgentStatus(InternalUser agent, int status, String reason, MyLogger logger) {
         if(status == agent.getAdmin_status()) {
             return;
         }
@@ -489,22 +489,22 @@ public class CommonUtils {
         }
     }
 
-    private static String getAccStatusSmsText(String userId, int userType, int statusReason) {
+    private static String getAccStatusSmsText(String userId, int userType, String statusReason) {
         int hours = (userType==DbConstants.USER_TYPE_MERCHANT)
                 ? GlobalSettingsConstants.MERCHANT_ACCOUNT_BLOCKED_HOURS
                 : GlobalSettingsConstants.CUSTOMER_ACCOUNT_BLOCKED_HOURS;
 
         switch(statusReason) {
-            case DbConstants.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
+            case DbConstantsBackend.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, userId, hours);
-            case DbConstants.LOCKED_WRONG_PIN_LIMIT_RCHD:
+            case DbConstantsBackend.LOCKED_WRONG_PIN_LIMIT_RCHD:
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, userId, hours);
-            case DbConstants.LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD:
+            case DbConstantsBackend.LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD:
                 if(userType==DbConstants.USER_TYPE_AGENT) {
                     return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT, userId);
                 }
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWD_RESET, userId, hours);
-            case DbConstants.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD:
+            case DbConstantsBackend.LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD:
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_FORGOT_USERID, userId, hours);
             default:
                 // TODO: Raise alarm

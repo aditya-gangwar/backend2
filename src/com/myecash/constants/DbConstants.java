@@ -43,29 +43,6 @@ public class DbConstants {
             "Ready to enable"
     };
 
-    // Merchant table - 'status_reason' column values
-    //public static final int ENABLED_NEW_USER = 1;
-    public static final int ENABLED_ACTIVE = 1;
-    public static final int DISABLED_AUTO_BY_SYSTEM = 2;
-    public static final int DISABLED_ON_USER_REQUEST = 3;
-    public static final int LOCKED_WRONG_PASSWORD_LIMIT_RCHD = 4;
-    public static final int LOCKED_WRONG_PIN_LIMIT_RCHD = 5;
-    public static final int LOCKED_FORGOT_PASSWORD_ATTEMPT_LIMIT_RCHD = 6;
-    public static final int LOCKED_FORGOT_USERID_ATTEMPT_LIMIT_RCHD = 7;
-    public static final int REG_ERROR_ROLE_ASSIGN_FAILED = 8;
-
-    // Map int status values to corresponding descriptions
-    public static String statusReasonDescriptions[] = {
-            "",
-            "User is active",
-            "By system for security purpose. Will be re-activated after verification.",
-            "On user request.",
-            "Wrong password attempts limit reached.",
-            "Wrong PIN attempts limit reached.",
-            "Wrong 'password reset' attempts limit reached.",
-            ""
-    };
-
     // CustomerCards table - 'status' column values
     public static final int CUSTOMER_CARD_STATUS_NEW = 0;
     public static final int CUSTOMER_CARD_STATUS_WITH_MERCHANT = 1;

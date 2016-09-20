@@ -9,9 +9,9 @@ public class Customers
 {
   private java.util.Date status_update_time;
   private String txn_pin;
-  private Integer status_reason;
+  private String status_reason;
   private String mobile_num;
-  private String admin_remarks;
+  //private String admin_remarks;
   private String ownerId;
   private java.util.Date updated;
   private java.util.Date created;
@@ -69,12 +69,12 @@ public class Customers
     this.txn_pin = txn_pin;
   }
 
-  public Integer getStatus_reason()
+  public String getStatus_reason()
   {
     return status_reason;
   }
 
-  public void setStatus_reason( Integer status_reason )
+  public void setStatus_reason( String status_reason )
   {
     this.status_reason = status_reason;
   }
@@ -89,7 +89,7 @@ public class Customers
     this.mobile_num = mobile_num;
   }
 
-  public String getAdmin_remarks()
+  /*public String getAdmin_remarks()
   {
     return admin_remarks;
   }
@@ -97,7 +97,7 @@ public class Customers
   public void setAdmin_remarks( String admin_remarks )
   {
     this.admin_remarks = admin_remarks;
-  }
+  }*/
 
   public String getOwnerId()
   {

@@ -70,7 +70,7 @@ public class InternalUserServices implements IBackendlessService {
 
             merchant.setAuto_id(merchantId);
             merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-            //merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
+            merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
             //merchant.setAdmin_remarks("New registered merchant");
             merchant.setMobile_num(merchant.getMobile_num());
@@ -151,7 +151,7 @@ public class InternalUserServices implements IBackendlessService {
         }
     }
 
-    public void disableMerchant(String merchantId, String ticketNum, String reason) {
+    public void disableMerchant(String merchantId, String ticketNum, String reason, String remarks) {
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -182,6 +182,7 @@ public class InternalUserServices implements IBackendlessService {
             op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
+            op.setRemarks(remarks);
             op.setAgentId(internalUser.getId());
             op.setInitiatedBy( (userType==DbConstants.USER_TYPE_CC)?
                     DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT:
@@ -195,6 +196,7 @@ public class InternalUserServices implements IBackendlessService {
             try {
                 merchant.setAdmin_status(DbConstants.USER_STATUS_DISABLED);
                 merchant.setStatus_update_time(new Date());
+                merchant.setStatus_reason(reason);
                 BackendOps.updateMerchant(merchant);
             } catch(Exception e) {
                 mLogger.error("disableMerchant: Exception while updating merchant status: "+merchantId);
@@ -260,7 +262,7 @@ public class InternalUserServices implements IBackendlessService {
         try {
             Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
             merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-            //merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+            merchant.setStatus_reason(DbConstantsBackend.REG_ERROR_ROLE_ASSIGN_FAILED);
             //merchant.setAdmin_remarks("Registration failed");
             //user.setProperty("merchant", merchant);
             //BackendOps.updateUser(user);
