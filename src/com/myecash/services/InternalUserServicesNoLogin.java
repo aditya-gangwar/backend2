@@ -107,7 +107,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
             }
 
-            CommonUtils.internalUserPwdResetImmediate(user, internalUser, mEdr, mLogger);
+            internalUserPwdResetImmediate(user, internalUser);
             mLogger.debug("Processed passwd reset op for: " + internalUser.getMobile_num());
 
             // no exception - means function execution success
@@ -125,4 +125,23 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
+    private void internalUserPwdResetImmediate(BackendlessUser user, InternalUser internalUser) {
+        // generate password
+        String passwd = CommonUtils.generateTempPassword();
+        // update user account for the password
+        user.setPassword(passwd);
+        user = BackendOps.updateUser(user);
+        mLogger.debug("Updated internal user for password reset: "+internalUser.getId());
+
+        // Send SMS through HTTP
+        String smsText = SmsHelper.buildPwdResetSMS(internalUser.getId(), passwd);
+        if( SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), mLogger) ){
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+        } else {
+            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+        };
+        mLogger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());
+    }
+
 }

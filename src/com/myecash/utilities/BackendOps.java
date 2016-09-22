@@ -75,7 +75,7 @@ public class BackendOps {
                     queryOptions.addRelated("merchant.trusted_devices");
                     if (allChilds) {
                         queryOptions.addRelated("merchant.address");
-                        queryOptions.addRelated("merchant.address.city");
+                        //queryOptions.addRelated("merchant.address.city");
                         queryOptions.addRelated("merchant.buss_category");
                     }
                 case DbConstants.USER_TYPE_AGENT:
@@ -105,7 +105,7 @@ public class BackendOps {
         if(allChilds) {
             relationProps.add("merchant.trusted_devices");
             relationProps.add("merchant.address");
-            relationProps.add("merchant.address.city");
+            //relationProps.add("merchant.address.city");
             relationProps.add("merchant.buss_category");
             relationProps.add("customer.membership_card");
         }
@@ -159,7 +159,7 @@ public class BackendOps {
             QueryOptions queryOptions = new QueryOptions();
             queryOptions.addRelated("trusted_devices");
             queryOptions.addRelated("address");
-            queryOptions.addRelated("address.city");
+            //queryOptions.addRelated("address.city");
             queryOptions.addRelated("buss_category");
             query.setQueryOptions(queryOptions);
 
@@ -233,6 +233,12 @@ public class BackendOps {
     /*
      * Customer operations
      */
+    public static void loadCustomer(BackendlessUser user) {
+        ArrayList<String> relationProps = new ArrayList<>();
+        relationProps.add("customer");
+        Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
+    }
+
     public static Customers getCustomer(String custId, int idType, boolean fetchCard) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         switch(idType) {
@@ -776,7 +782,23 @@ public class BackendOps {
         return Backendless.Persistence.save(device);
     }
 
+    public static Cities fetchCity(String cityName) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause("city = '"+cityName+"'");
 
+        BackendlessCollection<Cities> city = Backendless.Data.of( Cities.class ).find(query);
+        if( city.getTotalObjects() == 0) {
+            // no data found
+            String errorMsg = "No city found: "+cityName;
+            throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, errorMsg);
+        } else {
+            return city.getData().get(0);
+        }
+    }
+
+    public static void describeTable(String tableName) {
+        Backendless.Persistence.describe(tableName);
+    }
 
 }
 

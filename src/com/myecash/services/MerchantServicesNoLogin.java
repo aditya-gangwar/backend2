@@ -128,7 +128,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // For new registered merchant - send the password immediately
             if (!merchant.getFirst_login_ok()) {
-                CommonUtils.resetMchntPasswdImmediate(user, merchant, mEdr, mLogger);
+                resetMchntPasswdImmediate(user, merchant);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
             } else {
                 // create row in MerchantOps table
@@ -216,4 +216,28 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
+    private void resetMchntPasswdImmediate(BackendlessUser user, Merchants merchant) {
+        // generate password
+        String passwd = CommonUtils.generateTempPassword();
+        // update user account for the password
+        user.setPassword(passwd);
+        BackendOps.updateUser(user);
+        //TODO: remove printing passwd
+        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
+
+        // Send SMS through HTTP
+        String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
+        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger) ){
+            if(mEdr!=null) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            }
+        } else {
+            if(mEdr!=null) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
+            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+        };
+        mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
+    }
+
 }

@@ -7,10 +7,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import com.myecash.constants.*;
-import com.myecash.database.InternalUser;
-import com.myecash.database.MerchantIdBatches;
-import com.myecash.database.MerchantOps;
-import com.myecash.database.Merchants;
+import com.myecash.database.*;
 import com.myecash.messaging.SmsConstants;
 import com.myecash.messaging.SmsHelper;
 import com.myecash.utilities.BackendOps;
@@ -51,8 +48,11 @@ public class InternalUserServices implements IBackendlessService {
             InternalUser agent = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
 
+            // Fetch city
+            Cities city = BackendOps.fetchCity(merchant.getAddress().getCity());
+
             // get open merchant id batch
-            String countryCode = merchant.getAddress().getCity().getCountryCode();
+            String countryCode = city.getCountryCode();
             String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
             String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
             MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
@@ -77,7 +77,11 @@ public class InternalUserServices implements IBackendlessService {
             merchant.setFirst_login_ok(false);
             merchant.setAgentId(agent.getId());
             // set cashback and transaction table names
-            setCbAndTransTables(merchant, merchantCnt);
+            //setCbAndTransTables(merchant, merchantCnt);
+            merchant.setCashback_table(DbConstantsBackend.CASHBACK_TABLE_NAME + city.getCbTableCode());
+            BackendOps.describeTable(merchant.getCashback_table()); // just to check that the table exists
+            merchant.setTxn_table(DbConstantsBackend.TRANSACTION_TABLE_NAME + city.getCbTableCode());
+            BackendOps.describeTable(merchant.getTxn_table()); // just to check that the table exists
 
             // generate and set password
             String pwd = CommonUtils.generateTempPassword();
@@ -166,8 +170,7 @@ public class InternalUserServices implements IBackendlessService {
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
-            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT
-                    ) {
+            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT ) {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
             }
 
@@ -229,12 +232,12 @@ public class InternalUserServices implements IBackendlessService {
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
-
     }
 
     /*
      * Private helper methods
      */
+    /*
     private void setCbAndTransTables(Merchants merchant, long regCounter) {
         // decide on the cashback table using round robin
         int pool_size = BackendConstants.CASHBACK_TABLE_POOL_SIZE;
@@ -252,7 +255,7 @@ public class InternalUserServices implements IBackendlessService {
         String transTableName = DbConstantsBackend.TRANSACTION_TABLE_NAME + String.valueOf(table_suffix);
         merchant.setTxn_table(transTableName);
         mLogger.debug("Generated transaction table name:" + transTableName);
-    }
+    }*/
 
 //    private void rollbackRegister(BackendlessUser user) {
     private void rollbackRegister(String mchntId) {

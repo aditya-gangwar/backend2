@@ -14,6 +14,15 @@ public class Cities
   private java.util.Date created;
   private String state;
   private String countryCode;
+  private String cbTableCode;
+
+  public String getCbTableCode() {
+    return cbTableCode;
+  }
+
+  public void setCbTableCode(String cbTableCode) {
+    this.cbTableCode = cbTableCode;
+  }
 
   public String getCountryCode() {
     return countryCode;

@@ -16,7 +16,17 @@ public class Address
   private String line_2;
   private Double latitude;
   private String ownerId;
-  private Cities city;
+  private String city;
+  private String state;
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
   public String getLine_1()
   {
     return line_1;
@@ -87,12 +97,12 @@ public class Address
     return ownerId;
   }
 
-  public Cities getCity()
+  public String getCity()
   {
     return city;
   }
 
-  public void setCity( Cities city )
+  public void setCity( String city )
   {
     this.city = city;
   }

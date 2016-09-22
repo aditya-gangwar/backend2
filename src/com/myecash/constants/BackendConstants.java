@@ -6,7 +6,7 @@ package com.myecash.constants;
  */
 public class BackendConstants {
 
-    public static final String BULK_API_URL  = "http://52.66.162.192:8080/api/v1/data/bulk/";
+    public static final String BULK_API_URL  = "http://52.66.162.23:8080/api/v1/data/bulk/";
     public static final String APP_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
     public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
     //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key

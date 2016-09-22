@@ -110,6 +110,7 @@ public class CommonUtils {
         switch (merchant.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
+            case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
@@ -150,6 +151,7 @@ public class CommonUtils {
         switch(customer.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
+            case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
@@ -190,49 +192,6 @@ public class CommonUtils {
             case DbConstants.USER_STATUS_LOCKED:
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_LOCKED, "");
         }
-    }
-
-    public static void internalUserPwdResetImmediate(BackendlessUser user, InternalUser internalUser, String[] edr, MyLogger logger) {
-        // generate password
-        String passwd = CommonUtils.generateTempPassword();
-        // update user account for the password
-        user.setPassword(passwd);
-        user = BackendOps.updateUser(user);
-        logger.debug("Updated internal user for password reset: "+internalUser.getId());
-
-        // Send SMS through HTTP
-        String smsText = SmsHelper.buildPwdResetSMS(internalUser.getId(), passwd);
-        if( SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), logger) ){
-            edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-        } else {
-            edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        };
-        logger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());
-    }
-
-    public static void resetMchntPasswdImmediate(BackendlessUser user, Merchants merchant, String[] edr, MyLogger logger) {
-        // generate password
-        String passwd = CommonUtils.generateTempPassword();
-        // update user account for the password
-        user.setPassword(passwd);
-        BackendOps.updateUser(user);
-        //TODO: remove printing passwd
-        logger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
-
-        // Send SMS through HTTP
-        String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num(), logger) ){
-            if(edr!=null) {
-                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            }
-        } else {
-            if(edr!=null) {
-                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        };
-        logger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }
 
     public static String mchntPwdResetWhereClause(String merchantId) {
@@ -319,6 +278,8 @@ public class CommonUtils {
                 } catch (Exception e) {
                     // ignore the failure to lock the account
                     // TODO: raise alarm
+                    logger.error("Exception in handleWrongAttempt: "+e.toString());
+                    logger.error(stackTraceStr(e));
                 }
                 // throw max attempt limit reached exception
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD, "");
@@ -339,6 +300,8 @@ public class CommonUtils {
         } catch(Exception e) {
             // ignore exception
             // TODO: raise alarm however
+            logger.error("Exception in handleWrongAttempt: "+e.toString());
+            logger.error(stackTraceStr(e));
         }
     }
 

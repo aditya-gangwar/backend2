@@ -43,7 +43,7 @@ public class SmsConstants {
     public static String SMS_PASSWD = "MyCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_FIRST_PIN_CUSTOMER = "Dear Customer - Welcome to MyCash family !! Your User ID is %s, and your first PIN is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
-    public static String SMS_PASSWD_CHANGED = "MyCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
+    public static String SMS_PASSWD_CHANGED = "MyeCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
     public static String SMS_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
 
     // Registration / User ID messages

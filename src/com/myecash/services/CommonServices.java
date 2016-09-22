@@ -7,6 +7,7 @@ import com.backendless.servercode.InvocationContext;
 import com.myecash.constants.BackendConstants;
 import com.myecash.constants.BackendResponseCodes;
 import com.myecash.constants.DbConstants;
+import com.myecash.database.Customers;
 import com.myecash.database.InternalUser;
 import com.myecash.database.Merchants;
 import com.myecash.messaging.SmsHelper;
@@ -58,6 +59,16 @@ public class CommonServices implements IBackendlessService {
 
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                     mobileNum = merchant.getMobile_num();
+                    break;
+
+                case DbConstants.USER_TYPE_CUSTOMER:
+                    mLogger.debug("Usertype is Customer");
+                    BackendOps.loadCustomer(user);
+                    Customers customer = (Customers)user.getProperty("customer");
+                    mLogger.setProperties(customer.getPrivate_id(), DbConstants.USER_TYPE_CUSTOMER, customer.getDebugLogs());
+
+                    mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
+                    mobileNum = customer.getMobile_num();
                     break;
 
                 case DbConstants.USER_TYPE_AGENT:
