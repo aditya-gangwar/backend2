@@ -341,8 +341,8 @@ public class CommonUtils {
     }
 
     public static boolean customerCardRequired(Transaction txn) {
-        return ( (txn.getCl_debit()>0 && GlobalSettingsConstants.ACC_DEBIT_CARD_REQ>0) ||
-                (txn.getCb_debit()>0 && GlobalSettingsConstants.ACC_DEBIT_CARD_REQ>0) );
+        return ( (txn.getCl_debit()>0 && GlobalSettingsConstants.ACC_DEBIT_CARD_REQ) ||
+                (txn.getCb_debit()>0 && GlobalSettingsConstants.CB_REDEEM_CARD_REQ) );
     }
 
     public static boolean isTrustedDevice(String deviceId, List<MerchantDevice> trustedDevices) {

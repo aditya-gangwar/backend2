@@ -31,8 +31,8 @@ public class DbConstants {
     public static final int USER_STATUS_LOCKED = 3;
     // Error during registration - to be manually deleted
     public static final int USER_STATUS_REG_ERROR = 4;
-    // Acc can be 'enabled' by customer care, only when in this state
     public static final int USER_STATUS_READY_TO_ACTIVE = 5;
+    public static final int USER_STATUS_READY_TO_REMOVE = 6;
     // status code to text description
     public static String userStatusDesc[] = {
             "",
@@ -40,7 +40,8 @@ public class DbConstants {
             "Disabled",
             "Locked",
             "Not Registered",
-            "Ready to enable"
+            "Ready to Enable",
+            "In Expiry Period"
     };
 
     // CustomerCards table - 'status' column values
@@ -88,6 +89,9 @@ public class DbConstants {
     public static final String SETTINGS_OTP_VALID_MINS = "otp_valid_mins";
     public static final String SETTINGS_SERVICE_DISABLED_UNTIL = "service_disabled_until";
     public static final String SETTINGS_TXN_IMAGE_CAPTURE_MODE = "txn_image_capture_mode";
+    public static final String SETTINGS_CB_REDEEM_CARD_REQ = "cb_redeem_card_req";
+    public static final String SETTINGS_ACC_DB_CARD_REQ = "acc_debit_card_req";
+    public static final String SETTINGS_MCHNT_REMOVAL_EXPIRY_DAYS = "mchnt_removal_expiry_days";
 
     // GlobalSettings table - 'txn_image_capture_mode' column values
     public static final int TXN_IMAGE_CAPTURE_ALWAYS = 0;
@@ -97,6 +101,7 @@ public class DbConstants {
 
     // GlobalSettings table - 'value_datatype' column values
     public static final int DATATYPE_INT = 1;
-    public static final int DATATYPE_STRING = 2;
-    public static final int DATATYPE_DATE = 3;
+    public static final int DATATYPE_BOOLEAN = 2;
+    public static final int DATATYPE_STRING = 3;
+    public static final int DATATYPE_DATE = 4;
 }

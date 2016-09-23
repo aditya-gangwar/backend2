@@ -60,4 +60,6 @@ public class SmsConstants {
     public static String SMS_USER_ACC_DISABLE = "Dear User - Your account number '%s' is Disabled now. You can call us for further help.";
     public static String SMS_MCHNT_LOGIN_RESET = "Dear Merchant - As per request, the login access for account '%s' is reset successfully. Pls use 'Forgot Password' link to restore your access.";
     public static String SMS_MCHNT_MOBILE_CHANGE_ADMIN = "Dear Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Pls use 'Forgot Password' link to restore your access.";
+
+    public static String SMS_MERCHANT_REMOVE = "Dear Merchant - As per your request, your account '%s' is under %s days of expiry period now. 'Credit' transactions are not allowed from now. Your account will be automatically deleted on %s.";
 }

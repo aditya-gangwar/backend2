@@ -46,6 +46,9 @@ public class GlobalSettingsConstants {
     // Corresponding to 'mchnt_stats_no_refresh_hours' in GlobalSettings table
     public static final int MCHNT_STATS_NO_REFRESH_HOURS = 1;
 
-    public static final int ACC_DEBIT_CARD_REQ = 1;
-    public static final int CB_REDEEM_CARD_REQ = 1;
+    public static final boolean ACC_DEBIT_CARD_REQ = true;
+    public static final boolean CB_REDEEM_CARD_REQ = true;
+
+    // Corresponding to mchnt_removal_expiry_days
+    public static final int MCHNT_REMOVAL_EXPIRY_DAYS = 30;
 }

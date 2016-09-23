@@ -48,6 +48,7 @@ public class DbConstantsBackend {
     public static final String MERCHANT_OP_RESET_LOGIN_DATA = "Reset Password";
     public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
     public static final String MERCHANT_OP_DISABLE_ACC = "Disable Account";
+    public static final String MERCHANT_OP_REMOVE_ACC = "Remove Account";
     // 'status' column values
     public static final String MERCHANT_OP_STATUS_PENDING = "Pending";
     public static final String MERCHANT_OP_STATUS_LOCKED = "In progress";

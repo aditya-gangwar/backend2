@@ -64,10 +64,20 @@ public class TxnTableEventHelper {
             String merchantId = merchant.getAuto_id();
             mLogger.setProperties(merchantId,DbConstants.USER_TYPE_MERCHANT,merchant.getDebugLogs());
 
+            // check merchant status
+            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            // credit txns not allowed under expiry duration
+            if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
+                if(transaction.getCb_credit() > 0 || transaction.getCl_credit() > 0) {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_UNDER_EXPIRY, "");
+                }
+            }
+
             // Fetch customer
             Customers customer = BackendOps.getCustomer(transaction.getCustomer_id(), BackendConstants.CUSTOMER_ID_MOBILE, true);
             String customerId = customer.getMobile_num();
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerId;
+
             // check if customer is enabled
             CommonUtils.checkCustomerStatus(customer, mLogger);
 

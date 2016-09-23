@@ -152,6 +152,12 @@ public class MerchantServices implements IBackendlessService {
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
 
+            // check merchant status
+            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_UNDER_EXPIRY, "");
+            }
+
             // update settings
             merchant.setCb_rate(cbRate);
             merchant.setCl_add_enable(addClEnabled);
@@ -342,6 +348,7 @@ public class MerchantServices implements IBackendlessService {
             // not checking for merchant account status
 
             boolean calculateAgain = true;
+            // TODO: see if it is really required to fetch customer.card too - can be avoided if card status is not required
             // fetch merchant stat object, if exists
             MerchantStats stats = BackendOps.fetchMerchantStats(merchantId);
             // create object if not already available
@@ -383,9 +390,12 @@ public class MerchantServices implements IBackendlessService {
                     // loop on all cashback objects and calculate stats
                     mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
 
-                    StringBuilder sb = new StringBuilder(CUST_CSV_RECORD_MAX_CHARS * data.size());
+                    StringBuilder sb = new StringBuilder(CUST_CSV_RECORD_MAX_CHARS * (data.size()+1));
                     //sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
                     //sb.append(CommonConstants.CSV_NEWLINE);
+
+                    // Add first line as header - to give the file creation time in epoch
+                    sb.append(String.valueOf((new Date()).getTime())).append(CommonConstants.CSV_DELIMETER).append(CommonConstants.CSV_NEWLINE);
 
                     for (int k = 0; k < data.size(); k++) {
                         Cashback cb = data.get(k);

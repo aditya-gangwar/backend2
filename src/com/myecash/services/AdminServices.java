@@ -10,8 +10,10 @@ import com.myecash.messaging.SmsConstants;
 import com.myecash.messaging.SmsHelper;
 import com.myecash.utilities.BackendOps;
 import com.myecash.utilities.CommonUtils;
+import com.myecash.utilities.DateUtil;
 import com.myecash.utilities.MyLogger;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -86,6 +88,7 @@ public class AdminServices implements IBackendlessService {
             int oldStatus = merchant.getAdmin_status();
             Date oldUpdateTime = merchant.getStatus_update_time();
             String oldMobile = merchant.getMobile_num();
+            String oldReason = merchant.getStatus_reason();
             mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
 
             // Add merchant op first - then update status
@@ -113,6 +116,7 @@ public class AdminServices implements IBackendlessService {
             // update merchant status (and mobile num, if required)
             try {
                 merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
+                merchant.setStatus_reason(reason);
                 merchant.setStatus_update_time(new Date());
                 if(newMobileNum!=null) {
                     merchant.setMobile_num(newMobileNum);
@@ -152,6 +156,7 @@ public class AdminServices implements IBackendlessService {
                 try {
                     BackendOps.deleteMerchantOp(op);
                     merchant.setAdmin_status(oldStatus);
+                    merchant.setStatus_reason(oldReason);
                     merchant.setStatus_update_time(oldUpdateTime);
                     if(newMobileNum!=null) {
                         merchant.setMobile_num(oldMobile);
@@ -173,6 +178,100 @@ public class AdminServices implements IBackendlessService {
             } else {
                 smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, CommonUtils.getHalfVisibleId(merchantId), newMobileNum);
             }
+
+            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+            } else {
+                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void removeMerchant(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            CommonUtils.initTableToClassMappings();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "removeMerchant";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    ticketNum;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // fetch user with the given id with related merchant object
+            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+            // merchant should be in active state
+            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Merchant account is not active");
+            }
+
+            int oldStatus = merchant.getAdmin_status();
+            Date oldUpdateTime = merchant.getStatus_update_time();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+
+            // Add merchant op first - then update status
+            MerchantOps op = new MerchantOps();
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setAgentId(ADMIN_LOGINID);
+            op.setInitiatedBy( DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_MANUAL);
+            op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_LOGIN_DATA);
+            BackendOps.saveMerchantOp(op);
+
+            // update merchant status (and mobile num, if required)
+            try {
+                merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_REMOVE);
+                merchant.setStatus_update_time(new Date());
+                merchant.setStatus_reason(reason);
+                // disable cb and cl add
+                merchant.setCb_rate("0");
+                merchant.setCl_add_enable(false);
+                merchant = BackendOps.updateMerchant(merchant);
+
+            } catch(Exception e) {
+                mLogger.error("removeMerchant: Exception while updating merchant status: "+merchantId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("removeMerchant: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+            now.addDays(GlobalSettingsConstants.MCHNT_REMOVAL_EXPIRY_DAYS);
+            SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
+
+            // send SMS
+            String smsText = String.format(SmsConstants.SMS_MERCHANT_REMOVE,
+                    merchantId,
+                    String.valueOf(GlobalSettingsConstants.MCHNT_REMOVAL_EXPIRY_DAYS),
+                    sdf.format(now.getTime()));
 
             if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
