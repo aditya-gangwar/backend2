@@ -127,7 +127,7 @@ public class CommonConstants {
     public static int CB_CSV_BILL = 7;
     public static int CB_CSV_CREATE_TIME = 8;
     public static int CB_CSV_UPDATE_TIME = 9;
-    public static int CB_CSV_CUST_DETAILS = 10;
+    public static int CB_CSV_OTHER_DETAILS = 10;
     public static int CB_CSV_TOTAL_FIELDS = 11;
 
     /*

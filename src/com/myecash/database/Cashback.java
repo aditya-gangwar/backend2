@@ -19,7 +19,7 @@ public class Cashback
   private Integer total_billed;
   private String rowid;
   private String cust_private_id;
-  private String customer_details;
+  private String other_details;
   private String merchant_id;
   private Integer cb_billed;
   private Customers customer;
@@ -60,12 +60,12 @@ public class Cashback
     this.merchant_id = merchant_id;
   }
 
-  public String getCustomer_details() {
-    return customer_details;
+  public String getOther_details() {
+    return other_details;
   }
 
-  public void setCustomer_details(String customer_details) {
-    this.customer_details = customer_details;
+  public void setOther_details(String other_details) {
+    this.other_details = other_details;
   }
 
   public String getCust_private_id() {

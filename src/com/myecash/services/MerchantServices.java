@@ -300,7 +300,7 @@ public class MerchantServices implements IBackendlessService {
 
             // Add 'customer details' in the cashback object to be returned
             // these details are not stored in DB along with cashback object
-            cashback.setCustomer_details(buildCustomerDetails(customer, byCCUser, CommonConstants.CSV_SUB_DELIMETER));
+            cashback.setOther_details(buildCustomerDetails(customer, byCCUser, CommonConstants.CSV_SUB_DELIMETER));
             stripCashback(cashback);
 
             // no exception - means function execution success
@@ -626,7 +626,7 @@ public class MerchantServices implements IBackendlessService {
                 cashback = createCbObject(merchant, customer);
                 // Add 'customer details' in the cashback object to be returned
                 // these details are not stored in DB along with cashback object
-                cashback.setCustomer_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
+                cashback.setOther_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
                 // remove 'not needed sensitive' fields from cashback object
                 stripCashback(cashback);
 
@@ -858,7 +858,7 @@ public class MerchantServices implements IBackendlessService {
         csvFields[CommonConstants.CB_CSV_CREATE_TIME] = String.valueOf(cb.getCreated().getTime()) ;
         csvFields[CommonConstants.CB_CSV_UPDATE_TIME] = String.valueOf(cb.getUpdated().getTime()) ;
         if(cb.getCustomer()!=null) {
-            csvFields[CommonConstants.CB_CSV_CUST_DETAILS] = buildCustomerDetails(cb.getCustomer(), addCustCareData, CommonConstants.CSV_SUB_DELIMETER);
+            csvFields[CommonConstants.CB_CSV_OTHER_DETAILS] = buildCustomerDetails(cb.getCustomer(), addCustCareData, CommonConstants.CSV_SUB_DELIMETER);
         }
 
         // combine to single string
