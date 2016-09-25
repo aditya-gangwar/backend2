@@ -16,6 +16,70 @@ public class CustomerOps
   private String requestor_id;
   private String op_code;
   private String objectId;
+  private String initiatedBy;
+  private String initiatedVia;
+  private String ticketNum;
+  private String privateId;
+  private String op_status;
+  private String reason;
+  private String remarks;
+
+  public String getInitiatedBy() {
+    return initiatedBy;
+  }
+
+  public void setInitiatedBy(String initiatedBy) {
+    this.initiatedBy = initiatedBy;
+  }
+
+  public String getInitiatedVia() {
+    return initiatedVia;
+  }
+
+  public void setInitiatedVia(String initiatedVia) {
+    this.initiatedVia = initiatedVia;
+  }
+
+  public String getTicketNum() {
+    return ticketNum;
+  }
+
+  public void setTicketNum(String ticketNum) {
+    this.ticketNum = ticketNum;
+  }
+
+  public String getPrivateId() {
+    return privateId;
+  }
+
+  public void setPrivateId(String privateId) {
+    this.privateId = privateId;
+  }
+
+  public String getOp_status() {
+    return op_status;
+  }
+
+  public void setOp_status(String op_status) {
+    this.op_status = op_status;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
+  }
+
+  public String getRemarks() {
+    return remarks;
+  }
+
+  public void setRemarks(String remarks) {
+    this.remarks = remarks;
+  }
+
   public String getExtra_op_params()
   {
     return extra_op_params;

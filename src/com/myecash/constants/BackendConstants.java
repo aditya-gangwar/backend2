@@ -36,6 +36,7 @@ public class BackendConstants {
     // ignored error scenarios
     public static final String BACKEND_ERROR_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
     public static final String BACKEND_ERROR_MOBILE_NUM_NA = "MobileNumNotAvailable";
+    public static final String BACKEND_ERROR_PWD_RESET_LOCK_FAILED = "PwdResetLockFailed";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;

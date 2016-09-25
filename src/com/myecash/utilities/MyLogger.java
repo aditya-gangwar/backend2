@@ -66,6 +66,17 @@ public class MyLogger {
         }
     }
 
+    public void error(String msg, Exception e) {
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
+        mLogger.error(msg);
+        mLogger.error(CommonUtils.stackTraceStr(e));
+        if(BackendConstants.DEBUG_MODE) {
+            msg = "Error | "+msg;
+            //System.out.println(msg);
+            mSb.append("\n").append(msg);
+        }
+    }
+
     public void fatal(String msg) {
         msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.fatal(msg);

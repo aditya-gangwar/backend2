@@ -542,8 +542,45 @@ public class BackendOps {
     /*
      * Customer operations ops
      */
+    public static ArrayList<CustomerOps> fetchCustomerOps(String whereClause) {
+        // fetch cashback objects from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause(whereClause);
+        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+
+        QueryOptions options = new QueryOptions();
+        options.addSortByOption("created DESC");
+        dataQuery.setQueryOptions(options);
+
+        BackendlessCollection<CustomerOps> collection = Backendless.Data.of(CustomerOps.class).find(dataQuery);
+
+        int cnt = collection.getTotalObjects();
+        if(cnt > 0) {
+            ArrayList<CustomerOps> objects = new ArrayList<>();
+            while (collection.getCurrentPage().size() > 0)
+            {
+                int size  = collection.getCurrentPage().size();
+
+                Iterator<CustomerOps> iterator = collection.getCurrentPage().iterator();
+                while( iterator.hasNext() )
+                {
+                    objects.add(iterator.next());
+                }
+                collection = collection.nextPage();
+            }
+            return objects;
+        } else {
+            // no object is not an error
+            return null;
+        }
+    }
+
     public static CustomerOps saveCustomerOp(CustomerOps op) {
         return Backendless.Persistence.save( op );
+    }
+
+    public static void deleteCustomerOp(CustomerOps op) {
+        Backendless.Persistence.of( CustomerOps.class ).remove( op );
     }
 
 

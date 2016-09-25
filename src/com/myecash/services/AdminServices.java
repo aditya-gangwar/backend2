@@ -95,15 +95,15 @@ public class AdminServices implements IBackendlessService {
             MerchantOps op = new MerchantOps();
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
-            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
             op.setRemarks(remarks);
             op.setAgentId(ADMIN_LOGINID);
-            op.setInitiatedBy( DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
-            op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_MANUAL);
+            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
             if(newMobileNum==null) {
-                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_LOGIN_DATA);
+                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_ACC_FOR_LOGIN);
             } else {
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
                 // set extra params in presentable format
@@ -229,14 +229,14 @@ public class AdminServices implements IBackendlessService {
             MerchantOps op = new MerchantOps();
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
-            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
             op.setRemarks(remarks);
             op.setAgentId(ADMIN_LOGINID);
-            op.setInitiatedBy( DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
-            op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_MANUAL);
-            op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_LOGIN_DATA);
+            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
+            op.setOp_code(DbConstantsBackend.MERCHANT_OP_REMOVE_ACC);
             BackendOps.saveMerchantOp(op);
 
             // update merchant status (and mobile num, if required)

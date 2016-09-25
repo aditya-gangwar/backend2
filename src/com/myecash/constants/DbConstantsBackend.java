@@ -45,22 +45,28 @@ public class DbConstantsBackend {
      */
     // 'opcode' column values
     public static final String MERCHANT_OP_RESET_PASSWD = "Reset Password";
-    public static final String MERCHANT_OP_RESET_LOGIN_DATA = "Reset Password";
+    public static final String MERCHANT_OP_RESET_ACC_FOR_LOGIN = "Reset Account for Login";
     public static final String MERCHANT_OP_CHANGE_MOBILE = "Change Mobile";
     public static final String MERCHANT_OP_DISABLE_ACC = "Disable Account";
     public static final String MERCHANT_OP_REMOVE_ACC = "Remove Account";
+
+    /*
+     * Common to MerchantOps and CustomerOps table
+     */
     // 'status' column values
-    public static final String MERCHANT_OP_STATUS_PENDING = "Pending";
-    public static final String MERCHANT_OP_STATUS_LOCKED = "In progress";
-    public static final String MERCHANT_OP_STATUS_COMPLETE = "Completed";
+    public static final String USER_OP_STATUS_PENDING = "Pending";
+    //public static final String USER_OP_STATUS_LOCKED = "In progress";
+    public static final String USER_OP_STATUS_COMPLETE = "Completed";
+    public static final String USER_OP_STATUS_ERROR = "Failed";
     // 'initiatedBy' column values
-    public static final String MERCHANT_OP_INITBY_MCHNT = "Merchant";
-    public static final String MERCHANT_OP_INITBY_ADMIN = "MyeCash Admin";
+    public static final String USER_OP_INITBY_MCHNT = "Merchant";
+    public static final String USER_OP_INITBY_CUSTOMER = "Customer";
+    public static final String USER_OP_INITBY_ADMIN = "MyeCash Admin";
     // 'initiatedVia' column values - valid when initiated by merchant
-    public static final String MERCHANT_OP_INITVIA_APP = "App";
-    public static final String MERCHANT_OP_INITVIA_CC = "Call to Customer Care";
-    public static final String MERCHANT_OP_INITVIA_IVR = "Call to IVR";
-    public static final String MERCHANT_OP_INITVIA_MANUAL = "Manual application";
+    public static final String USER_OP_INITVIA_APP = "App";
+    public static final String USER_OP_INITVIA_CC = "Call to Customer Care";
+    public static final String USER_OP_INITVIA_IVR = "Call to IVR";
+    public static final String USER_OP_INITVIA_MANUAL = "Manual application";
 
     // Otp table - 'opcode' column values - apart from ones from 'MerchantOps' and 'CustomerOps' tables
     public static final String MERCHANT_OP_NEW_DEVICE_LOGIN = "new_device_login";

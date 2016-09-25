@@ -91,7 +91,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // check if any request already pending
-            if( BackendOps.fetchMerchantOps(CommonUtils.mchntPwdResetWhereClause(userId)) != null) {
+            if( BackendOps.fetchMerchantOps(mchntPwdResetWhereClause(userId)) != null) {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
             }
 
@@ -101,6 +101,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             if(userType != DbConstants.USER_TYPE_MERCHANT) {
                 throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,userId+" is not a merchant.");
             }
+
             Merchants merchant = (Merchants) user.getProperty("merchant");
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_USER_ID_IDX] = (String)user.getProperty("user_id");
@@ -136,9 +137,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 op.setMerchant_id(merchant.getAuto_id());
                 op.setMobile_num(merchant.getMobile_num());
                 op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD);
-                op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_PENDING);
-                op.setInitiatedBy(DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
-                op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_APP);
+                op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
+                op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
+                op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
 
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
@@ -236,8 +237,20 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             }
             throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
-        };
+        }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }
 
+    private String mchntPwdResetWhereClause(String merchantId) {
+        StringBuilder whereClause = new StringBuilder();
+
+        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
+        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
+
+        // created within last 'cool off mins'
+        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+        whereClause.append(" AND created > ").append(time);
+        return whereClause.toString();
+    }
 }

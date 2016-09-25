@@ -194,21 +194,6 @@ public class CommonUtils {
         }
     }
 
-    public static String mchntPwdResetWhereClause(String merchantId) {
-        StringBuilder whereClause = new StringBuilder();
-
-        // Single password reset request allowed in every 2 hours
-
-        // for particular merchant
-        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
-        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
-        // greater than configured period
-        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS * 60 * 1000);
-        whereClause.append(" AND created > ").append(time);
-        return whereClause.toString();
-    }
-
-
     public static void checkCardForUse(CustomerCards card) {
         switch(card.getStatus()) {
             /*

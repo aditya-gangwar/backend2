@@ -60,9 +60,10 @@ public class DbConstants {
 
 
     // CustomerOps table - 'opcode' column values
-    public static final String CUSTOMER_OP_NEW_CARD = "NEW CARD";
-    public static final String CUSTOMER_OP_RESET_PIN = "RESET PIN";
-    public static final String CUSTOMER_OP_CHANGE_MOBILE = "CHANGE MOBILE";
+    public static final String CUSTOMER_OP_RESET_PASSWORD = "Reset Password";
+    public static final String CUSTOMER_OP_NEW_CARD = "New Card";
+    public static final String CUSTOMER_OP_RESET_PIN = "Reset Pin";
+    public static final String CUSTOMER_OP_CHANGE_MOBILE = "Change Mobile";
 
     // Transactions table values
     public static final String TXN_CUSTOMER_PIN_USED = "Yes";

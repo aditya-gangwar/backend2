@@ -18,7 +18,7 @@ public class MerchantOps
   private String ticketNum;
   private String merchant_id;
   private java.util.Date updated;
-  private String otp;
+  //private String otp;
   private String op_status;
   private String reason;
   private String agentId;
@@ -130,7 +130,7 @@ public class MerchantOps
     return updated;
   }
 
-  public String getOtp()
+  /*public String getOtp()
   {
     return otp;
   }
@@ -138,7 +138,7 @@ public class MerchantOps
   public void setOtp( String otp )
   {
     this.otp = otp;
-  }
+  }*/
 
   public String getOp_status()
   {

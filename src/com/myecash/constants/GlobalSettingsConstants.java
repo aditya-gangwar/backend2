@@ -20,12 +20,15 @@ public class GlobalSettingsConstants {
     public static final int CUSTOMER_WRONG_ATTEMPT_LIMIT = 5;
     public static final int INTERNAL_USER_WRONG_ATTEMPT_LIMIT = 5;
 
-    // Keep it 2-5 minutes less than what is configured in GlobalSettings
-    // to allow for the time between 'message request submitted' and 'message actually delivered'
-    public static final int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 5;
+    // TODO: Keep the timer duration 1/6th of below configured value
+    // So, if Cool_off_mins is 60, then timer should run every 10 mins
+    public static final int MERCHANT_PASSWORD_RESET_COOL_OFF_MINS = 60;
+    public static final int CUSTOMER_PASSWORD_RESET_COOL_OFF_MINS = 60;
 
-    // Single password reset request allowed in 2 hours
-    public static final int MERCHANT_PASSWORD_RESET_REQUEST_GAP_MINS = 120;
+    // Below are not part of global settings, but keeping them here
+    // as they depend on above 'cool off' period values - keep the values 1/6th of above
+    public static final int MERCHANT_PASSWORD_RESET_TIMER_INTERVAL = 10;
+    public static final int CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL = 10;
 
     // Corresponding 'customer_account_block_hrs' in GlobalSettings table
     public static final int CUSTOMER_ACCOUNT_BLOCKED_HOURS = 24;

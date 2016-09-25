@@ -182,16 +182,16 @@ public class InternalUserServices implements IBackendlessService {
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
             op.setOp_code(DbConstantsBackend.MERCHANT_OP_DISABLE_ACC);
-            op.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
             op.setRemarks(remarks);
             op.setAgentId(internalUser.getId());
             op.setInitiatedBy( (userType==DbConstants.USER_TYPE_CC)?
-                    DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT:
-                    DbConstantsBackend.MERCHANT_OP_INITBY_ADMIN);
+                    DbConstantsBackend.USER_OP_INITBY_MCHNT :
+                    DbConstantsBackend.USER_OP_INITBY_ADMIN);
             if(userType==DbConstants.USER_TYPE_CC) {
-                op.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_CC);
+                op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_CC);
             }
             BackendOps.saveMerchantOp(op);
 

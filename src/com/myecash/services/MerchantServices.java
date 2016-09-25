@@ -35,20 +35,20 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Merchant operations
      */
-    public Merchants changeMobile(String currentMobile, String newMobile, String otp) {
+    public Merchants changeMobile(String verifyparam, String newMobile, String otp) {
 
         CommonUtils.initTableToClassMappings();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "changeMobile";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = currentMobile+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = verifyparam+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 newMobile+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 otp;
 
         boolean positiveException = false;
 
         try {
-            mLogger.debug("In changeMobile: " + currentMobile + "," + newMobile);
+            mLogger.debug("In changeMobile: " + verifyparam + "," + newMobile);
 
             // Fetch merchant with all child - as the same instance is to be returned too
             Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
@@ -59,7 +59,7 @@ public class MerchantServices implements IBackendlessService {
                 // First run, generate OTP if all fine
 
                 // Validate based on given current number
-                if (!merchant.getMobile_num().equals(currentMobile)) {
+                if (!merchant.getDob().equals(verifyparam)) {
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
                 }
 
@@ -84,9 +84,9 @@ public class MerchantServices implements IBackendlessService {
                 merchantops.setMerchant_id(merchant.getAuto_id());
                 merchantops.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
                 merchantops.setMobile_num(oldMobile);
-                merchantops.setInitiatedBy(DbConstantsBackend.MERCHANT_OP_INITBY_MCHNT);
-                merchantops.setInitiatedVia(DbConstantsBackend.MERCHANT_OP_INITVIA_APP);
-                merchantops.setOp_status(DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE);
+                merchantops.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
+                merchantops.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
+                merchantops.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
                 // set extra params in presentable format
                 String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobile;
                 merchantops.setExtra_op_params(extraParams);
@@ -491,7 +491,7 @@ public class MerchantServices implements IBackendlessService {
             String whereClause = "merchant_id = '"+merchantId+"'";
             if(!byCCUser) {
                 // return only 'completed' ops to merchant
-                whereClause = whereClause+" AND op_status = '"+DbConstantsBackend.MERCHANT_OP_STATUS_COMPLETE+"'";
+                whereClause = whereClause+" AND op_status = '"+DbConstantsBackend.USER_OP_STATUS_COMPLETE +"'";
             }
             mLogger.debug("where clause: "+whereClause);
 
@@ -508,7 +508,7 @@ public class MerchantServices implements IBackendlessService {
                 for (MerchantOps op: ops) {
                     op.setTicketNum("");
                     op.setReason("");
-                    op.setOtp("");
+                    //op.setOtp("");
                     op.setOp_status("");
                 }
             }
@@ -1019,7 +1019,7 @@ public class MerchantServices implements IBackendlessService {
         BackendOps.updateUser(custUser);
 
         // Send message to customer informing the same - ignore sent status
-        String smsText = SmsHelper.buildCustMobileChangeSMS( oldMobile, newMobile );
+        String smsText = SmsHelper.buildMobileChangeSMS( oldMobile, newMobile );
         if(SmsHelper.sendSMS(smsText, oldMobile+","+newMobile, mLogger)){
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {

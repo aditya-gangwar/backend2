@@ -157,6 +157,50 @@ public class CommonServices implements IBackendlessService {
         }
     }
 
+    public Customers getCustomer(String custId) {
+        CommonUtils.initTableToClassMappings();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCustomer";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = custId;
+
+        try {
+            mLogger.debug("In getCustomer");
+
+            // Send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(), null, mEdr, mLogger, true);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            Customers customer = null;
+            if (userType == DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                if (!customer.getMobile_num().equals(custId)) {
+                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,
+                            "Invalid customer id provided: " + custId);
+                }
+            } else if (userType == DbConstants.USER_TYPE_CC) {
+                // fetching merchant user instead of direct merchant object - for lastLogin value
+                //BackendlessUser user = BackendOps.fetchUser(merchantId, DbConstants.USER_TYPE_MERCHANT, true);
+                //merchant = (Merchants)user.getProperty("merchant");
+                //merchant.setLastLogin((Date)user.getProperty("lastLogin"));
+                customer = BackendOps.getCustomer(custId, CommonUtils.getCustomerIdType(custId), true);
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
+            } else {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return customer;
+        } catch (Exception e) {
+            CommonUtils.handleException(e, false, mLogger, mEdr);
+            throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime, mLogger, mEdr);
+        }
+    }
+
     /*
      * Private helper methods
      */
