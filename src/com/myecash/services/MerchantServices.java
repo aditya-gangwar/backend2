@@ -287,6 +287,7 @@ public class MerchantServices implements IBackendlessService {
             Cashback cashback = null;
             if(data == null) {
                 if(byCCUser) {
+                    // if called by CC, return from here - to skip cb creation logic
                     positiveException = true;
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_CUST_NOT_REG_WITH_MCNT, "");
                 }

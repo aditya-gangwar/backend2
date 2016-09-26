@@ -520,7 +520,7 @@ public class CommonUtils {
 
             case DbConstants.USER_TYPE_CUSTOMER:
                 Customers customer = (Customers) user.getProperty("customer");
-                edr[BackendConstants.EDR_MCHNT_ID_IDX] = customer.getPrivate_id();
+                edr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
                 logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, customer.getDebugLogs());
                 // check if merchant is enabled
                 CommonUtils.checkCustomerStatus(customer, logger);

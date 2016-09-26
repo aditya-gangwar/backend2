@@ -4,17 +4,17 @@ package com.myecash.services;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
-import com.myecash.constants.BackendConstants;
-import com.myecash.constants.BackendResponseCodes;
-import com.myecash.constants.DbConstants;
-import com.myecash.constants.DbConstantsBackend;
-import com.myecash.database.AllOtp;
-import com.myecash.database.CustomerOps;
-import com.myecash.database.Customers;
+import com.myecash.constants.*;
+import com.myecash.database.*;
 import com.myecash.messaging.SmsHelper;
 import com.myecash.utilities.BackendOps;
 import com.myecash.utilities.CommonUtils;
 import com.myecash.utilities.MyLogger;
+import com.myecash.utilities.MyMerchant;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by adgangwa on 25-09-2016.
@@ -125,4 +125,85 @@ public class CustomerServices implements IBackendlessService {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
+
+    public List<Cashback> getCashbacks(String custPrivateId, long updatedSince) {
+
+        CommonUtils.initTableToClassMappings();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashbacks";
+
+        boolean positiveException = false;
+        try {
+            mLogger.debug("In getCashbacks");
+
+            // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            boolean callByCC = false;
+            Customers customer = null;
+            if(userType==DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                custPrivateId = customer.getPrivate_id();
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = custPrivateId;
+
+            } else if(userType==DbConstants.USER_TYPE_CC) {
+                // fetch merchant
+                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.CUSTOMER_ID_PRIVATE_ID, false);
+                callByCC = true;
+            } else {
+                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+            }
+
+            // not checking for customer account status
+
+            List<Cashback> cbs= null;
+            String[] csvFields = customer.getCashback_table().split(CommonConstants.CSV_DELIMETER);
+
+            // fetch cashback records from each table
+            for(int i=0; i<csvFields.length; i++) {
+
+                // fetch all CB records for this customer in this table
+                String whereClause = "cust_private_id = '" + custPrivateId + "' AND updated > "+updatedSince;
+                mLogger.debug("whereClause: "+whereClause);
+
+                ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause,csvFields[i], false, true);
+                if (data != null) {
+                    if(cbs==null) {
+                        cbs= new ArrayList<>();
+                    }
+                    // dont want to send complete merchant objects
+                    // convert the required info into a CSV string
+                    // and send as other_details column of the cashback object
+                    for (Cashback cb :
+                            data) {
+                        cb.setOther_details(MyMerchant.toCsvString(cb.getMerchant()));
+                    }
+
+                    // add all fetched records from this table to final set
+                    cbs.addAll(data);
+                }
+            }
+
+            if(cbs==null || cbs.size()==0) {
+                positiveException = true;
+                throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, "");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return cbs;
+
+        } catch(Exception e) {
+            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
+            throw e;
+        } finally {
+            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+
 }
