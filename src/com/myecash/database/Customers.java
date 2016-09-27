@@ -5,6 +5,8 @@ import com.backendless.BackendlessCollection;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.persistence.BackendlessDataQuery;
 
+import java.util.Date;
+
 public class Customers
 {
   private java.util.Date status_update_time;
@@ -24,6 +26,15 @@ public class Customers
   private String cardId;
   private Boolean first_login_ok;
   private Boolean debugLogs;
+  private Date lastRenewDate;
+
+  public Date getLastRenewDate() {
+    return lastRenewDate;
+  }
+
+  public void setLastRenewDate(Date lastRenewDate) {
+    this.lastRenewDate = lastRenewDate;
+  }
 
   public Boolean getDebugLogs() {
     return debugLogs;

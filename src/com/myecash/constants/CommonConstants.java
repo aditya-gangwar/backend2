@@ -60,7 +60,8 @@ public class CommonConstants {
     // DOB in format 'DDMMYYYY'
     public static final int DOB_SECRET_LEN = 8; //mobile number
     public static final int TRANSACTION_ID_LEN = 12;
-    public static final int PIN_OTP_LEN = 5;
+    public static final int PIN_LEN = 5;
+    public static final int OTP_LEN = 5;
 
     public static final int MAX_DEVICES_PER_MERCHANT = 3;
     public static final int dbQueryMaxPageSize = 100;

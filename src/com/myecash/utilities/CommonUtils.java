@@ -53,8 +53,8 @@ public class CommonUtils {
     public static String generateCustomerPIN() {
         // random numeric string
         Random random = new Random();
-        char[] id = new char[CommonConstants.PIN_OTP_LEN];
-        for (int i = 0; i < CommonConstants.PIN_OTP_LEN; i++) {
+        char[] id = new char[CommonConstants.PIN_LEN];
+        for (int i = 0; i < CommonConstants.PIN_LEN; i++) {
             id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
         }
         return new String(id);
@@ -63,8 +63,8 @@ public class CommonUtils {
     public static String generateOTP() {
         // random numeric string
         Random random = new Random();
-        char[] id = new char[CommonConstants.PIN_OTP_LEN];
-        for (int i = 0; i < CommonConstants.PIN_OTP_LEN; i++) {
+        char[] id = new char[CommonConstants.OTP_LEN];
+        for (int i = 0; i < CommonConstants.OTP_LEN; i++) {
             id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
         }
         return new String(id);
