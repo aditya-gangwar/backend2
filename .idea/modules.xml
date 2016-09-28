@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/backend.iml" filepath="$PROJECT_DIR$/backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../MyeCash2/common/src/main/common.iml" filepath="$PROJECT_DIR$/../MyeCash2/common/src/main/common.iml" />
       <module fileurl="file://$PROJECT_DIR$/src/com/myecash/services/services.iml" filepath="$PROJECT_DIR$/src/com/myecash/services/services.iml" />
     </modules>
   </component>
