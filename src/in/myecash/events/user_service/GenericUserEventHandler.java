@@ -4,13 +4,15 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
-import in.myecash.constants.*;
-import in.myecash.database.*;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.*;
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+import in.myecash.database.*;
 
 /**
 * GenericUserEventHandler handles the User Service events.
@@ -54,7 +56,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 if(context.getUserToken()==null) {
                     mLogger.error("In afterLogin: RunnerContext: "+context.toString());
                     //TODO: user token is coming null - bug with standlone backendless. Open the below check when fixed.
-                    //throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in: " + login);
+                    //throw new BackendlessException(BackendResponseCodes.NOT_LOGGED_IN, "User not logged in: " + login);
                 } else {
                     HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
                 }
@@ -77,7 +79,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String deviceInfo = merchant.getTempDevId();
                     if(deviceInfo==null || deviceInfo.isEmpty()) {
                         // TODO : Raise critical alarm
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                     }
 
                     // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<time>,<otp>
@@ -95,7 +97,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         // most probably from last login call - setDeviceInfo not called before this login
                         // can indicate sabotage
                         // TODO : Raise critical alarm
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "Device data is old");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "Device data is old");
                     }
 
                     // Check if device is in trusted list
@@ -109,7 +111,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // Check for max devices allowed per user
                             int deviceCnt = (merchant.getTrusted_devices()!=null) ? merchant.getTrusted_devices().size() : 0;
                             if (deviceCnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
-                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_TRUSTED_DEVICE_LIMIT_RCHD, "Trusted device limit reached");
+                                throw new BackendlessException(String.valueOf(ErrorCodes.TRUSTED_DEVICE_LIMIT_RCHD), "Trusted device limit reached");
                             }
                             // Generate OTP
                             AllOtp newOtp = new AllOtp();
@@ -120,7 +122,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                             // OTP generated successfully - return exception to indicate so
                             positiveException = true;
-                            throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                            throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
                         } else {
                             // OTP available - validate the same
@@ -164,8 +166,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             try {
                                 BackendOps.updateMerchant(merchant);
                             } catch(BackendlessException e) {
-                                if(e.getCode().equals(BackendResponseCodes.BL_ERROR_DUPLICATE_ENTRY)) {
-                                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_DEVICE_ALREADY_REGISTERED,
+                                if(e.getCode().equals(ErrorCodes.BL_ERROR_DUPLICATE_ENTRY)) {
+                                    throw new BackendlessException(String.valueOf(ErrorCodes.DEVICE_ALREADY_REGISTERED),
                                             deviceId+" is already registered");
                                 }
                                 throw e;
@@ -203,7 +205,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     if(deviceData==null || deviceData.getTempId()==null || deviceData.getTempId().isEmpty()) {
                         // TODO : Raise critical alarm
                         mLogger.fatal("In afterLogin for internal user: Temp instance id not available: "+userId);
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode1");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "SubCode1");
                     }
                     // If first login after register - store the provided 'instanceId' as trusted
                     if(!internalUser.getFirst_login_ok()) {
@@ -216,12 +218,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         } else {
                             // invalid state
                             mLogger.fatal("In afterLogin for agent: Invalid state: "+userId);
-                            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode2");
+                            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "SubCode2");
                         }
                     } else {
                         // compare instanceIds
                         if(!deviceData.getInstanceId().equals(deviceData.getTempId())) {
-                            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "SubCode3");
+                            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "SubCode3");
                         }
                     }
                     // update device data
@@ -248,7 +250,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                 // first login not done yet
                                 mLogger.debug("First login pending");
                                 positiveException = true;
-                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FIRST_LOGIN_PENDING, "");
+                                throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                             }
                             break;
 
@@ -261,7 +263,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                 // first login not done yet
                                 mLogger.debug("First login pending");
                                 positiveException = true;
-                                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FIRST_LOGIN_PENDING, "");
+                                throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                             }
                             break;
 
@@ -394,7 +396,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             newOtp = backendOps.generateOtp(newOtp);
             if(newOtp == null) {
                 // failed to generate otp
-                BackendlessFault fault = new BackendlessFault(AppConstants.BE_ERROR_OTP_GENERATE_FAILED,"Failed to generate OTP");
+                BackendlessFault fault = new BackendlessFault(AppConstants.OTP_GENERATE_FAILED,"Failed to generate OTP");
                 throw new BackendlessException(fault);
             } else {
                 // OTP generated successfully - return exception to indicate so
@@ -467,7 +469,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // fetch merchant
                 merchant = BackendOps.getMerchant(userId, false);
                 if(merchant==null) {
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_NO_SUCH_USER, "No merchant object with id "+userId, false);
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.NO_SUCH_USER, "No merchant object with id "+userId, false);
                 }
             }
 
@@ -482,7 +484,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // fetch merchant
                 customer = BackendOps.getCustomer(userId, true);
                 if(customer==null) {
-                    CommonUtils.throwException(mLogger, BackendResponseCodes.BE_ERROR_NO_SUCH_USER, "No customer object with id "+userId, false);
+                    CommonUtils.throwException(mLogger, BackendResponseCodes.NO_SUCH_USER, "No customer object with id "+userId, false);
                 }
             }
 
@@ -558,7 +560,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
                     MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
                     if(batch == null) {
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH,
+                        throw new BackendlessException(BackendResponseCodes.MERCHANT_ID_RANGE_ERROR,
                                 "No open merchant id batch available: "+batchTableName+","+whereClause);
                     }
 

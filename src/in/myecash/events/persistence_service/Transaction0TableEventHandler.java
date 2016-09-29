@@ -6,9 +6,9 @@ import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
 import com.backendless.servercode.annotation.Async;
 
+import in.myecash.common.constants.ErrorCodes;
+import in.myecash.common.database.Transaction;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.database.Transaction;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 
@@ -49,7 +49,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
                 transaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 transaction.getTrans_id();
         CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
     /*
     @Override
@@ -61,7 +61,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
             Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
             Logger logger = Backendless.Logging.getLogger("com.myecash.services.Transaction0TableEventHandler");
             logger.error("In beforeLast: find attempt by not-authenticated user.");
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(BackendResponseCodes.OPERATION_NOT_ALLOWED,"");
         }
     }
 
@@ -74,7 +74,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
             Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
             Logger logger = Backendless.Logging.getLogger("com.myecash.services.Transaction0TableEventHandler");
             logger.error("In beforeLast: find attempt by not-authenticated user.");
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(BackendResponseCodes.OPERATION_NOT_ALLOWED,"");
         }
     }
 
@@ -87,7 +87,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
             Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
             Logger logger = Backendless.Logging.getLogger("com.myecash.services.Transaction0TableEventHandler");
             logger.error("In beforeLast: find attempt by not-authenticated user.");
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(BackendResponseCodes.OPERATION_NOT_ALLOWED,"");
         }
     }
     */

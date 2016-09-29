@@ -7,6 +7,8 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
 import in.myecash.constants.*;
 import in.myecash.database.*;
 import in.myecash.messaging.SmsConstants;
@@ -89,7 +91,7 @@ public class BackendOps {
         BackendlessCollection<BackendlessUser> user = Backendless.Data.of( BackendlessUser.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No user found: "+userid;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -119,7 +121,7 @@ public class BackendOps {
         if (merchant == null) {
             //mLogger.error("Merchant object in null");
             String errorMsg = "Merchant object in null";
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.NO_SUCH_USER, errorMsg);
         }
         return user;*/
 
@@ -172,7 +174,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+userId;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -186,7 +188,7 @@ public class BackendOps {
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
             String errorMsg = "No Merchant found: "+mobileNum;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(BackendResponseCodes.NO_SUCH_USER, errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -266,7 +268,7 @@ public class BackendOps {
         } else {
             if(fetchCard && user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
             }
             return user.getData().get(0);
         }
@@ -286,7 +288,7 @@ public class BackendOps {
         BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
         if( collection.getTotalObjects() == 0) {
             String errorMsg = "No membership card found: "+cardId;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_CARD, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
         } else {
             return collection.getData().get(0);
         }
@@ -391,11 +393,11 @@ public class BackendOps {
             } else {
                 edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
                 String errorMsg = "In generateOtp: Failed to send SMS";
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, errorMsg);
+                throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), errorMsg);
             }
         } catch (Exception e) {
             String errorMsg = "Exception in generateOtp: "+e.toString();
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATE_FAILED), errorMsg);
         }
     }
 
@@ -404,8 +406,8 @@ public class BackendOps {
         try {
             otp = BackendOps.fetchOtp(userId);
         } catch(BackendlessException e) {
-            if(e.getCode().equals(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND)) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
+            if(e.getCode().equals(ErrorCodes.BL_ERROR_NO_DATA_FOUND)) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
             }
             throw e;
         }
@@ -424,7 +426,7 @@ public class BackendOps {
                 // TODO: raise alarm
             }
         } else {
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_OTP, "");
+            throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
         }
     }
 
@@ -486,7 +488,7 @@ public class BackendOps {
             return collection.getData().get(0);
         } else {
             String errorMsg = "In fetchDevice: No data found" + deviceId;
-            BackendlessFault fault = new BackendlessFault(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
+            BackendlessFault fault = new BackendlessFault(ErrorCodes.BL_ERROR_NO_DATA_FOUND,errorMsg);
             throw new BackendlessException(fault);
         }
     }
@@ -687,7 +689,7 @@ public class BackendOps {
         if( user.getTotalObjects() == 0) {
             // no data found
             String errorMsg = "No internal user found: "+userId;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             return user.getData().get(0);
         }
@@ -749,7 +751,7 @@ public class BackendOps {
         } else if(size == 1) {
             return collection.getData().get(0);
         }
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "More than 1 open merchant id batches: "+size+","+tableName);
+        throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "More than 1 open merchant id batches: "+size+","+tableName);
     }
 
     /*
@@ -799,7 +801,7 @@ public class BackendOps {
         } else if(size == 1) {
             return collection.getData().get(0);
         }
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "More than 1 open Card id batches: "+size+","+tableName);
+        throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "More than 1 open Card id batches: "+size+","+tableName);
     }
 
 
@@ -827,7 +829,7 @@ public class BackendOps {
         if( city.getTotalObjects() == 0) {
             // no data found
             String errorMsg = "No city found: "+cityName;
-            throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, errorMsg);
+            throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), errorMsg);
         } else {
             return city.getData().get(0);
         }
@@ -856,7 +858,7 @@ public class BackendOps {
         if(size == 1) {
             return collection.getData().get(0);
         }
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Batch object is not exactly 1: "+size+","+tableName+","+batchId);
+        throw new BackendlessException(BackendResponseCodes.GENERAL_ERROR, "Batch object is not exactly 1: "+size+","+tableName+","+batchId);
     }
 
     public static List<MerchantIdBatches> fetchOpenMerchantIdBatches(String tableName) {

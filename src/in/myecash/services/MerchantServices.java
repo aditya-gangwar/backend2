@@ -6,8 +6,8 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
-import in.myecash.constants.*;
-import in.myecash.database.*;
+import in.myecash.common.CsvConverter;
+import in.myecash.common.MyCustomer;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.*;
@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+import in.myecash.database.*;
 
 /**
  * Created by adgangwa on 15-05-2016.
@@ -59,7 +64,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // Validate based on given current number
                 if (!merchant.getDob().equals(verifyparam)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
                 }
 
                 // Generate OTP to verify new mobile number
@@ -71,7 +76,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
                 // Second run, as OTP available
@@ -154,7 +159,7 @@ public class MerchantServices implements IBackendlessService {
             // check merchant status
             CommonUtils.checkMerchantStatus(merchant, mLogger);
             if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_UNDER_EXPIRY, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
             }
 
             // update settings
@@ -191,7 +196,7 @@ public class MerchantServices implements IBackendlessService {
 
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if(trustedDevices.size() <= 1) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "You are not allowed to delete last device");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "You are not allowed to delete last device");
             }
 
             // find matching object
@@ -205,7 +210,7 @@ public class MerchantServices implements IBackendlessService {
             if(matched!=null){
                 BackendOps.deleteMchntDevice(matched);
             } else {
-                throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, "No such trusted device: "+deviceId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "No such trusted device: "+deviceId);
             }
 
             // no exception - means function execution success
@@ -248,7 +253,7 @@ public class MerchantServices implements IBackendlessService {
                 merchant = (Merchants) userObj;
                 // check to ensure that merchant is request CB for itself only
                 if (!merchant.getAuto_id().equals(merchantId)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,"Invalid merchant id provided: " + merchantId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid merchant id provided: " + merchantId);
                 }
                 merchantCbTable = merchant.getCashback_table();
 
@@ -256,7 +261,7 @@ public class MerchantServices implements IBackendlessService {
                 // use provided merchant values
                 byCCUser = true;
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             int customerIdType = CommonUtils.getCustomerIdType(customerId);
@@ -275,7 +280,7 @@ public class MerchantServices implements IBackendlessService {
                     positiveException = true;
                 }
                 String errorMsg = "No user found: "+customerId;
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_SUCH_USER, errorMsg);
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
             }
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
 
@@ -288,7 +293,7 @@ public class MerchantServices implements IBackendlessService {
                 if(byCCUser) {
                     // if called by CC, return from here - to skip cb creation logic
                     positiveException = true;
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_CUST_NOT_REG_WITH_MCNT, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.CUST_NOT_REG_WITH_MCNT), "");
                 }
                 cashback = handleCashbackCreate(merchant, customer);
             } else {
@@ -300,7 +305,8 @@ public class MerchantServices implements IBackendlessService {
 
             // Add 'customer details' in the cashback object to be returned
             // these details are not stored in DB along with cashback object
-            cashback.setOther_details(buildCustomerDetails(customer, byCCUser, CommonConstants.CSV_SUB_DELIMETER));
+            //cashback.setOther_details(buildCustomerDetails(customer, byCCUser, CommonConstants.CSV_SUB_DELIMETER));
+            cashback.setOther_details(MyCustomer.toCsvString(customer, byCCUser));
             stripCashback(cashback);
 
             // no exception - means function execution success
@@ -340,7 +346,7 @@ public class MerchantServices implements IBackendlessService {
                 merchant = BackendOps.getMerchant(mchntId, false, false);
                 callByCC = true;
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             String merchantId = merchant.getAuto_id();
@@ -420,7 +426,11 @@ public class MerchantServices implements IBackendlessService {
                         stats.bill_amt_no_cb = stats.bill_amt_no_cb + (cb.getTotal_billed() - cb.getCb_billed());
 
                         // write record as csv string
-                        sb.append(buildCashbackDetails(cb, callByCC)).append(CommonConstants.CSV_NEWLINE);
+                        if(cb.getCustomer()!=null) {
+                            cb.setOther_details(MyCustomer.toCsvString(cb.getCustomer(), callByCC));
+                        }
+                        //sb.append(buildCashbackDetails(cb, callByCC)).append(CommonConstants.CSV_NEWLINE);
+                        sb.append(CsvConverter.csvStrFromCb(cb)).append(CommonConstants.CSV_NEWLINE);
                     }
 
                     // upload data as CSV file
@@ -476,13 +486,13 @@ public class MerchantServices implements IBackendlessService {
                 merchant = (Merchants) userObj;
                 // check to ensure that merchant is request CB for itself only
                 if (!merchant.getAuto_id().equals(merchantId)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,"Invalid merchant id provided: " + merchantId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid merchant id provided: " + merchantId);
                 }
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // use provided merchant values
                 byCCUser = true;
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             // not checking for merchant account status
@@ -500,7 +510,7 @@ public class MerchantServices implements IBackendlessService {
                 // not exactly a positive exception - but using it to avoid logging of this as error
                 // as it can happen frequently as valid scenario
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
             }
 
             if(!byCCUser) {
@@ -626,7 +636,8 @@ public class MerchantServices implements IBackendlessService {
                 cashback = createCbObject(merchant, customer);
                 // Add 'customer details' in the cashback object to be returned
                 // these details are not stored in DB along with cashback object
-                cashback.setOther_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
+                //cashback.setOther_details(buildCustomerDetails(customer, false, CommonConstants.CSV_SUB_DELIMETER));
+                cashback.setOther_details(MyCustomer.toCsvString(customer, false));
                 // remove 'not needed sensitive' fields from cashback object
                 stripCashback(cashback);
 
@@ -694,7 +705,7 @@ public class MerchantServices implements IBackendlessService {
                 // Don't verify QR card# for 'new card' operation
                 if (!opCode.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
                         !cardId.equals(scannedCardId)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Wrong membership card");
                 }
 
                 // Don't verify PIN for 'reset PIN' operation
@@ -702,7 +713,7 @@ public class MerchantServices implements IBackendlessService {
                         !customer.getTxn_pin().equals(pin)) {
 
                     CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN, mLogger);
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
                 // Generate OTP and send SMS
@@ -718,7 +729,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
                 // Second run, as OTP available
@@ -837,6 +848,7 @@ public class MerchantServices implements IBackendlessService {
         return BackendOps.saveCashback(cashback, merchant.getCashback_table());
     }
 
+    /*
     private String buildCashbackDetails(Cashback cb, boolean addCustCareData) {
 
         // Build cashback data as CSV record
@@ -858,7 +870,8 @@ public class MerchantServices implements IBackendlessService {
         csvFields[CommonConstants.CB_CSV_CREATE_TIME] = String.valueOf(cb.getCreated().getTime()) ;
         csvFields[CommonConstants.CB_CSV_UPDATE_TIME] = String.valueOf(cb.getUpdated().getTime()) ;
         if(cb.getCustomer()!=null) {
-            csvFields[CommonConstants.CB_CSV_OTHER_DETAILS] = buildCustomerDetails(cb.getCustomer(), addCustCareData, CommonConstants.CSV_SUB_DELIMETER);
+            //csvFields[CommonConstants.CB_CSV_OTHER_DETAILS] = buildCustomerDetails(cb.getCustomer(), addCustCareData, CommonConstants.CSV_SUB_DELIMETER);
+            csvFields[CommonConstants.CB_CSV_OTHER_DETAILS] = MyCustomer.toCsvString(cb.getCustomer(), addCustCareData);
         }
 
         // combine to single string
@@ -905,24 +918,9 @@ public class MerchantServices implements IBackendlessService {
         StringJoiner sj = new StringJoiner(delim);
         for(String s:csvFields) sj.add(s);
 
-        /*
-        StringBuilder sb = new StringBuilder(256);
-        sb.append(customer.getMobile_num()).append(CommonConstants.CSV_DELIMETER)
-                .append(customer.getAdmin_status()).append(CommonConstants.CSV_DELIMETER)
-                .append(customer.getStatus_reason()).append(CommonConstants.CSV_DELIMETER);
-
-        SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
-        sdf.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
-        sb.append(sdf.format(customer.getStatus_update_time())).append(CommonConstants.CSV_DELIMETER);
-
-        CustomerCards card = customer.getMembership_card();
-        sb.append(card.getCard_id()).append(CommonConstants.CSV_DELIMETER)
-                .append(card.getStatus()).append(CommonConstants.CSV_DELIMETER)
-                .append(sdf.format(card.getStatus_update_time()));*/
-
         mLogger.debug("Generated customer details: "+sj.toString());
         return sj.toString();
-    }
+    }*/
 
     // Strip cashback object for information not needed by merchant app
     private void stripCashback(Cashback cashback) {
@@ -1057,7 +1055,7 @@ public class MerchantServices implements IBackendlessService {
         } catch (UnsupportedEncodingException e) {
             mLogger.error("Customer data CSV file upload failed: "+ e.toString());
             // For multiple days, single failure will be considered failure for all days
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create customer data CSV file: "+e.toString());
+            throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Failed to create customer data CSV file: "+e.toString());
         }
     }
 }
@@ -1108,11 +1106,11 @@ public class MerchantServices implements IBackendlessService {
         if( !SmsHelper.sendSMS(smsText, mobileNum) )
         {
             //TODO: add in alarms table
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "Failed to send password reset SMS: "+userId, false);
+            CommonUtils.throwException(mLogger,BackendResponseCodes.SEND_SMS_FAILED, "Failed to send password reset SMS: "+userId, false);
         }
 
         //mLogger.flush();
-        //return BackendResponseCodes.BE_RESPONSE_NO_ERROR;
+        //return BackendResponseCodes.NO_ERROR;
     }
     private String buildPwdChangeSMS(String userId) {
         return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
@@ -1153,7 +1151,7 @@ public class MerchantServices implements IBackendlessService {
                 // Verify PIN
                 if (!customer.getTxn_pin().equals(pin)) {
                     CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
+                    throw new BackendlessException(BackendResponseCodes.WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
                 // Generate OTP and send SMS
@@ -1165,7 +1163,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(BackendResponseCodes.OTP_GENERATED, "");
 
             } else {
                 // Second run, as OTP available

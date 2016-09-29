@@ -6,8 +6,6 @@ import com.backendless.FilePermission;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
-import in.myecash.constants.*;
-import in.myecash.database.*;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
@@ -15,6 +13,11 @@ import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.Date;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+import in.myecash.database.*;
 
 /**
  * Created by adgangwa on 12-08-2016.
@@ -57,7 +60,7 @@ public class InternalUserServices implements IBackendlessService {
             String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
             MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
             if(batch == null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NO_OPEN_MERCHANT_ID_BATCH,
+                throw new BackendlessException(String.valueOf(ErrorCodes.MERCHANT_ID_RANGE_ERROR),
                         "No open merchant id batch available: "+batchTableName+","+whereClause);
             }
 
@@ -130,7 +133,7 @@ public class InternalUserServices implements IBackendlessService {
             } catch(Exception e) {
                 mLogger.fatal("Failed to create merchant directories: "+merchantId+","+e.toString());
                 rollbackRegister(merchantId);
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, e.toString());
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), e.toString());
             }
 
             // send SMS with user id
@@ -171,7 +174,7 @@ public class InternalUserServices implements IBackendlessService {
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT ) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             // Fetch merchant

@@ -12,6 +12,8 @@ import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 import in.myecash.constants.*;
 import in.myecash.database.*;
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -82,7 +84,7 @@ public class AdminServices implements IBackendlessService {
 
             // merchant should be in disabled state
             if(merchant.getAdmin_status() != DbConstants.USER_STATUS_DISABLED) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Merchant account is not disabled yet");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not disabled yet");
             }
 
             int oldStatus = merchant.getAdmin_status();
@@ -218,7 +220,7 @@ public class AdminServices implements IBackendlessService {
 
             // merchant should be in active state
             if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Merchant account is not active");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not active");
             }
 
             int oldStatus = merchant.getAdmin_status();
@@ -314,7 +316,7 @@ public class AdminServices implements IBackendlessService {
 
             int highestBatchId = (highestBatch!=null) ? highestBatch.getBatchId() : 0;
             if(highestBatchId >= BackendConstants.MERCHANT_ID_MAX_BATCH_ID_PER_RANGE) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "All batches already available: "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "All batches already available: "+countryCode+","+rangeId);
             }
 
             // batch will start from 1, and not 0, which is reserved for future use
@@ -374,7 +376,7 @@ public class AdminServices implements IBackendlessService {
                 // If rangeId of 'current open batch' is different from the one provided
                 // first close the current open batch manually, and then try again.
                 // Check added just to be more sure - when new range is being opened
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "RangeId of 'current open batch' is different : "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "RangeId of 'current open batch' is different : "+countryCode+","+rangeId);
             }
 
             // check if current open batch is still empty
@@ -382,7 +384,7 @@ public class AdminServices implements IBackendlessService {
                 String merchantIdPrefix = countryCode+openBatch.getRangeBatchId();
                 int cnt = BackendOps.getMerchantCnt("auto_id like '"+merchantIdPrefix+"%'");
                 if(cnt < BackendConstants.MERCHANT_ID_MAX_SNO_PER_BATCH) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Current open batch still empty : "+cnt+","+countryCode+","+rangeId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Current open batch still empty : "+cnt+","+countryCode+","+rangeId);
                 }
 
                 // close current open batch
@@ -395,7 +397,7 @@ public class AdminServices implements IBackendlessService {
                     "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_AVAILABLE+"'",
                     false);
             if(lowestBatch==null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "No available batch in given range id : "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
             }
 
             // update status of the batch
@@ -436,7 +438,7 @@ public class AdminServices implements IBackendlessService {
 
             int highestBatchId = (highestBatch!=null) ? highestBatch.getBatchId() : -1;
             if(highestBatchId >= BackendConstants.CARD_ID_MAX_BATCH_ID_PER_RANGE) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "All batches already available: "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "All batches already available: "+countryCode+","+rangeId);
             }
 
             int startIdx = highestBatchId+1;
@@ -494,7 +496,7 @@ public class AdminServices implements IBackendlessService {
                 // If rangeId of 'current open batch' is different from the one provided
                 // first close the current open batch manually, and then try again.
                 // Check added just to be more sure - when new range is being opened
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "RangeId of 'current open batch' is different : "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "RangeId of 'current open batch' is different : "+countryCode+","+rangeId);
             }
 
             // check if current open batch is still empty
@@ -502,7 +504,7 @@ public class AdminServices implements IBackendlessService {
                 String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID+countryCode+openBatch.getRangeBatchId();
                 int cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%'");
                 if(cnt < BackendConstants.CARD_ID_MAX_SNO_PER_BATCH) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Current open batch still empty : "+cnt+","+countryCode+","+rangeId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Current open batch still empty : "+cnt+","+countryCode+","+rangeId);
                 }
 
                 // close current open batch
@@ -515,7 +517,7 @@ public class AdminServices implements IBackendlessService {
                     "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.CARD_ID_BATCH_STATUS_AVAILABLE+"'",
                     false);
             if(lowestBatch==null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "No available batch in given range id : "+countryCode+","+rangeId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
             }
 
             // update status of the batch
@@ -558,18 +560,18 @@ public class AdminServices implements IBackendlessService {
             String prefix = null;
             switch (userType) {
                 case DbConstants.USER_TYPE_AGENT:
-                    prefix = CommonConstants.PREFIX_AGENT_ID;
+                    prefix = BackendConstants.PREFIX_AGENT_ID;
                     break;
                 case DbConstants.USER_TYPE_CC:
-                    prefix = CommonConstants.PREFIX_CC_ID;
+                    prefix = BackendConstants.PREFIX_CC_ID;
                     break;
                 case DbConstants.USER_TYPE_CNT:
-                    prefix = CommonConstants.PREFIX_CCNT_ID;
+                    prefix = BackendConstants.PREFIX_CCNT_ID;
                     break;
             }
             String userId = prefix+argUserId;
             if(userId.length() != CommonConstants.INTERNAL_USER_ID_LEN) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "User ID length is wrong");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "User ID length is wrong");
             }
 
             // login using 'admin' user
@@ -649,7 +651,7 @@ public class AdminServices implements IBackendlessService {
             // make sure batch is not already open
             String tableNameMerchantIds = "MerchantIds"+countryCode+rangeId;
             if(BackendOps.merchantIdBatchOpen(tableNameMerchantIds, batchId)) {
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Batch is already open: "+countryCode+","+rangeId+","+batchId);
+                throw CommonUtils.getException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Batch is already open: "+countryCode+","+rangeId+","+batchId);
             }
 
             String tableNameBatches = "MerchantIdBatches"+countryCode;
@@ -672,7 +674,7 @@ public class AdminServices implements IBackendlessService {
             // fetch new batch object
             MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(tableNameBatches, rangeId, batchId);
             if(batch.getStatus().equals(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_CLOSED)) {
-                throw CommonUtils.getException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Invalid new batch status: "+countryCode+","+rangeId+","+batchId);
+                throw CommonUtils.getException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Invalid new batch status: "+countryCode+","+rangeId+","+batchId);
             }
 
             // add 'merchant ids' for this range

@@ -4,9 +4,9 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
+import in.myecash.common.constants.ErrorCodes;
+import in.myecash.common.database.Merchants;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.database.Merchants;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 
@@ -34,7 +34,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeUpdate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id();
         CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "");
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         if(context.getUserToken()==null) {
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),"");
         }
     }
 
@@ -58,7 +58,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFind";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),"");
         }
     }
 
@@ -70,7 +70,7 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         if(context.getUserToken()==null) {
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "Merchants-beforeFirst";
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),"");
         }
     }
 }

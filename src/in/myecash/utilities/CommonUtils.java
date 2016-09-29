@@ -3,16 +3,19 @@ package in.myecash.utilities;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
-import in.myecash.constants.*;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
-import in.myecash.database.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+import in.myecash.database.*;
 
 /**
  * Created by adgangwa on 22-05-2016.
@@ -104,14 +107,14 @@ public class CommonUtils {
     }
 
     public static void checkMerchantStatus(Merchants merchant, MyLogger logger) {
-        String errorCode = null;
+        Integer errorCode = null;
         String errorMsg = null;
 
         switch (merchant.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
             case DbConstants.USER_STATUS_READY_TO_ACTIVE:
-                errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorCode = ErrorCodes.USER_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
 
@@ -133,7 +136,7 @@ public class CommonUtils {
                             // TODO: Raise alarm for manual correction
                         }
                     } else {
-                        errorCode = BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorCode = ErrorCodes.USER_ACC_LOCKED;
                         errorMsg = "Account is locked: "+now.getTime()+","+blockedTime.getTime()+","+allowedDuration;
                     }
                 }
@@ -141,18 +144,18 @@ public class CommonUtils {
         }
 
         if(errorCode != null) {
-            throw new BackendlessException(errorCode, errorMsg);
+            throw new BackendlessException(errorCode.toString(), errorMsg);
         }
     }
 
     public static void checkCustomerStatus(Customers customer, MyLogger logger) {
-        String errorCode = null;
+        Integer errorCode = null;
         String errorMsg = null;
         switch(customer.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
             case DbConstants.USER_STATUS_READY_TO_ACTIVE:
-                errorCode = BackendResponseCodes.BE_ERROR_ACC_DISABLED;
+                errorCode = ErrorCodes.USER_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
 
@@ -174,23 +177,23 @@ public class CommonUtils {
                             // TODO: Raise alarm for manual correction
                         }
                     } else {
-                        errorCode = BackendResponseCodes.BE_ERROR_ACC_LOCKED;
+                        errorCode = ErrorCodes.USER_ACC_LOCKED;
                         errorMsg = "Account is locked";
                     }
                 }
                 break;
         }
         if(errorCode != null) {
-            throw new BackendlessException(errorCode, errorMsg);
+            throw new BackendlessException(errorCode.toString(), errorMsg);
         }
     }
 
     public static void checkInternalUserStatus(InternalUser agent) {
         switch (agent.getAdmin_status()) {
             case DbConstants.USER_STATUS_DISABLED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_DISABLED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.USER_ACC_DISABLED), "");
             case DbConstants.USER_STATUS_LOCKED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_LOCKED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.USER_ACC_LOCKED), "");
         }
     }
 
@@ -203,21 +206,21 @@ public class CommonUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
         }
     }
 
     public static void checkCardForAllocation(CustomerCards card) {
         switch(card.getStatus()) {
             case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_CARD_INUSE, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.CARD_ALREADY_IN_USE), "");
             /*
             case DbConstants.CUSTOMER_CARD_STATUS_BLOCKED:
                 return BackendResponseCodes.BE_ERROR_CARD_BLOCKED;*/
 
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
         }
     }
 
@@ -267,7 +270,7 @@ public class CommonUtils {
                     logger.error(stackTraceStr(e));
                 }
                 // throw max attempt limit reached exception
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.FAILED_ATTEMPT_LIMIT_RCHD), "");
             }
         } else {
             // related attempt row not available - create the same
@@ -295,20 +298,20 @@ public class CommonUtils {
             case CommonConstants.MERCHANT_ID_LEN:
                 return DbConstants.USER_TYPE_MERCHANT;
             case CommonConstants.INTERNAL_USER_ID_LEN:
-                if(userdId.startsWith(CommonConstants.PREFIX_AGENT_ID)) {
+                if(userdId.startsWith(BackendConstants.PREFIX_AGENT_ID)) {
                     return DbConstants.USER_TYPE_AGENT;
-                } else if(userdId.startsWith(CommonConstants.PREFIX_CC_ID)) {
+                } else if(userdId.startsWith(BackendConstants.PREFIX_CC_ID)) {
                     return DbConstants.USER_TYPE_CC;
-                } else if(userdId.startsWith(CommonConstants.PREFIX_CCNT_ID)) {
+                } else if(userdId.startsWith(BackendConstants.PREFIX_CCNT_ID)) {
                     return DbConstants.USER_TYPE_CNT;
                 } else {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Invalid user type for id: "+userdId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),"Invalid user type for id: "+userdId);
                 }
             case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
             case CommonConstants.MOBILE_NUM_LENGTH:
                 return DbConstants.USER_TYPE_CUSTOMER;
             default:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Invalid user type for id: "+userdId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),"Invalid user type for id: "+userdId);
         }
     }
 
@@ -352,7 +355,7 @@ public class CommonUtils {
             case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
                 return BackendConstants.CUSTOMER_ID_PRIVATE_ID;
             default:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid customer ID: "+id);
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid customer ID: "+id);
         }
     }
 
@@ -363,7 +366,7 @@ public class CommonUtils {
             case CommonConstants.MERCHANT_ID_LEN:
                 return BackendConstants.MERCHANT_ID_AUTO_ID;
             default:
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "Invalid Merchant ID: "+id);
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid Merchant ID: "+id);
         }
     }
 
@@ -495,7 +498,7 @@ public class CommonUtils {
 
         edr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
         if(allowedUserType!=null && allowedUserType!=userType) {
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
         }
 
         switch (userType) {
@@ -527,7 +530,7 @@ public class CommonUtils {
                 return customer;
         }
 
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Operation not allowed to this user");
+        throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Operation not allowed to this user");
     }
 
     public static BackendlessException getNewException(BackendlessException be) {
@@ -558,7 +561,7 @@ public class CommonUtils {
         edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
         edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
         logger.edr(edr);
-        logger.flush();
+        //logger.flush();
     }
 
     public static String stackTraceStr(Exception e) {
@@ -572,7 +575,7 @@ public class CommonUtils {
     public static void writeOpNotAllowedEdr(MyLogger logger, String[] mEdr) {
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(System.currentTimeMillis());
         mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
-        mEdr[BackendConstants.EDR_EXP_CODE_IDX] = BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED;
+        mEdr[BackendConstants.EDR_EXP_CODE_IDX] = String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED);
         mEdr[BackendConstants.EDR_EXP_MSG_IDX] = mEdr[BackendConstants.EDR_API_NAME_IDX]+" not allowed.";
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
         logger.edr(mEdr);
@@ -620,8 +623,8 @@ public class CommonUtils {
                 // ignore exception - as we anyways be raising exception
                 // TODO: raise minor alarm however
                 // raise 'verification failed' exception
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+                throw new BackendlessException(BackendResponseCodes.VERIFICATION_FAILED,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.VERIFICATION_FAILED);
             }
         }
 
@@ -637,8 +640,8 @@ public class CommonUtils {
                     // TODO: raise alarm
                 }
                 // throw max attempt limit reached exception
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD,
-                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_FAILED_ATTEMPT_LIMIT_RCHD);
+                throw new BackendlessException(BackendResponseCodes.FAILED_ATTEMPT_LIMIT_RCHD,
+                        CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.FAILED_ATTEMPT_LIMIT_RCHD);
             }
         } else {
             // related attempt row not available - create the same
@@ -659,8 +662,8 @@ public class CommonUtils {
         }
 
         // raise 'verification failed' exception
-        throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED,
-                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED);
+        throw new BackendlessException(BackendResponseCodes.VERIFICATION_FAILED,
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+BackendResponseCodes.VERIFICATION_FAILED);
     }
 
     // returns true if max attempt limit reached

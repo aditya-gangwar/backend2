@@ -3,16 +3,14 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
-import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.constants.DbConstants;
-import in.myecash.constants.DbConstantsBackend;
-import in.myecash.database.InternalUser;
-import in.myecash.database.InternalUserDevice;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
+
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+import in.myecash.database.*;
 
 /**
  * Created by adgangwa on 17-07-2016.
@@ -39,7 +37,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
 
         try {
             if (deviceId == null || deviceId.isEmpty()) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "");
             }
 
             mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceId);
@@ -87,7 +85,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             if(userType != DbConstants.USER_TYPE_AGENT &&
                     userType != DbConstants.USER_TYPE_CC &&
                     userType != DbConstants.USER_TYPE_CNT) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,userId+" is not an internal user.");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),userId+" is not an internal user.");
             }
 
             InternalUser internalUser = (InternalUser) user.getProperty("internalUser");
@@ -104,7 +102,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             String dob = internalUser.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
                 CommonUtils.handleWrongAttempt(userId, internalUser, userType, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             internalUserPwdResetImmediate(user, internalUser);
@@ -139,7 +137,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+            throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         };
         mLogger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());
     }

@@ -5,15 +5,13 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.constants.DbConstants;
-import in.myecash.database.Customers;
 import in.myecash.database.InternalUser;
-import in.myecash.database.Merchants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -129,7 +127,7 @@ public class CommonServices implements IBackendlessService {
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
                 merchant = (Merchants) userObj;
                 if (!merchant.getAuto_id().equals(merchantId)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
                             "Invalid merchant id provided: " + merchantId);
                 }
             } else if (userType == DbConstants.USER_TYPE_CC ||
@@ -141,7 +139,7 @@ public class CommonServices implements IBackendlessService {
                 merchant = BackendOps.getMerchant(merchantId, true, true);
                 mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             // no exception - means function execution success
@@ -174,7 +172,7 @@ public class CommonServices implements IBackendlessService {
             if (userType == DbConstants.USER_TYPE_CUSTOMER) {
                 customer = (Customers) userObj;
                 if (!customer.getMobile_num().equals(custId)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA,
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
                             "Invalid customer id provided: " + custId);
                 }
             } else if (userType == DbConstants.USER_TYPE_CC) {
@@ -185,7 +183,7 @@ public class CommonServices implements IBackendlessService {
                 customer = BackendOps.getCustomer(custId, CommonUtils.getCustomerIdType(custId), true);
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             // no exception - means function execution success

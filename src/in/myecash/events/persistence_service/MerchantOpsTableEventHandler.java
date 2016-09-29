@@ -4,9 +4,9 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
+import in.myecash.common.constants.ErrorCodes;
+import in.myecash.common.database.MerchantOps;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.database.MerchantOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
 
@@ -33,7 +33,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeFirst";
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
     }
 
@@ -49,7 +49,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
     }
 
@@ -63,7 +63,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeLast";
             CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,"");
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
     }
 
@@ -108,7 +108,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             String oldMobile = merchantops.getMobile_num();
             String newMobile = merchantops.getExtra_op_params();
             if(!merchant.getMobile_num().equals(oldMobile)) {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "Wrong old mobile number", false);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.VERIFICATION_FAILED, "Wrong old mobile number", false);
             }
 
             // Generate OTP and send SMS
@@ -119,18 +119,18 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             newOtp = mBackendOps.generateOtp(newOtp);
             if(newOtp == null) {
                 // failed to generate otp
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_OTP_GENERATE_FAILED, "OTP generate failed", false);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.OTP_GENERATE_FAILED, "OTP generate failed", false);
             }
 
             // OTP generated successfully - return exception to indicate so
-            CommonUtils.throwException(mLogger,BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "OTP generated successfully", true);
+            CommonUtils.throwException(mLogger,BackendResponseCodes.OTP_GENERATED, "OTP generated successfully", true);
 
         } else {
             // Second run, as OTP available
             AllOtp fetchedOtp = mBackendOps.fetchOtp(merchantops.getMerchant_id());
             if( fetchedOtp == null ||
                     !mBackendOps.validateOtp(fetchedOtp, otp) ) {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_WRONG_OTP, "Wrong OTP provided: "+otp, false);
+                CommonUtils.throwException(mLogger,BackendResponseCodes.WRONG_OTP, "Wrong OTP provided: "+otp, false);
             }
             // remove PIN and OTP from the object
             merchantops.setOtp(null);

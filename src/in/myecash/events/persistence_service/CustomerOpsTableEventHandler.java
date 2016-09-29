@@ -39,7 +39,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             int userType = (Integer)user.getProperty("user_type");
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
             if(userType!=DbConstants.USER_TYPE_MERCHANT) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Only merchant operation");
+                throw new BackendlessException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Only merchant operation");
             }
 
             Merchants merchant = (Merchants) user.getProperty("merchant");
@@ -66,7 +66,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 if (!custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
                         !cardId.equals(customerops.getQr_card())) {
 
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Wrong membership card");
+                    throw new BackendlessException(BackendResponseCodes.WRONG_CARD, "Wrong membership card");
                 }
 
                 // Don't verify PIN for 'reset PIN' operation
@@ -91,7 +91,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(BackendResponseCodes.OTP_GENERATED, "");
 
             } else {
                 // Second run, as OTP available
@@ -273,7 +273,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         if( !SmsHelper.sendSMS(smsText, customer.getMobile_num()) )
         {
             //TODO: raise alarm
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+            throw new BackendlessException(BackendResponseCodes.GENERAL_ERROR, "");
         }
     }
 
@@ -427,7 +427,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         } else {
             //TODO: raise alarm
             mLogger.error("Cashback with non-matching mobile num: "+rowid+","+oldMobile);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+            throw new BackendlessException(BackendResponseCodes.GENERAL_ERROR, "");
         }
     }
 
@@ -441,7 +441,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
         } else {
             //TODO: raise alarm
             mLogger.error("Cashback with non-matching qr code: "+cb.getRowid_card()+","+oldQrCode);
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "");
+            throw new BackendlessException(BackendResponseCodes.GENERAL_ERROR, "");
         }
     }
     */

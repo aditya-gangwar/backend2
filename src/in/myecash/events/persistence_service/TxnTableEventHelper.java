@@ -4,13 +4,8 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
-import in.myecash.constants.*;
-import in.myecash.database.Customers;
-import in.myecash.database.Merchants;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
-import in.myecash.database.Cashback;
-import in.myecash.database.Transaction;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
@@ -20,6 +15,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
 
 /**
  * Created by adgangwa on 13-05-2016.
@@ -51,7 +50,7 @@ public class TxnTableEventHelper {
                 mLogger.error("Context itself is null");
             } else if(context.getUserToken()==null) {
                 mLogger.error("In handleBeforeCreate: RunnerContext: "+context.toString());
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_LOGGED_IN, "User not logged in");
+                throw new BackendlessException(String.valueOf(ErrorCodes.NOT_LOGGED_IN), "User not logged in");
             } else {
                 HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
             }
@@ -67,9 +66,9 @@ public class TxnTableEventHelper {
             // check merchant status
             CommonUtils.checkMerchantStatus(merchant, mLogger);
             // credit txns not allowed under expiry duration
-            if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
+            if(merchant.getAdmin_status()== DbConstants.USER_STATUS_READY_TO_REMOVE) {
                 if(transaction.getCb_credit() > 0 || transaction.getCl_credit() > 0) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_ACC_UNDER_EXPIRY, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
                 }
             }
 
@@ -86,12 +85,12 @@ public class TxnTableEventHelper {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
                         CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN, mLogger);
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customerId);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customerId);
                     } else {
                         transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
                     }
                 } else {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "PIN Missing: " + customerId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "PIN Missing: " + customerId);
                 }
             } else {
                 transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
@@ -101,10 +100,10 @@ public class TxnTableEventHelper {
             if(CommonUtils.customerCardRequired(transaction)) {
                 if(transaction.getUsedCardId()!=null) {
                     if(!transaction.getUsedCardId().equals(customer.getCardId())) {
-                        throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Card Mismatch: " + customerId);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + customerId);
                     }
                 } else {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_CARD, "Card Missing: " + customerId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Missing: " + customerId);
                 }
             }
 
@@ -125,7 +124,7 @@ public class TxnTableEventHelper {
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
                 if ((cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_CASH_ACCOUNT_LIMIT_RCHD, "Cash account limit reached: " + customerId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + customerId);
                 }
                 cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
                 cashback.setCb_debit(cashback.getCb_debit() + transaction.getCb_debit());
@@ -150,7 +149,7 @@ public class TxnTableEventHelper {
                 transaction.setCashback(cashback);
 
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Txn commit: No cashback object found: "+merchantId+","+customerId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Txn commit: No cashback object found: "+merchantId+","+customerId);
             }
 
             // no exception - means function execution success
@@ -223,7 +222,7 @@ public class TxnTableEventHelper {
             Cashback cashback = transaction.getCashback();
             if(cashback==null) {
                 mLogger.error("Cashback object is not available.");
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL,"Txn afterCreate: No cashback object found: "+
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),"Txn afterCreate: No cashback object found: "+
                         transaction.getMerchant_id()+","+transaction.getCustomer_id());
             } else {
                 merchantName = transaction.getMerchant_name().toUpperCase(Locale.ENGLISH);

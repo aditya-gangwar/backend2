@@ -3,13 +3,15 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
-import in.myecash.constants.*;
 import in.myecash.database.CustomerOps;
-import in.myecash.database.Customers;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
 
 import java.util.Date;
 
@@ -38,7 +40,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
             // check if any request already pending
             if( BackendOps.fetchMerchantOps(custPwdResetWhereClause(mobileNum)) != null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
 
             // fetch user with the given id with related object
@@ -46,7 +48,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             BackendlessUser user = BackendOps.fetchUser(mobileNum, DbConstants.USER_TYPE_CUSTOMER, false);
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_CUSTOMER) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,mobileNum+" is not a customer.");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),mobileNum+" is not a customer.");
             }
 
             Customers customer = (Customers) user.getProperty("customer");
@@ -62,7 +64,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             String cardId = customer.getCardId();
             if (cardId == null || !cardId.equalsIgnoreCase(secret)) {
                 CommonUtils.handleWrongAttempt(mobileNum, customer, userType, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             // For new registered customer - send the password immediately
@@ -83,7 +85,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
 
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
             }
 
             // no exception - means function execution success
@@ -115,7 +117,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         } else {
             mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+            throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+customer.getMobile_num());
     }

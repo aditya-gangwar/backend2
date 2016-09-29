@@ -6,7 +6,6 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.constants.*;
 import in.myecash.database.CustomerOps;
-import in.myecash.database.Customers;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
@@ -15,6 +14,9 @@ import in.myecash.utilities.MyLogger;
 
 import java.util.ArrayList;
 import java.util.Date;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
 
 /**
  * CustomerPasswdResetTimer is a timer.
@@ -85,7 +87,7 @@ public class CustomerPasswdResetTimer extends com.backendless.servercode.extensi
             String smsText = buildPwdResetSMS(op.getMobile_num(), passwd);
             if (!SmsHelper.sendSMS(smsText, customer.getMobile_num(), mLogger)) {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
             mLogger.debug("Sent password reset SMS: " + customer.getMobile_num());
 

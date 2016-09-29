@@ -4,19 +4,21 @@ package in.myecash.services;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
-import in.myecash.constants.*;
+import in.myecash.common.MyMerchant;
 import in.myecash.database.AllOtp;
-import in.myecash.database.Cashback;
 import in.myecash.database.CustomerOps;
-import in.myecash.database.Customers;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
 import in.myecash.utilities.MyLogger;
-import in.myecash.utilities.MyMerchant;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
+
 
 /**
  * Created by adgangwa on 25-09-2016.
@@ -55,7 +57,7 @@ public class CustomerServices implements IBackendlessService {
 
                 // Validate based on given current number
                 if (!customer.getTxn_pin().equals(verifyParam)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
                 }
 
                 // Generate OTP to verify new mobile number
@@ -67,7 +69,7 @@ public class CustomerServices implements IBackendlessService {
 
                 // OTP generated successfully - return exception to indicate so
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OTP_GENERATED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
                 // Second run, as OTP available
@@ -157,7 +159,7 @@ public class CustomerServices implements IBackendlessService {
                 customer = BackendOps.getCustomer(custPrivateId, BackendConstants.CUSTOMER_ID_PRIVATE_ID, false);
                 callByCC = true;
             } else {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED, "Operation not allowed to this user");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
             // not checking for customer account status
@@ -192,7 +194,7 @@ public class CustomerServices implements IBackendlessService {
 
             if(cbs==null || cbs.size()==0) {
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BL_ERROR_NO_DATA_FOUND, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
             }
 
             // no exception - means function execution success

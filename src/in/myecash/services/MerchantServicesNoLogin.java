@@ -3,10 +3,6 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
-import in.myecash.constants.*;
-import in.myecash.database.MerchantDevice;
-import in.myecash.database.MerchantOps;
-import in.myecash.database.Merchants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.CommonUtils;
@@ -14,6 +10,10 @@ import in.myecash.utilities.MyLogger;
 
 import java.util.Date;
 import java.util.List;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
+import in.myecash.constants.*;
 
 /**
  * Created by adgangwa on 14-07-2016.
@@ -38,7 +38,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         try {
             if (deviceInfo == null || deviceInfo.isEmpty()) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_INPUT_DATA, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "");
             }
 
             mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceInfo);
@@ -94,14 +94,14 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // check if any request already pending
             if( BackendOps.fetchMerchantOps(mchntPwdResetWhereClause(userId)) != null) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_DUPLICATE_REQUEST, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
 
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT, false);
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_MERCHANT) {
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_OPERATION_NOT_ALLOWED,userId+" is not a merchant.");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),userId+" is not a merchant.");
             }
 
             Merchants merchant = (Merchants) user.getProperty("merchant");
@@ -118,7 +118,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
                 if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
 
@@ -126,7 +126,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             String storedDob = merchant.getDob();
             if (storedDob == null || !storedDob.equalsIgnoreCase(dob)) {
                 CommonUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             // For new registered merchant - send the password immediately
@@ -147,7 +147,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
 
                 positiveException = true;
-                throw new BackendlessException(BackendResponseCodes.BE_RESPONSE_OP_SCHEDULED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
             }
 
             // no exception - means function execution success
@@ -185,7 +185,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
                 if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_NOT_TRUSTED_DEVICE, "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
 
@@ -193,7 +193,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
                 CommonUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_FORGOT_USERID, mLogger);
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_VERIFICATION_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             // send merchant id by SMS
@@ -202,7 +202,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
             } else {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             };
 
             // no exception - means function execution success
@@ -238,7 +238,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             if(mEdr!=null) {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             }
-            throw new BackendlessException(BackendResponseCodes.BE_ERROR_SEND_SMS_FAILED, "");
+            throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }

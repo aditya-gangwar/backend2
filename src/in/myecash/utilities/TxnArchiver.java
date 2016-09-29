@@ -2,12 +2,9 @@ package in.myecash.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
+import in.myecash.common.CsvConverter;
 import in.myecash.common.DateUtil;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.BackendResponseCodes;
-import in.myecash.constants.CommonConstants;
-import in.myecash.database.Merchants;
-import in.myecash.database.Transaction;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,6 +15,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import in.myecash.common.database.*;
+import in.myecash.common.constants.*;
 
 public class TxnArchiver
 {
@@ -36,7 +36,7 @@ public class TxnArchiver
     private HashMap<String,StringBuilder> mCsvDataMap;
 
     // All required date formatters
-    private SimpleDateFormat mSdfDateWithTime;
+    //private SimpleDateFormat mSdfDateWithTime;
     //private SimpleDateFormat mSdfOnlyDateBackend;
     //private SimpleDateFormat mSdfOnlyDateBackendGMT;
     //private SimpleDateFormat mSdfOnlyDateFilename;
@@ -48,7 +48,7 @@ public class TxnArchiver
         //mMerchantIdSuffix = merchantIdSuffix;
 
         mToday = new Date();
-        mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+        //mSdfDateWithTime = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
         //mSdfOnlyDateBackend = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
         //mSdfOnlyDateBackendGMT = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
         //mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
@@ -119,7 +119,7 @@ public class TxnArchiver
                     // rollback
                     deleteCsvFiles();
                     edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), error);
 
                 } else if(recordsUpdated != mLastFetchTransactions.size()) {
                     String error = "Count of txns updated for status does not match.";
@@ -132,7 +132,7 @@ public class TxnArchiver
                     mLogger.error(error);
                     deleteCsvFiles();
                     edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, error);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), error);
 
                 } else {
                     // update archive date in merchant record
@@ -230,7 +230,7 @@ public class TxnArchiver
             } catch (UnsupportedEncodingException e) {
                 mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
                 // For multiple days, single failure will be considered failure for all days
-                throw new BackendlessException(BackendResponseCodes.BE_ERROR_GENERAL, "Failed to create CSV file: "+e.toString());
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Failed to create CSV file: "+e.toString());
             }
         }
     }
@@ -271,13 +271,15 @@ public class TxnArchiver
                 mCsvDataMap.put(filename,sb);
             }
 
+            sb.append(CsvConverter.csvStrFromTxn(txn));
+            sb.append(CommonConstants.CSV_NEWLINE);
             /*
              * Format:
              *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,used_card_id
              *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent,cpin,img_filename\n
              * The sequence in format should match 'index constants' defined in CommonConstants class
              */
-            sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
+            /*sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
             sb.append(mSdfDateWithTime.format(txnDate)).append(CommonConstants.CSV_DELIMETER);
             sb.append(mLastFetchMerchant.getAuto_id()).append(CommonConstants.CSV_DELIMETER);
             sb.append(mLastFetchMerchant.getName()).append(CommonConstants.CSV_DELIMETER);
@@ -294,7 +296,7 @@ public class TxnArchiver
             sb.append(txn.getCpin()).append(CommonConstants.CSV_DELIMETER);
             String imgFilename = txn.getImgFileName();
             sb.append( (imgFilename==null||imgFilename.isEmpty())?"":imgFilename ).append(CommonConstants.CSV_DELIMETER);
-            sb.append(CommonConstants.CSV_NEWLINE);
+            sb.append(CommonConstants.CSV_NEWLINE);*/
         }
     }
 

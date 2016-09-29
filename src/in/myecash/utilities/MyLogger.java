@@ -2,9 +2,9 @@ package in.myecash.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.logging.Logger;
+import in.myecash.common.constants.CommonConstants;
+import in.myecash.common.constants.DbConstants;
 import in.myecash.constants.BackendConstants;
-import in.myecash.constants.CommonConstants;
-import in.myecash.constants.DbConstants;
 
 /**
  * Created by adgangwa on 19-08-2016.
