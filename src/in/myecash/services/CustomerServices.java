@@ -5,11 +5,8 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import in.myecash.common.MyMerchant;
-import in.myecash.database.AllOtp;
-import in.myecash.database.CustomerOps;
-import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.ArrayList;
@@ -32,9 +29,89 @@ public class CustomerServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Customer operations
      */
+    public List<Cashback> getCashbacks(String custPrivateId, long updatedSince) {
+
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashbacks";
+
+        boolean positiveException = false;
+        try {
+            mLogger.debug("In getCashbacks");
+
+            // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediately after
+            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            //boolean callByCC = false;
+            Customers customer = null;
+            if(userType==DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                custPrivateId = customer.getPrivate_id();
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = custPrivateId;
+
+            } else if(userType==DbConstants.USER_TYPE_CC) {
+                // fetch merchant
+                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.CUSTOMER_ID_PRIVATE_ID, false);
+                //callByCC = true;
+            } else {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // not checking for customer account status
+
+            List<Cashback> cbs= null;
+            String[] csvFields = customer.getCashback_table().split(CommonConstants.CSV_DELIMETER);
+
+            // fetch cashback records from each table
+            for(int i=0; i<csvFields.length; i++) {
+
+                // fetch all CB records for this customer in this table
+                String whereClause = "cust_private_id = '" + custPrivateId + "' AND updated > "+updatedSince;
+                mLogger.debug("whereClause: "+whereClause);
+
+                ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause,csvFields[i], false, true);
+                if (data != null) {
+                    if(cbs==null) {
+                        cbs= new ArrayList<>();
+                    }
+                    // dont want to send complete merchant objects
+                    // convert the required info into a CSV string
+                    // and send as other_details column of the cashback object
+                    for (Cashback cb :
+                            data) {
+                        cb.setOther_details(MyMerchant.toCsvString(cb.getMerchant()));
+                    }
+
+                    // add all fetched records from this table to final set
+                    cbs.addAll(data);
+                }
+            }
+
+            if(cbs==null || cbs.size()==0) {
+                positiveException = true;
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return cbs;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    /*
     public Customers changeMobile(String verifyParam, String newMobile, String otp) {
 
-        CommonUtils.initTableToClassMappings();
+        CommonUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "changeMobile";
@@ -64,7 +141,7 @@ public class CustomerServices implements IBackendlessService {
                 AllOtp newOtp = new AllOtp();
                 newOtp.setUser_id(customer.getPrivate_id());
                 newOtp.setMobile_num(newMobile);
-                newOtp.setOpcode(DbConstants.CUSTOMER_OP_CHANGE_MOBILE);
+                newOtp.setOpcode(DbConstants.OP_CHANGE_MOBILE);
                 BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
@@ -73,13 +150,13 @@ public class CustomerServices implements IBackendlessService {
 
             } else {
                 // Second run, as OTP available
-                BackendOps.validateOtp(customer.getPrivate_id(), otp);
+                BackendOps.validateOtp(customer.getPrivate_id(), DbConstants.OP_CHANGE_MOBILE, otp);
                 mLogger.debug("OTP matched for given customer operation: " + customer.getPrivate_id());
 
                 // first add record in merchant ops table
                 CustomerOps customerOp = new CustomerOps();
                 customerOp.setPrivateId(customer.getPrivate_id());
-                customerOp.setOp_code(DbConstants.CUSTOMER_OP_CHANGE_MOBILE);
+                customerOp.setOp_code(DbConstants.OP_CHANGE_MOBILE);
                 customerOp.setMobile_num(oldMobile);
                 customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                 customerOp.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
@@ -128,78 +205,95 @@ public class CustomerServices implements IBackendlessService {
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
-    }
+    }*/
 
-    public List<Cashback> getCashbacks(String custPrivateId, long updatedSince) {
-
-        CommonUtils.initTableToClassMappings();
+    /*
+    public void changePin(String oldPin, String newPin, String cardNum) {
+        CommonUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashbacks";
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "changeMobile";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cardNum;
 
         boolean positiveException = false;
+
         try {
-            mLogger.debug("In getCashbacks");
+            // Fetch customer
+            Customers customer = (Customers) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    DbConstants.USER_TYPE_CUSTOMER, mEdr, mLogger, false);
+            String mobileNum = customer.getMobile_num();
 
-            // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
-            // But check immediatly after
-            Object userObj = CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    null, mEdr, mLogger, false);
-            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+            if(oldPin==null || oldPin.isEmpty()) {
+                // PIN reset scenario
 
-            boolean callByCC = false;
-            Customers customer = null;
-            if(userType==DbConstants.USER_TYPE_CUSTOMER) {
-                customer = (Customers) userObj;
-                custPrivateId = customer.getPrivate_id();
-                mEdr[BackendConstants.EDR_CUST_ID_IDX] = custPrivateId;
-
-            } else if(userType==DbConstants.USER_TYPE_CC) {
-                // fetch merchant
-                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.CUSTOMER_ID_PRIVATE_ID, false);
-                callByCC = true;
-            } else {
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
-            }
-
-            // not checking for customer account status
-
-            List<Cashback> cbs= null;
-            String[] csvFields = customer.getCashback_table().split(CommonConstants.CSV_DELIMETER);
-
-            // fetch cashback records from each table
-            for(int i=0; i<csvFields.length; i++) {
-
-                // fetch all CB records for this customer in this table
-                String whereClause = "cust_private_id = '" + custPrivateId + "' AND updated > "+updatedSince;
-                mLogger.debug("whereClause: "+whereClause);
-
-                ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause,csvFields[i], false, true);
-                if (data != null) {
-                    if(cbs==null) {
-                        cbs= new ArrayList<>();
-                    }
-                    // dont want to send complete merchant objects
-                    // convert the required info into a CSV string
-                    // and send as other_details column of the cashback object
-                    for (Cashback cb :
-                            data) {
-                        cb.setOther_details(MyMerchant.toCsvString(cb.getMerchant()));
-                    }
-
-                    // add all fetched records from this table to final set
-                    cbs.addAll(data);
+                if(cardNum==null || cardNum.isEmpty()) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"All input params not available");
                 }
-            }
 
-            if(cbs==null || cbs.size()==0) {
+                // check if any request already pending
+                if( BackendOps.fetchMerchantOps(custPinResetWhereClause(mobileNum)) != null) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
+                }
+
+                // check for 'extra verification'
+                String cardId = customer.getCardId();
+                if (cardId == null || !cardId.equalsIgnoreCase(cardNum)) {
+                    CommonUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstants.OP_CHANGE_PIN
+                            DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, mLogger);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                }
+
+                // Add to customer op table for later processing
+                // create row in CustomerOps table
+                CustomerOps op = new CustomerOps();
+                op.setMobile_num(customer.getMobile_num());
+                op.setPrivateId(customer.getPrivate_id());
+                op.setOp_code(DbConstants.OP_CHANGE_PIN);
+                op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
+                op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
+                op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
+
+                BackendOps.saveCustomerOp(op);
+                mLogger.debug("Processed PIN reset op for: " + customer.getPrivate_id());
+
                 positiveException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
+
+            } else {
+                // PIN change scenario
+                if(newPin==null || newPin.isEmpty() || newPin.length()!=CommonConstants.PIN_LEN) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid new PIN value");
+                }
+
+                // check for 'extra verification'
+                String pin = customer.getTxn_pin();
+                if (pin == null || !pin.equalsIgnoreCase(oldPin)) {
+                    CommonUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstants.OP_CHANGE_PIN
+                            DbConstantsBackend.WRONG_PARAM_TYPE_PIN, mLogger);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                }
+
+                // Change PIN
+                customer.setTxn_pin(newPin);
+                BackendOps.updateCustomer(customer);
+
+                // Send SMS through HTTP
+                if(mobileNum!=null) {
+                    String smsText = SmsHelper.buildPwdChangeSMS(userId);
+                    if( SmsHelper.sendSMS(smsText, mobileNum, mLogger) ){
+                        mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
+                    } else {
+                        mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+                    };
+                } else {
+                    //TODO: raise alarm
+                    mLogger.error("In changePassword: mobile number is null");
+                    mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_MOBILE_NUM_NA;
+                }
             }
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            return cbs;
 
         } catch(Exception e) {
             CommonUtils.handleException(e,positiveException,mLogger,mEdr);
@@ -207,10 +301,24 @@ public class CustomerServices implements IBackendlessService {
         } finally {
             CommonUtils.finalHandling(startTime,mLogger,mEdr);
         }
-    }
+    }*/
 
-    public void changePin(String oldPin, String newPin, String cardNum) {
+    /*
+     * Private helper methods
+     */
+    /*
+    private String custPinResetWhereClause(String customerMobileNum) {
+        StringBuilder whereClause = new StringBuilder();
 
-    }
+        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PIN).append("'");
+        whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
+        whereClause.append("AND mobile_num = '").append(customerMobileNum).append("'");
+
+        // created within last 'cool off' mins
+        long time = (new Date().getTime()) - (MyGlobalSettings.CUSTOMER_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+        whereClause.append(" AND created > ").append(time);
+        return whereClause.toString();
+    }*/
+
 
 }

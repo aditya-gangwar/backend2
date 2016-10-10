@@ -6,7 +6,7 @@ import com.backendless.servercode.annotation.Asset;
 import in.myecash.common.constants.ErrorCodes;
 import in.myecash.common.database.Cashback;
 import in.myecash.constants.BackendConstants;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 /**
@@ -29,7 +29,7 @@ public class Cashback0TableEventHandler extends com.backendless.servercode.exten
         // beforeUpdate is not called, if update is done from server code
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "cashback-beforeUpdate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cashback.getRowid();
-        CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
 }

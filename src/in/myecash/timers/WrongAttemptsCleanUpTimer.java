@@ -34,7 +34,7 @@ public class WrongAttemptsCleanUpTimer extends com.backendless.servercode.extens
     private void initCommon() {
         Backendless.Logging.setLogReportingPolicy(BackendConstants.LOG_POLICY_NUM_MSGS, BackendConstants.LOG_POLICY_FREQ_SECS);
         mLogger = Backendless.Logging.getLogger("com.myecash.services.MerchantServices");
-        CommonUtils.initTableToClassMappings();
+        CommonUtils.initAll();
     }
 
     private int deleteOldWrongAttempts() {

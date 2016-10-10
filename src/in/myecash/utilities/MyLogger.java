@@ -25,7 +25,7 @@ public class MyLogger {
 
         mLogger = Backendless.Logging.getLogger(loggerName);
         mEdrLogger = Backendless.Logging.getLogger("utilities.edr");
-        mLogId = CommonUtils.generateLogId();
+        mLogId = BackendUtils.generateLogId();
         mDebugLogs = BackendConstants.FORCED_DEBUG_LOGS;
 
         if(BackendConstants.DEBUG_MODE) {
@@ -69,7 +69,7 @@ public class MyLogger {
     public void error(String msg, Exception e) {
         msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.error(msg);
-        mLogger.error(CommonUtils.stackTraceStr(e));
+        mLogger.error(BackendUtils.stackTraceStr(e));
         if(BackendConstants.DEBUG_MODE) {
             msg = "Error | "+msg;
             //System.out.println(msg);

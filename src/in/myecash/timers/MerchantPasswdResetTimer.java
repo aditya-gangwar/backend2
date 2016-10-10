@@ -4,10 +4,11 @@ import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.annotation.BackendlessTimer;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import in.myecash.common.database.*;
@@ -38,7 +39,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
     @Override
     public void execute( String appVersionId ) throws Exception
     {
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantPasswdResetTimer";
@@ -88,10 +89,10 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
                 }
             }
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -101,10 +102,10 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             BackendlessUser user = BackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT, false);
             Merchants merchant = (Merchants) user.getProperty("merchant");
             // check admin status
-            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
             // generate password
-            String passwd = CommonUtils.generateTempPassword();
+            String passwd = BackendUtils.generateTempPassword();
 
             // update user account for the password
             user.setPassword(passwd);
@@ -113,8 +114,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
             // Send SMS through HTTP
             String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
-            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
             mLogger.debug("Sent password reset SMS: " + merchant.getAuto_id());
@@ -134,7 +134,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
     private String mchntPwdResetWhereClause() {
         StringBuilder whereClause = new StringBuilder();
 
-        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PASSWD).append("'");
         whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
 
         // Records between last (cool off mins - timer duration) to (cool off mins)
@@ -146,8 +146,8 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         // Thus, no two consecutive runs will pick same records and thus never clash.
 
         long now = new Date().getTime();
-        long startTime = now - GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS;
-        long endTime = startTime + GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
+        long startTime = now - MyGlobalSettings.getMchntPasswdResetMins();
+        long endTime = startTime + MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
 
         whereClause.append(" AND created >= ").append(startTime);
         whereClause.append(" AND created < ").append(endTime);
@@ -157,7 +157,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
     }
 
     private String buildPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_PASSWD,CommonUtils.getHalfVisibleId(userId),password);
+        return String.format(SmsConstants.SMS_PASSWD, BackendUtils.getHalfVisibleId(userId),password);
     }
 }
 
@@ -166,10 +166,10 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         StringBuilder whereClause = new StringBuilder();
 
         // for particular merchant
-        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append("op_code = '").append(DbConstantsBackend.OP_RESET_PASSWD).append("'");
         whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
         // older than configured cool off period
-        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+        long time = (new Date().getTime()) - (MyGlobalSettings.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
 
         whereClause.append(" AND created < ").append(time);
 

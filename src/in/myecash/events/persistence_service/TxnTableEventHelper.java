@@ -4,10 +4,12 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
+import in.myecash.common.CommonUtils;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.text.SimpleDateFormat;
@@ -58,13 +60,13 @@ public class TxnTableEventHelper {
             //mLogger.debug("Invocation context: "+InvocationContext.asString());
 
             // Fetch merchant
-            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(context.getUserId(),
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(context.getUserId(),
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             String merchantId = merchant.getAuto_id();
             mLogger.setProperties(merchantId,DbConstants.USER_TYPE_MERCHANT,merchant.getDebugLogs());
 
             // check merchant status
-            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
             // credit txns not allowed under expiry duration
             if(merchant.getAdmin_status()== DbConstants.USER_STATUS_READY_TO_REMOVE) {
                 if(transaction.getCb_credit() > 0 || transaction.getCl_credit() > 0) {
@@ -78,13 +80,20 @@ public class TxnTableEventHelper {
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerId;
 
             // check if customer is enabled
-            CommonUtils.checkCustomerStatus(customer, mLogger);
+            BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
+
+            // if customer in 'restricted access' mode - allow only credit txns
+            if(customer.getAdmin_status()==DbConstants.USER_STATUS_MOB_CHANGE_RECENT &&
+                    (transaction.getCl_debit()>0 || transaction.getCb_debit()>0)) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.USER_MOB_CHANGE_RESTRICTED_ACCESS), "");
+            }
 
             // verify PIN
             if(CommonUtils.customerPinRequired(merchant, transaction)) {
                 if (transaction.getCpin() != null) {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
-                        CommonUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN, mLogger);
+                        BackendUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER,
+                                DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customerId);
                     } else {
                         transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
@@ -97,7 +106,7 @@ public class TxnTableEventHelper {
             }
 
             // check if card required and provided and matches
-            if(CommonUtils.customerCardRequired(transaction)) {
+            if(BackendUtils.customerCardRequired(transaction)) {
                 if(transaction.getUsedCardId()!=null) {
                     if(!transaction.getUsedCardId().equals(customer.getCardId())) {
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + customerId);
@@ -110,7 +119,7 @@ public class TxnTableEventHelper {
             // check that card is not blocked
             // TODO: check this if this is really required - if not, avoid fetching card object also
             mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = customer.getCardId();
-            CommonUtils.checkCardForUse(customer.getMembership_card());
+            BackendUtils.checkCardForUse(customer.getMembership_card());
 
             // Fetch cashback record
             String whereClause = "rowid = '" + customer.getPrivate_id() + merchantId + "'";
@@ -123,7 +132,7 @@ public class TxnTableEventHelper {
                 cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
-                if ((cashback.getCl_credit() - cashback.getCl_debit()) > GlobalSettingsConstants.CUSTOMER_CASH_MAX_LIMIT) {
+                if ((cashback.getCl_credit() - cashback.getCl_debit()) > MyGlobalSettings.getCashAccLimit()) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + customerId);
                 }
                 cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
@@ -136,7 +145,7 @@ public class TxnTableEventHelper {
                 transaction.setCust_private_id(customer.getPrivate_id());
                 transaction.setMerchant_id(merchantId);
                 transaction.setMerchant_name(merchant.getName());
-                transaction.setTrans_id(CommonUtils.generateTxnId(merchantId));
+                transaction.setTrans_id(BackendUtils.generateTxnId(merchantId));
                 transaction.setCreate_time(new Date());
                 transaction.setArchived(false);
                 transaction.setCpin(null);
@@ -156,13 +165,13 @@ public class TxnTableEventHelper {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             if(e instanceof BackendlessException) {
-                throw CommonUtils.getNewException((BackendlessException) e);
+                throw BackendUtils.getNewException((BackendlessException) e);
             }
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -193,10 +202,10 @@ public class TxnTableEventHelper {
             }
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -237,11 +246,7 @@ public class TxnTableEventHelper {
                 String smsText = buildSMS();
                 if(smsText!=null) {
                     // Send SMS through HTTP
-                    if( SmsHelper.sendSMS(smsText,custMobile, mLogger) ) {
-                        mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-                    } else {
-                        mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                    }
+                    SmsHelper.sendSMS(smsText,custMobile, mEdr, mLogger);
                 }
             }
         }

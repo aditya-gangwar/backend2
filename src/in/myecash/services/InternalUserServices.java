@@ -6,10 +6,11 @@ import com.backendless.FilePermission;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
+import in.myecash.common.CommonUtils;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.Date;
@@ -32,7 +33,7 @@ public class InternalUserServices implements IBackendlessService {
      */
     public void registerMerchant(Merchants merchant)
     {
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerMerchant";
@@ -48,7 +49,7 @@ public class InternalUserServices implements IBackendlessService {
             //mLogger.flush();
 
             // Fetch agent
-            InternalUser agent = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
 
             // Fetch city
@@ -57,7 +58,7 @@ public class InternalUserServices implements IBackendlessService {
             // get open merchant id batch
             String countryCode = city.getCountryCode();
             String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
-            String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+            String whereClause = "status = '"+DbConstantsBackend.BATCH_STATUS_OPEN +"'";
             MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
             if(batch == null) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.MERCHANT_ID_RANGE_ERROR),
@@ -68,7 +69,7 @@ public class InternalUserServices implements IBackendlessService {
             Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             mLogger.debug("Fetched merchant cnt: "+merchantCnt);
             // set merchant id
-            merchantId = CommonUtils.generateMerchantId(batch, countryCode, merchantCnt);
+            merchantId = BackendUtils.generateMerchantId(batch, countryCode, merchantCnt);
             mLogger.debug("Generated merchant id: "+merchantId);
 
             merchant.setAuto_id(merchantId);
@@ -87,7 +88,7 @@ public class InternalUserServices implements IBackendlessService {
             BackendOps.describeTable(merchant.getTxn_table()); // just to check that the table exists
 
             // generate and set password
-            String pwd = CommonUtils.generateTempPassword();
+            String pwd = BackendUtils.generateTempPassword();
             mLogger.debug("Generated passwd: "+pwd);
 
             BackendlessUser user = new BackendlessUser();
@@ -138,28 +139,24 @@ public class InternalUserServices implements IBackendlessService {
 
             // send SMS with user id
             String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
-            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             if(merchantId!=null && !merchantId.isEmpty()) {
                 BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             }
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void disableMerchant(String merchantId, String ticketNum, String reason, String remarks) {
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "disableMerchant";
@@ -169,7 +166,7 @@ public class InternalUserServices implements IBackendlessService {
 
         try {
             // Fetch customer care user
-            InternalUser internalUser = (InternalUser) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -184,7 +181,7 @@ public class InternalUserServices implements IBackendlessService {
             MerchantOps op = new MerchantOps();
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
-            op.setOp_code(DbConstantsBackend.MERCHANT_OP_DISABLE_ACC);
+            op.setOp_code(DbConstants.OP_DISABLE_ACC);
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
@@ -196,14 +193,16 @@ public class InternalUserServices implements IBackendlessService {
             if(userType==DbConstants.USER_TYPE_CC) {
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_CC);
             }
-            BackendOps.saveMerchantOp(op);
+            op = BackendOps.saveMerchantOp(op);
 
             // Update status
             try {
-                merchant.setAdmin_status(DbConstants.USER_STATUS_DISABLED);
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_DISABLED, reason,
+                        mEdr, mLogger);
+                /*merchant.setAdmin_status(DbConstants.USER_STATUS_DISABLED);
                 merchant.setStatus_update_time(new Date());
                 merchant.setStatus_reason(reason);
-                BackendOps.updateMerchant(merchant);
+                merchant = BackendOps.updateMerchant(merchant);*/
             } catch(Exception e) {
                 mLogger.error("disableMerchant: Exception while updating merchant status: "+merchantId);
                 // Rollback - delete merchant op added
@@ -219,21 +218,17 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // send SMS with user id
-            String smsText = String.format(SmsConstants.SMS_USER_ACC_DISABLE, CommonUtils.getHalfVisibleId(merchantId));
-            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
+            String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, BackendUtils.getHalfVisibleId(merchantId));
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -267,15 +262,16 @@ public class InternalUserServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         try {
             Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
-            merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-            merchant.setStatus_reason(DbConstantsBackend.REG_ERROR_ROLE_ASSIGN_FAILED);
-            //merchant.setAdmin_remarks("Registration failed");
-            //user.setProperty("merchant", merchant);
-            //BackendOps.updateUser(user);
-            BackendOps.updateMerchant(merchant);
+            BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
+                    mEdr, mLogger);
+
+            /*merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
+            merchant.setStatus_reason(DbConstantsBackend.REG_ERROR_REG_FAILED);
+            BackendOps.updateMerchant(merchant);*/
         } catch(Exception ex) {
             mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
-            //TODO: raise critical alarm
+            mLogger.error(BackendUtils.stackTraceStr(ex));
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
             throw ex;
         }
     }

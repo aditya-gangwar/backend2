@@ -5,7 +5,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import in.myecash.common.constants.*;
@@ -60,15 +60,15 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void resetInternalUserPassword(String userId, String secret1) {
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetInternalUserPassword";
@@ -96,12 +96,13 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
 
             // check admin status
-            CommonUtils.checkInternalUserStatus(internalUser);
+            BackendUtils.checkInternalUserStatus(internalUser);
 
             // check for 'extra verification'
             String dob = internalUser.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
-                CommonUtils.handleWrongAttempt(userId, internalUser, userType, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
+                BackendUtils.handleWrongAttempt(userId, internalUser, userType,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
@@ -112,10 +113,10 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -125,7 +126,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
      */
     private void internalUserPwdResetImmediate(BackendlessUser user, InternalUser internalUser) {
         // generate password
-        String passwd = CommonUtils.generateTempPassword();
+        String passwd = BackendUtils.generateTempPassword();
         // update user account for the password
         user.setPassword(passwd);
         user = BackendOps.updateUser(user);
@@ -133,12 +134,9 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildPwdResetSMS(internalUser.getId(), passwd);
-        if( SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), mLogger) ){
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-        } else {
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+        if( !SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), mEdr, mLogger) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
-        };
+        }
         mLogger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());
     }
 

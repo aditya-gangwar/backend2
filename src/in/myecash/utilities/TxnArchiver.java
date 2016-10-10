@@ -2,6 +2,7 @@ package in.myecash.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
+import in.myecash.common.CommonUtils;
 import in.myecash.common.CsvConverter;
 import in.myecash.common.DateUtil;
 import in.myecash.constants.BackendConstants;
@@ -13,7 +14,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import in.myecash.common.database.*;
@@ -73,7 +73,7 @@ public class TxnArchiver
         mSdfOnlyDateFilename.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
 
         mLogger.debug("Running TxnArchiver"+mMerchantIdSuffix+", "+mSdfDateWithTime.format(startTime));
-        CommonUtils.initTableToClassMappings();
+        CommonUtils.initAll();
 
         // Fetch next not processed merchant
         mLastFetchMerchant = null;

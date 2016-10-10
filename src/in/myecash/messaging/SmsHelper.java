@@ -8,7 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 
@@ -18,7 +18,7 @@ import in.myecash.utilities.MyLogger;
 public class SmsHelper {
     //private static MyLogger mLogger;
 
-    public static boolean sendSMS(String message, String recipients, MyLogger logger) {
+    public static boolean sendSMS(String message, String recipients, String[] edr, MyLogger logger) {
 
         logger.debug("SMS: " + message);
 
@@ -44,6 +44,7 @@ public class SmsHelper {
 
             if (uc.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 logger.error("Failed to send SMS ("+message+") to "+recipients+". HTTP response: "+uc.getResponseCode());
+                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
                 return false;
             }
             logger.debug(uc.getResponseMessage());
@@ -58,6 +59,7 @@ public class SmsHelper {
         } catch (Exception e) {
             logger.error("Failed to send SMS ("+message+") to "+recipients);
             logger.error("Failed to send SMS:"+e.toString());
+            edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
             return false;
 
         } finally {
@@ -66,6 +68,7 @@ public class SmsHelper {
             }
         }
 
+        edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
         return true;
     }
 
@@ -73,15 +76,11 @@ public class SmsHelper {
      * Methods to build SMS texts
      */
     public static String buildNewCardSMS(String userId, String card_num) {
-        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, BackendUtils.getHalfVisibleId(userId));
     }
 
     public static String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
-    }
-
-    public static String buildCustPwdResetSMS(String userId, String pin) {
-        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, BackendUtils.getHalfVisibleId(userId), BackendUtils.getHalfVisibleId(mobile_num));
     }
 
     public static String buildFirstPwdResetSMS(String userId, String password) {
@@ -93,12 +92,21 @@ public class SmsHelper {
     }
 
     public static String buildPwdChangeSMS(String userId) {
-        return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_PASSWD_CHANGED, BackendUtils.getHalfVisibleId(userId));
     }
 
     public static String buildPwdResetSMS(String userId, String password) {
         return String.format(SmsConstants.SMS_PASSWD,userId,password);
     }
+
+    public static String buildCustPinResetSMS(String userId, String pin) {
+        return String.format(SmsConstants.SMS_PIN, BackendUtils.getHalfVisibleId(userId),pin);
+    }
+
+    public static String buildPinChangeSMS(String userId) {
+        return String.format(SmsConstants.SMS_PIN_CHANGED, BackendUtils.getHalfVisibleId(userId));
+    }
+
 }
 
 

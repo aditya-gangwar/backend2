@@ -3,10 +3,11 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.database.CustomerOps;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import in.myecash.common.database.*;
@@ -27,7 +28,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
      * Public methods: Backend REST APIs
      */
    public void resetCustomerPassword(String mobileNum, String secret) {
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetInternalUserPassword";
@@ -58,12 +59,13 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
 
             // check admin status
-            CommonUtils.checkCustomerStatus(customer, mLogger);
+            BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 
             // check for 'extra verification'
             String cardId = customer.getCardId();
             if (cardId == null || !cardId.equalsIgnoreCase(secret)) {
-                CommonUtils.handleWrongAttempt(mobileNum, customer, userType, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
+                BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
@@ -76,7 +78,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 CustomerOps op = new CustomerOps();
                 op.setMobile_num(customer.getMobile_num());
                 op.setPrivateId(customer.getPrivate_id());
-                op.setOp_code(DbConstants.CUSTOMER_OP_RESET_PASSWORD);
+                op.setOp_code(DbConstants.OP_RESET_PASSWD);
                 op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
                 op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
@@ -92,10 +94,10 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -105,7 +107,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
      */
     private void customerPwdResetImmediate(BackendlessUser user, Customers customer) {
         // generate password
-        String passwd = CommonUtils.generateTempPassword();
+        String passwd = BackendUtils.generateTempPassword();
         // update user account for the password
         user.setPassword(passwd);
         user = BackendOps.updateUser(user);
@@ -113,10 +115,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildFirstPwdResetSMS(customer.getMobile_num(), passwd);
-        if( SmsHelper.sendSMS(smsText, customer.getMobile_num(), mLogger) ){
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-        } else {
-            mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+        if( !SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+customer.getMobile_num());
@@ -125,12 +124,12 @@ public class CustomerServicesNoLogin implements IBackendlessService {
     private String custPwdResetWhereClause(String customerMobileNum) {
         StringBuilder whereClause = new StringBuilder();
 
-        whereClause.append("op_code = '").append(DbConstants.CUSTOMER_OP_RESET_PASSWORD).append("'");
+        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PASSWD).append("'");
         whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
         whereClause.append("AND mobile_num = '").append(customerMobileNum).append("'");
 
         // created within last 'cool off' mins
-        long time = (new Date().getTime()) - (GlobalSettingsConstants.CUSTOMER_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+        long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * 60 * 1000);
         whereClause.append(" AND created > ").append(time);
         return whereClause.toString();
     }

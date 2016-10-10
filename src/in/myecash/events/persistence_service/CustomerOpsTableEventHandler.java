@@ -63,7 +63,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
                 String cardId = customer.getMembership_card().getCard_id();
                 mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = cardId;
                 String custOp = customerops.getOp_code();
-                if (!custOp.equals(DbConstants.CUSTOMER_OP_NEW_CARD) &&
+                if (!custOp.equals(DbConstants.OP_NEW_CARD) &&
                         !cardId.equals(customerops.getQr_card())) {
 
                     throw new BackendlessException(BackendResponseCodes.WRONG_CARD, "Wrong membership card");
@@ -71,17 +71,17 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
 
                 // Don't verify PIN for 'reset PIN' operation
                 String pin = customerops.getPin();
-                if (!custOp.equals(DbConstants.CUSTOMER_OP_RESET_PIN) &&
+                if (!custOp.equals(DbConstants.OP_RESET_PIN) &&
                         !customer.getTxn_pin().equals(pin)) {
 
-                    CommonUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_PIN);
+                    CommonUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.WRONG_PARAM_TYPE_PIN);
                     throw new BackendlessException(BackendResponseCodes.BE_ERROR_WRONG_PIN, "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
                 // Generate OTP and send SMS
                 AllOtp newOtp = new AllOtp();
                 newOtp.setUser_id(mobileNum);
-                if (custOp.equals(DbConstants.CUSTOMER_OP_CHANGE_MOBILE)) {
+                if (custOp.equals(DbConstants.OP_CHANGE_MOBILE)) {
                     newOtp.setMobile_num(customerops.getExtra_op_params());
                 } else {
                     newOtp.setMobile_num(mobileNum);
@@ -150,13 +150,13 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
             if(result.getException()==null) {
                 String opcode = customerops.getOp_code();
                 switch (opcode) {
-                    case DbConstants.CUSTOMER_OP_NEW_CARD:
+                    case DbConstants.OP_NEW_CARD:
                         changeCustomerCard(customerops);
                         break;
-                    case DbConstants.CUSTOMER_OP_CHANGE_MOBILE:
+                    case DbConstants.OP_CHANGE_MOBILE:
                         changeCustomerMobile(customerops);
                         break;
-                    case DbConstants.CUSTOMER_OP_RESET_PIN:
+                    case DbConstants.OP_RESET_PIN:
                         resetCustomerPin(customerops.getMobile_num());
                         break;
                 }

@@ -2,7 +2,7 @@
 package in.myecash;
 
 import com.backendless.servercode.IBackendlessBootstrap;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 
 
 public class Bootstrap implements IBackendlessBootstrap
@@ -11,7 +11,7 @@ public class Bootstrap implements IBackendlessBootstrap
   @Override
   public void onStart()
   {
-    CommonUtils.initTableToClassMappings();
+    BackendUtils.initAll();
   }
     
   @Override

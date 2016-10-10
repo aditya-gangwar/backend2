@@ -5,10 +5,11 @@ import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import in.myecash.common.DateUtil;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 import in.myecash.constants.*;
 import in.myecash.database.*;
@@ -59,7 +60,7 @@ public class AdminServices implements IBackendlessService {
     public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks, String newMobileNum, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMchntLoginOrChangeMob";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -105,25 +106,27 @@ public class AdminServices implements IBackendlessService {
             op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
             op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
             if(newMobileNum==null) {
-                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_ACC_FOR_LOGIN);
+                op.setOp_code(DbConstants.OP_RESET_ACC_FOR_LOGIN);
             } else {
-                op.setOp_code(DbConstantsBackend.MERCHANT_OP_CHANGE_MOBILE);
+                op.setOp_code(DbConstants.OP_CHANGE_MOBILE);
                 // set extra params in presentable format
                 String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
                 op.setExtra_op_params(extraParams);
                 //op.setExtra_op_params(newMobileNum);
             }
-            BackendOps.saveMerchantOp(op);
+            op = BackendOps.saveMerchantOp(op);
 
             // update merchant status (and mobile num, if required)
             try {
-                merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
-                merchant.setStatus_reason(reason);
-                merchant.setStatus_update_time(new Date());
                 if(newMobileNum!=null) {
                     merchant.setMobile_num(newMobileNum);
                 }
-                merchant = BackendOps.updateMerchant(merchant);
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_ACTIVE, reason,
+                        mEdr, mLogger);
+                /*merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
+                merchant.setStatus_reason(reason);
+                merchant.setStatus_update_time(new Date());
+                merchant = BackendOps.updateMerchant(merchant);*/
 
             } catch(Exception e) {
                 mLogger.error("resetMchntLoginOrChangeMob: Exception while updating merchant status: "+merchantId);
@@ -157,13 +160,15 @@ public class AdminServices implements IBackendlessService {
                 // Rollback - delete merchant op added, and rollback merchant status
                 try {
                     BackendOps.deleteMerchantOp(op);
-                    merchant.setAdmin_status(oldStatus);
-                    merchant.setStatus_reason(oldReason);
-                    merchant.setStatus_update_time(oldUpdateTime);
                     if(newMobileNum!=null) {
                         merchant.setMobile_num(oldMobile);
                     }
-                    BackendOps.updateMerchant(merchant);
+                    BackendUtils.setMerchantStatus(merchant, oldStatus, oldReason,
+                            mEdr, mLogger);
+                    /*merchant.setAdmin_status(oldStatus);
+                    merchant.setStatus_reason(oldReason);
+                    merchant.setStatus_update_time(oldUpdateTime);
+                    BackendOps.updateMerchant(merchant);*/
                 } catch(Exception ex) {
                     mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: "+merchantId);
                     // Rollback also failed
@@ -176,33 +181,29 @@ public class AdminServices implements IBackendlessService {
             // send SMS
             String smsText = null;
             if(newMobileNum==null) {
-                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, CommonUtils.getHalfVisibleId(merchantId));
+                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, BackendUtils.getHalfVisibleId(merchantId));
             } else {
-                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, CommonUtils.getHalfVisibleId(merchantId), newMobileNum);
+                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, BackendUtils.getHalfVisibleId(merchantId), newMobileNum);
             }
 
-            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void removeMerchant(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "removeMerchant";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -238,18 +239,23 @@ public class AdminServices implements IBackendlessService {
             op.setAgentId(ADMIN_LOGINID);
             op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
             op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
-            op.setOp_code(DbConstantsBackend.MERCHANT_OP_REMOVE_ACC);
-            BackendOps.saveMerchantOp(op);
+            op.setOp_code(DbConstants.OP_REMOVE_ACC);
+            op = BackendOps.saveMerchantOp(op);
 
             // update merchant status (and mobile num, if required)
             try {
-                merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_REMOVE);
-                merchant.setStatus_update_time(new Date());
-                merchant.setStatus_reason(reason);
                 // disable cb and cl add
                 merchant.setCb_rate("0");
                 merchant.setCl_add_enable(false);
-                merchant = BackendOps.updateMerchant(merchant);
+                // set time when request is made
+                merchant.setRemoveReqDate(new Date());
+                // update status and save merchant object
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_REMOVE, reason,
+                        mEdr, mLogger);
+                /*merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_REMOVE);
+                merchant.setStatus_update_time(new Date());
+                merchant.setStatus_reason(reason);
+                merchant = BackendOps.updateMerchant(merchant);*/
 
             } catch(Exception e) {
                 mLogger.error("removeMerchant: Exception while updating merchant status: "+merchantId);
@@ -266,37 +272,33 @@ public class AdminServices implements IBackendlessService {
             }
 
             DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
-            now.addDays(GlobalSettingsConstants.MCHNT_REMOVAL_EXPIRY_DAYS);
+            now.addDays(MyGlobalSettings.getMchntExpiryDays());
             SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
 
             // send SMS
             String smsText = String.format(SmsConstants.SMS_MERCHANT_REMOVE,
                     merchantId,
-                    String.valueOf(GlobalSettingsConstants.MCHNT_REMOVAL_EXPIRY_DAYS),
+                    String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
                     sdf.format(now.getTime()));
 
-            if(SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "createMerchantIdBatches";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -330,7 +332,7 @@ public class AdminServices implements IBackendlessService {
             // assuming 2 digit batch ids from 01 - 99 (00 reserved for now)
             for(int i=startIdx; i<endIdx; i++) {
                 MerchantIdBatches batch = new MerchantIdBatches();
-                batch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_AVAILABLE);
+                batch.setStatus(DbConstantsBackend.BATCH_STATUS_AVAILABLE);
                 batch.setRangeId(rangeId);
                 batch.setBatchId(i);
                 String batchId = String.format("%02d",i);
@@ -343,18 +345,18 @@ public class AdminServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void openNextMerchantIdBatch(String countryCode, String rangeId, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "openNextMerchantIdBatch";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -371,7 +373,7 @@ public class AdminServices implements IBackendlessService {
 
             // get current open batch
             MerchantIdBatches openBatch = BackendOps.fetchMerchantIdBatch(tableName,
-                    "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'");
+                    "status = '"+DbConstantsBackend.BATCH_STATUS_OPEN +"'");
             if(openBatch!=null && !openBatch.getRangeId().equals(rangeId)) {
                 // If rangeId of 'current open batch' is different from the one provided
                 // first close the current open batch manually, and then try again.
@@ -388,38 +390,38 @@ public class AdminServices implements IBackendlessService {
                 }
 
                 // close current open batch
-                openBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_CLOSED);
+                openBatch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
                 BackendOps.saveMerchantIdBatch(tableName, openBatch);
             }
 
             // find next available batch
             MerchantIdBatches lowestBatch = BackendOps.firstMerchantIdBatchByBatchId(tableName,
-                    "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_AVAILABLE+"'",
+                    "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.BATCH_STATUS_AVAILABLE +"'",
                     false);
             if(lowestBatch==null) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
             }
 
             // update status of the batch
-            lowestBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN);
+            lowestBatch.setStatus(DbConstantsBackend.BATCH_STATUS_OPEN);
             BackendOps.saveMerchantIdBatch(tableName, lowestBatch);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void createCardIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "createCardIdBatches";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -451,7 +453,7 @@ public class AdminServices implements IBackendlessService {
             // assuming 2 digit batch ids from 00 - 99
             for(int i=startIdx; i<endIdx; i++) {
                 CardIdBatches batch = new CardIdBatches();
-                batch.setStatus(DbConstantsBackend.CARD_ID_BATCH_STATUS_AVAILABLE);
+                batch.setStatus(DbConstantsBackend.BATCH_STATUS_AVAILABLE);
                 batch.setRangeId(rangeId);
                 batch.setBatchId(i);
                 String batchId = String.format("%03d",i);
@@ -464,18 +466,18 @@ public class AdminServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "openNextCardIdBatch";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = countryCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -508,31 +510,31 @@ public class AdminServices implements IBackendlessService {
                 }
 
                 // close current open batch
-                openBatch.setStatus(DbConstantsBackend.CARD_ID_BATCH_STATUS_CLOSED);
+                openBatch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
                 BackendOps.saveCardIdBatch(tableName, openBatch);
             }
 
             // find next available batch
             CardIdBatches lowestBatch = BackendOps.firstCardIdBatchByBatchId(tableName,
-                    "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.CARD_ID_BATCH_STATUS_AVAILABLE+"'",
+                    "rangeId = '"+rangeId+"' and status = '"+DbConstantsBackend.BATCH_STATUS_AVAILABLE+"'",
                     false);
             if(lowestBatch==null) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
             }
 
             // update status of the batch
-            lowestBatch.setStatus(DbConstantsBackend.CARD_ID_BATCH_STATUS_OPEN);
+            lowestBatch.setStatus(DbConstantsBackend.BATCH_STATUS_OPEN);
             BackendOps.saveCardIdBatch(tableName, lowestBatch);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -542,7 +544,7 @@ public class AdminServices implements IBackendlessService {
     private void registerInternalUser(String argUserId, int userType, String mobile, String name, String dob, String pwd) {
         long startTime = System.currentTimeMillis();
         try {
-            CommonUtils.initTableToClassMappings();
+            BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerInternalUser";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = argUserId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -623,7 +625,7 @@ public class AdminServices implements IBackendlessService {
 
             // Send sms to the customer with PIN
             String smsText = String.format(SmsConstants.SMS_REG_INTERNAL_USER, userId);
-            if (!SmsHelper.sendSMS(smsText, mobile, mLogger)) {
+            if (!SmsHelper.sendSMS(smsText, mobile, mEdr, mLogger)) {
                 // TODO: write to alarm table for retry later
             }
 
@@ -631,11 +633,11 @@ public class AdminServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
             BackendOps.logoutUser();
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 }
@@ -664,7 +666,7 @@ public class AdminServices implements IBackendlessService {
                     if(BackendOps.getAvailableMerchantIdCnt(tableNameMerchantIds, openBatch.getBatchId())==0 &&
                             BackendOps.getTotalMerchantIdCnt(tableNameMerchantIds, openBatch.getBatchId())==BackendConstants.MERCHANT_ID_MAX_IDS_PER_BATCH) {
                         // update batch status
-                        openBatch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_CLOSED);
+                        openBatch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
                         BackendOps.saveMerchantIdBatch(tableNameBatches, openBatch);
                         mLogger.info("Closed batch "+openBatch.getBatchId()+" in table "+tableNameBatches);
                     }
@@ -673,7 +675,7 @@ public class AdminServices implements IBackendlessService {
 
             // fetch new batch object
             MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(tableNameBatches, rangeId, batchId);
-            if(batch.getStatus().equals(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_CLOSED)) {
+            if(batch.getStatus().equals(DbConstantsBackend.BATCH_STATUS_CLOSED)) {
                 throw CommonUtils.getException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Invalid new batch status: "+countryCode+","+rangeId+","+batchId);
             }
 
@@ -694,8 +696,8 @@ public class AdminServices implements IBackendlessService {
             }
 
             // update batch status
-            if(batch.getStatus().equals(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_CLOSED)) {
-                batch.setStatus(DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN);
+            if(batch.getStatus().equals(DbConstantsBackend.BATCH_STATUS_CLOSED)) {
+                batch.setStatus(DbConstantsBackend.BATCH_STATUS_OPEN);
                 BackendOps.saveMerchantIdBatch(tableNameBatches, batch);
                 mLogger.info("Opened batch "+batchId+" in table "+tableNameBatches);
             }

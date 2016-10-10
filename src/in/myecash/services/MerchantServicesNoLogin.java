@@ -3,9 +3,10 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.Date;
@@ -28,7 +29,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
      */
     public void setDeviceForLogin(String loginId, String deviceInfo, String rcvdOtp) {
 
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForLogin";
@@ -69,16 +70,16 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void resetMerchantPwd(String userId, String deviceId, String dob) {
 
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMerchantPwd";
@@ -111,13 +112,13 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             // check admin status
-            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
             // Check if from trusted device
             // don't check for first time after merchant is registered
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
-                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
@@ -125,7 +126,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String storedDob = merchant.getDob();
             if (storedDob == null || !storedDob.equalsIgnoreCase(dob)) {
-                CommonUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_PASSWORD_RESET, mLogger);
+                BackendUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
@@ -138,7 +140,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 MerchantOps op = new MerchantOps();
                 op.setMerchant_id(merchant.getAuto_id());
                 op.setMobile_num(merchant.getMobile_num());
-                op.setOp_code(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD);
+                op.setOp_code(DbConstants.OP_RESET_PASSWD);
                 op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
                 op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
@@ -154,16 +156,16 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
     public void sendMerchantId(String mobileNum, String deviceId) {
 
-        CommonUtils.initTableToClassMappings();
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "sendMerchantId";
@@ -178,13 +180,13 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             // check admin status
-            CommonUtils.checkMerchantStatus(merchant, mLogger);
+            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
             // Check if from trusted device
             // don't check for first time after merchant is registered
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
-                if (!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
@@ -192,13 +194,14 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
-                CommonUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_FORGOT_USERID, mLogger);
+                BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_FORGOT_USERID, mEdr, mLogger);
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             // send merchant id by SMS
             String smsText = SmsHelper.buildUserIdSMS(merchant.getAuto_id());
-            if (SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger)) {
+            if (SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
             } else {
                 mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
@@ -209,10 +212,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -221,7 +224,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
      */
     private void resetMchntPasswdImmediate(BackendlessUser user, Merchants merchant) {
         // generate password
-        String passwd = CommonUtils.generateTempPassword();
+        String passwd = BackendUtils.generateTempPassword();
         // update user account for the password
         user.setPassword(passwd);
         BackendOps.updateUser(user);
@@ -230,14 +233,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mLogger) ){
-            if(mEdr!=null) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            }
-        } else {
-            if(mEdr!=null) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            }
+        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
@@ -246,12 +242,12 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     private String mchntPwdResetWhereClause(String merchantId) {
         StringBuilder whereClause = new StringBuilder();
 
-        whereClause.append("op_code = '").append(DbConstantsBackend.MERCHANT_OP_RESET_PASSWD).append("'");
+        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PASSWD).append("'");
         whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
         whereClause.append("AND merchant_id = '").append(merchantId).append("'");
 
         // created within last 'cool off mins'
-        long time = (new Date().getTime()) - (GlobalSettingsConstants.MERCHANT_PASSWORD_RESET_COOL_OFF_MINS * 60 * 1000);
+        long time = (new Date().getTime()) - (MyGlobalSettings.getMchntPasswdResetMins() * 60 * 1000);
         whereClause.append(" AND created > ").append(time);
         return whereClause.toString();
     }

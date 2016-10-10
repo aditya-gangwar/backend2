@@ -24,11 +24,12 @@ public class SmsConstants {
     // TODO: Review all SMS text
 
     // Account Status change SMS
-    public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong password attempts.";
-    public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong PIN attempts.";
-    public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
-    public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot password' attempts.";
-    public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
+    public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyeCash account '%s' is locked due to multiple wrong password attempts. It will be unlocked automatically after %s hours.";
+    public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyeCash account '%s' is locked due to multiple wrong PIN attempts. It will be unlocked automatically after %s hours.";
+    public static String SMS_ACCOUNT_LOCKED_VERIFY_FAILED = "Your MyeCash account '%s' is locked due to multiple wrong verifications. It will be unlocked automatically after %s hours.";
+    public static String SMS_ACCOUNT_DISABLE = "Your MyeCash account number '%s' is Disabled now. You can call us for further help.";
+    //public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
+    //public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
 
     // MyeCash transaction SMS
     public static String SMS_TXN_DEBIT_CL_CB = "Mycash: %s debited Rs %d from your Account and Rs %d from Cashback on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
@@ -41,10 +42,12 @@ public class SmsConstants {
     // Password/PIN/OTP messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyCash family !! Your User ID is %s, and your password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD = "MyeCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_FIRST_PIN_CUSTOMER = "Dear Customer - Welcome to MyCash family !! Your User ID is %s, and your first PIN is '%s'. PLS DO NOT SHARE WITH ANYONE.";
-    public static String SMS_PIN = "MyCash transaction PIN for user %s is '%s'. PLS DO NOT SHARE WITH ANYONE.";
     public static String SMS_PASSWD_CHANGED = "MyeCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
-    public static String SMS_OTP = "You have initiated '%s' txn for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
+    public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
+
+    public static String SMS_CUSTOMER_REGISTER = "Dear Customer - Welcome to MyeCash family. Your User ID is %s. Download MyeCash App from Android store to manage your account.";
+    public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. PLS KEEP IT SECRET AND DO NOT SHARE WITH ANYONE.";
+    public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
@@ -56,7 +59,6 @@ public class SmsConstants {
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
     // Account enable/disable
-    public static String SMS_USER_ACC_DISABLE = "Dear User - Your account number '%s' is Disabled now. You can call us for further help.";
     public static String SMS_MCHNT_LOGIN_RESET = "Dear Merchant - As per request, the login access for account '%s' is reset successfully. Pls use 'Forgot Password' link to restore your access.";
     public static String SMS_MCHNT_MOBILE_CHANGE_ADMIN = "Dear Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Pls use 'Forgot Password' link to restore your access.";
 

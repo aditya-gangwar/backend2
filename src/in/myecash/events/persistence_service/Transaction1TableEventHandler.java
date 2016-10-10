@@ -8,7 +8,7 @@ import com.backendless.servercode.annotation.Async;
 import in.myecash.common.constants.ErrorCodes;
 import in.myecash.common.database.Transaction;
 import in.myecash.constants.BackendConstants;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 /**
@@ -47,7 +47,7 @@ public class Transaction1TableEventHandler extends com.backendless.servercode.ex
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 transaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 transaction.getTrans_id();
-        CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
     /*

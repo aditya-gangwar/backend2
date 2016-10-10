@@ -7,6 +7,8 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.QueryOptions;
+import in.myecash.common.DateUtil;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.constants.*;
@@ -19,7 +21,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import static in.myecash.utilities.CommonUtils.getMerchantIdType;
+import static in.myecash.utilities.BackendUtils.getMerchantIdType;
+import static in.myecash.utilities.BackendUtils.stackTraceStr;
 
 /**
  * Created by adgangwa on 15-05-2016.
@@ -97,19 +100,20 @@ public class BackendOps {
         }
     }
 
-    public static BackendlessUser fetchUserByObjectId(String objectId, boolean allChilds) {
+    public static BackendlessUser fetchUserByObjectId(String objectId, boolean allMchntChilds) {
         ArrayList<String> relationProps = new ArrayList<>();
         // add all childs
         relationProps.add("merchant");
         relationProps.add("customer");
+        // membership card data is almost always required
+        relationProps.add("customer.membership_card");
         relationProps.add("internalUser");
 
-        if(allChilds) {
+        if(allMchntChilds) {
             relationProps.add("merchant.trusted_devices");
             relationProps.add("merchant.address");
             //relationProps.add("merchant.address.city");
             relationProps.add("merchant.buss_category");
-            relationProps.add("customer.membership_card");
         }
 
         return Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
@@ -366,10 +370,16 @@ public class BackendOps {
         // Send SMS with OTP
         try {
             AllOtp newOtp = null;
-            AllOtp oldOtp = fetchOtp(otp.getUser_id());
+            AllOtp oldOtp = fetchOtp(otp.getUser_id(), otp.getOpcode());
             if (oldOtp != null) {
                 // delete oldOtp
-                deleteOtp(oldOtp);
+                try {
+                    deleteOtp(otp);
+                } catch(Exception e) {
+                    // ignore
+                    logger.error("Exception in generateOtp: "+e.toString());
+                    logger.error(stackTraceStr(e));
+                }
                 /*
                 oldOtp.setOtp_value(CommonUtils.generateOTP());
                 oldOtp.setOpcode(otp.getOpcode());
@@ -378,17 +388,17 @@ public class BackendOps {
                 */
             }
             // create new OTP object
-            otp.setOtp_value(CommonUtils.generateOTP());
+            otp.setOtp_value(BackendUtils.generateOTP());
             newOtp = Backendless.Persistence.save(otp);
 
             // Send SMS through HTTP
             String smsText = String.format(SmsConstants.SMS_OTP,
                     newOtp.getOpcode(),
-                    CommonUtils.getHalfVisibleId(newOtp.getUser_id()),
+                    BackendUtils.getHalfVisibleId(newOtp.getUser_id()),
                     newOtp.getOtp_value(),
-                    GlobalSettingsConstants.OTP_VALID_MINS);
+                    MyGlobalSettings.OTP_VALID_MINS);
 
-            if (SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), logger)){
+            if (SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), edr, logger)){
                 edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
             } else {
                 edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
@@ -401,10 +411,11 @@ public class BackendOps {
         }
     }
 
-    public static void validateOtp(String userId, String rcvdOtp) {
+    public static void validateOtp(String userId, String opcode, String rcvdOtp) {
         AllOtp otp = null;
         try {
-            otp = BackendOps.fetchOtp(userId);
+            otp = BackendOps.fetchOtp(userId, opcode);
+
         } catch(BackendlessException e) {
             if(e.getCode().equals(ErrorCodes.BL_ERROR_NO_DATA_FOUND)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
@@ -412,38 +423,43 @@ public class BackendOps {
             throw e;
         }
 
-        Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
+        //Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
-        if ( ((currTime.getTime() - otpTime.getTime()) < (GlobalSettingsConstants.OTP_VALID_MINS*60*1000)) &&
+        if ( ((currTime.getTime() - otp.getCreated().getTime()) < (MyGlobalSettings.OTP_VALID_MINS*60*1000)) &&
                 rcvdOtp.equals(otp.getOtp_value()) ) {
             // active otp available and matched
             // delete as can be used only once
             try {
                 deleteOtp(otp);
             } catch(Exception e) {
-                // error in delete is not considered as OTP not matching - ignore
-                // TODO: raise alarm
+                // ignore - delete will be tried again, when OTP is generated by same user for same opcode again
             }
         } else {
             throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
         }
     }
 
-    private static void deleteOtp(AllOtp otp) {
-        Backendless.Persistence.of( AllOtp.class ).remove( otp );
-    }
-
-    private static AllOtp fetchOtp(String userId) {
+    private static AllOtp fetchOtp(String userId, String opcode) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setWhereClause("user_id = '" + userId + "'");
+        dataQuery.setWhereClause("user_id = '" + userId + "' AND opcode = '"+opcode+"'");
+
+        QueryOptions options = new QueryOptions();
+        options.addSortByOption("created DESC");
+        dataQuery.setQueryOptions(options);
 
         BackendlessCollection<AllOtp> collection = Backendless.Data.of(AllOtp.class).find(dataQuery);
         if( collection.getTotalObjects() > 0) {
+            // return the latest one, in case of multiple records
+            // may happen if delete failed for similar record
             return collection.getData().get(0);
         } else {
             return null;
         }
+    }
+
+    private static void deleteOtp(AllOtp otp) {
+        Backendless.Persistence.of( AllOtp.class ).remove( otp );
     }
 
     /*
@@ -604,13 +620,27 @@ public class BackendOps {
             // create row
             WrongAttempts newAttempt = new WrongAttempts();
             newAttempt.setUser_id(userId);
-            newAttempt.setAttempt_type(type);
+            newAttempt.setParam_type(type);
             newAttempt.setAttempt_cnt(0);
             newAttempt.setUser_type(userType);
             return saveWrongAttempt(newAttempt);
         }
         return attempt;
     }*/
+
+    public static int getTodayWrongAttemptCnt(String userId, String type) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+
+        DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
+        todayMidnight.toMidnight();
+
+        dataQuery.setWhereClause("user_id = '" + userId +
+                "' AND attempt_type = '" + type +
+                "' AND create_time < '" + todayMidnight.getTime().getTime() + "'");
+
+        BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
+        return collection.getTotalObjects();
+    }
 
     public static WrongAttempts fetchWrongAttempts(String userId, String type) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -788,7 +818,7 @@ public class BackendOps {
     public static CardIdBatches fetchOpenCardIdBatch(String tableName) {
         Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
 
-        String whereClause = "status = '"+ DbConstantsBackend.CARD_ID_BATCH_STATUS_OPEN+"'";
+        String whereClause = "status = '"+ DbConstantsBackend.BATCH_STATUS_OPEN+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -864,7 +894,7 @@ public class BackendOps {
     public static List<MerchantIdBatches> fetchOpenMerchantIdBatches(String tableName) {
         Backendless.Data.mapTableToClass(tableName, MerchantIdBatches.class);
 
-        String whereClause = "status = "+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+        String whereClause = "status = "+DbConstantsBackend.BATCH_STATUS_OPEN+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();

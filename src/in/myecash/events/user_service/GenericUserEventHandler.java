@@ -5,7 +5,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.util.*;
@@ -72,7 +72,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
                     // check admin status
-                    CommonUtils.checkMerchantStatus(merchant, mLogger);
+                    BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
                     // Check if 'device id' not set
                     // This is set in setDeviceId() backend API
@@ -102,7 +102,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                     // Check if device is in trusted list
                     List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-                    if(!CommonUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                    if(!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                         // Device not in trusted list
 
                         if (rcvdOtp == null || rcvdOtp.isEmpty()) {
@@ -117,7 +117,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             AllOtp newOtp = new AllOtp();
                             newOtp.setUser_id(userId);
                             newOtp.setMobile_num(merchant.getMobile_num());
-                            newOtp.setOpcode(DbConstantsBackend.MERCHANT_OP_NEW_DEVICE_LOGIN);
+                            newOtp.setOpcode(DbConstants.OP_LOGIN);
                             BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                             // OTP generated successfully - return exception to indicate so
@@ -126,7 +126,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                         } else {
                             // OTP available - validate the same
-                            BackendOps.validateOtp(userId, rcvdOtp);
+                            BackendOps.validateOtp(userId, DbConstants.OP_LOGIN, rcvdOtp);
 
                             // OTP is valid - add this device to trusted list
                             // Trusted device may be null - create new if so
@@ -184,7 +184,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
 
                     // check admin status
-                    CommonUtils.checkCustomerStatus(customer, mLogger);
+                    BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 
                     if(!customer.getFirst_login_ok()) {
                         customer.setFirst_login_ok(true);
@@ -198,7 +198,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     mLogger.setProperties(internalUser.getId(), userType, internalUser.getDebugLogs());
                     mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
                     // check admin status
-                    CommonUtils.checkInternalUserStatus(internalUser);
+                    BackendUtils.checkInternalUserStatus(internalUser);
 
                     // fetch device data
                     InternalUserDevice deviceData = BackendOps.fetchInternalUserDevice(userId);
@@ -232,7 +232,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 }
 
             } else {
-                Integer userType = CommonUtils.getUserType(login);
+                Integer userType = BackendUtils.getUserType(login);
                 mEdr[BackendConstants.EDR_USER_TYPE_IDX] = userType.toString();
 
                 // login failed - increase count if failed due to wrong password
@@ -245,7 +245,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-                            CommonUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
+                            BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
+                                    DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if(!merchant.getFirst_login_ok()) {
                                 // first login not done yet
                                 mLogger.debug("First login pending");
@@ -258,7 +259,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // fetch customer
                             Customers customer = BackendOps.getCustomer(login, BackendConstants.CUSTOMER_ID_MOBILE, false);
                             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-                            CommonUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
+                            BackendUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER,
+                                    DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if(!customer.getFirst_login_ok()) {
                                 // first login not done yet
                                 mLogger.debug("First login pending");
@@ -273,7 +275,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // fetch agent
                             InternalUser internalUser = BackendOps.getInternalUser(login);
                             mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
-                            CommonUtils.handleWrongAttempt(login, internalUser, userType, DbConstantsBackend.ATTEMPT_TYPE_USER_LOGIN, mLogger);
+                            BackendUtils.handleWrongAttempt(login, internalUser, userType,
+                                    DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             break;
                     }
                 } else {
@@ -289,13 +292,13 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            CommonUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
             if(e instanceof BackendlessException) {
-                throw CommonUtils.getNewException((BackendlessException) e);
+                throw BackendUtils.getNewException((BackendlessException) e);
             }
             throw e;
         } finally {
-            CommonUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
@@ -557,7 +560,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     // get open merchant id batch
                     String countryCode = merchant.getAddress().getCity().getCountryCode();
                     String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
-                    String whereClause = "status = '"+DbConstantsBackend.MERCHANT_ID_BATCH_STATUS_OPEN+"'";
+                    String whereClause = "status = '"+DbConstantsBackend.BATCH_STATUS_OPEN+"'";
                     MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
                     if(batch == null) {
                         throw new BackendlessException(BackendResponseCodes.MERCHANT_ID_RANGE_ERROR,
@@ -624,7 +627,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // TODO: add as 'Major' alarm - user to be removed later manually
                             // rollback to not-usable state
                             merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-                            merchant.setStatus_reason(DbConstants.REG_ERROR_ROLE_ASSIGN_FAILED);
+                            merchant.setStatus_reason(DbConstants.REG_ERROR_REG_FAILED);
                             try {
                                 BackendOps.updateMerchant(merchant);
                             } catch(Exception ex) {

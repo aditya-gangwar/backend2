@@ -10,12 +10,22 @@ public class WrongAttempts
 {
   private Integer user_type;
   private String user_id;
-  private Integer attempt_cnt;
+  //private Integer attempt_cnt;
   private String objectId;
-  private String attempt_type;
+  private String param_type;
   private String ownerId;
   private java.util.Date updated;
   private java.util.Date created;
+  private String opCode;
+
+  public String getOpCode() {
+    return opCode;
+  }
+
+  public void setOpCode(String opCode) {
+    this.opCode = opCode;
+  }
+
   public Integer getUser_type()
   {
     return user_type;
@@ -36,7 +46,7 @@ public class WrongAttempts
     this.user_id = user_id;
   }
 
-  public Integer getAttempt_cnt()
+  /*public Integer getAttempt_cnt()
   {
     return attempt_cnt;
   }
@@ -44,21 +54,21 @@ public class WrongAttempts
   public void setAttempt_cnt( Integer attempt_cnt )
   {
     this.attempt_cnt = attempt_cnt;
-  }
+  }*/
 
   public String getObjectId()
   {
     return objectId;
   }
 
-  public String getAttempt_type()
+  public String getParam_type()
   {
-    return attempt_type;
+    return param_type;
   }
 
-  public void setAttempt_type( String attempt_type )
+  public void setParam_type(String param_type)
   {
-    this.attempt_type = attempt_type;
+    this.param_type = param_type;
   }
 
   public String getOwnerId()

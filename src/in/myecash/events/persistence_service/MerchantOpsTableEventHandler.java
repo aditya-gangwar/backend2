@@ -7,7 +7,7 @@ import com.backendless.servercode.annotation.Asset;
 import in.myecash.common.constants.ErrorCodes;
 import in.myecash.common.database.MerchantOps;
 import in.myecash.constants.BackendConstants;
-import in.myecash.utilities.CommonUtils;
+import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 /**
@@ -31,7 +31,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //initCommon();
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeFirst";
-            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+            BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
             throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
@@ -47,7 +47,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeFind";
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = query.getWhereClause();
-            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+            BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
 
             throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
@@ -62,7 +62,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
             //initCommon();
             //mLogger.error("In beforeLast: find attempt by not-authenticated user.");
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantOps-beforeLast";
-            CommonUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+            BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
             throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
         }
     }
@@ -153,7 +153,7 @@ public class MerchantOpsTableEventHandler extends com.backendless.servercode.ext
 
         String opcode = merchantops.getOp_code();
         switch(opcode) {
-            case DbConstants.MERCHANT_OP_CHANGE_MOBILE:
+            case DbConstants.OP_CHANGE_MOBILE:
                 changeMerchantMobile(merchantops);
                 break;
             default:
