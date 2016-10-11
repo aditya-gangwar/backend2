@@ -55,7 +55,7 @@ public class CustomerServices implements IBackendlessService {
 
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // fetch merchant
-                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.CUSTOMER_ID_PRIVATE_ID, false);
+                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
                 //callByCC = true;
             } else {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");

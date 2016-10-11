@@ -82,6 +82,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // first add record in merchant ops table
                 MerchantOps merchantops = new MerchantOps();
+                merchantops.setCreateTime(new Date());
                 merchantops.setMerchant_id(merchant.getAuto_id());
                 merchantops.setOp_code(DbConstants.OP_CHANGE_MOBILE);
                 merchantops.setMobile_num(oldMobile);
@@ -266,7 +267,7 @@ public class MerchantServices implements IBackendlessService {
             // Required as we need the private id of the customer to fetch the cashback
             Customers customer = BackendOps.getCustomer(customerId, customerIdType, true);
             if(customer==null) {
-                if(customerIdType!=BackendConstants.CUSTOMER_ID_PRIVATE_ID) {
+                if(customerIdType!=BackendConstants.ID_TYPE_AUTO) {
                     // it may not be positive exception
                     // but using it to avoid getting this logged as 'error edr'
                     // as this will happen always in case of 'user registration' etc
@@ -790,6 +791,7 @@ public class MerchantServices implements IBackendlessService {
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
         customer.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
         customer.setStatus_update_time(new Date());
+        customer.setLastRenewDate(new Date());
 
         // get customer counter value and encode the same to get customer private id
         Long customerCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
@@ -868,6 +870,7 @@ public class MerchantServices implements IBackendlessService {
     }
 
     private void rollbackRegister(String custId, CustomerCards card) {
+        mLogger.debug("In rollbackRegister");
         // add flag for manual check
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
 
@@ -875,7 +878,7 @@ public class MerchantServices implements IBackendlessService {
         try {
             BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
 
-            Customers customer = BackendOps.getCustomer(custId, BackendConstants.CUSTOMER_ID_MOBILE, false);
+            Customers customer = BackendOps.getCustomer(custId, BackendConstants.ID_TYPE_MOBILE, false);
             customer.setMembership_card(null);
             BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
                     mEdr, mLogger);
@@ -1073,7 +1076,7 @@ public class MerchantServices implements IBackendlessService {
                     true, DbConstants.USER_TYPE_MERCHANT, mEdr);
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(customerId, BackendConstants.CUSTOMER_ID_MOBILE);
+            Customers customer = BackendOps.getCustomer(customerId, BackendConstants.ID_TYPE_MOBILE);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
             String cardId = customer.getMembership_card().getCard_id();
             mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = cardId;

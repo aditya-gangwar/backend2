@@ -18,7 +18,6 @@ import in.myecash.messaging.SmsHelper;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import static in.myecash.utilities.BackendUtils.getMerchantIdType;
@@ -155,7 +154,7 @@ public class BackendOps {
     public static Merchants getMerchant(String userId, boolean onlyTrustedDevicesChild, boolean allChild) {
         BackendlessDataQuery query = new BackendlessDataQuery();
 
-        if(getMerchantIdType(userId)== BackendConstants.MERCHANT_ID_AUTO_ID) {
+        if(getMerchantIdType(userId)== BackendConstants.ID_TYPE_AUTO) {
             query.setWhereClause("auto_id = '"+userId+"'");
         } else {
             query.setWhereClause("mobile_num = '"+userId+"'");
@@ -212,12 +211,13 @@ public class BackendOps {
             ArrayList<Merchants> objects = new ArrayList<>();
             while (users.getCurrentPage().size() > 0)
             {
+                objects.addAll(users.getData());
                 //int size  = users.getCurrentPage().size();
-                Iterator<Merchants> iterator = users.getCurrentPage().iterator();
+                /*Iterator<Merchants> iterator = users.getCurrentPage().iterator();
                 while( iterator.hasNext() )
                 {
                     objects.add(iterator.next());
-                }
+                }*/
                 users = users.nextPage();
             }
             return objects;
@@ -248,13 +248,13 @@ public class BackendOps {
     public static Customers getCustomer(String custId, int idType, boolean fetchCard) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         switch(idType) {
-            case BackendConstants.CUSTOMER_ID_MOBILE:
+            case BackendConstants.ID_TYPE_MOBILE:
                 query.setWhereClause("mobile_num = '"+custId+"'");
                 break;
-            case BackendConstants.CUSTOMER_ID_CARD:
+            case BackendConstants.ID_TYPE_CARD:
                 query.setWhereClause("cardId = '"+custId+"'");
                 break;
-            case BackendConstants.CUSTOMER_ID_PRIVATE_ID:
+            case BackendConstants.ID_TYPE_AUTO:
                 query.setWhereClause("private_id = '"+custId+"'");
                 break;
         }
@@ -341,11 +341,12 @@ public class BackendOps {
             ArrayList<Cashback> objects = new ArrayList<>();
             while (collection.getCurrentPage().size() > 0)
             {
-                Iterator<Cashback> iterator = collection.getCurrentPage().iterator();
+                objects.addAll(collection.getData());
+                /*Iterator<Cashback> iterator = collection.getCurrentPage().iterator();
                 while( iterator.hasNext() )
                 {
                     objects.add(iterator.next());
-                }
+                }*/
                 collection = collection.nextPage();
             }
             return objects;
@@ -374,11 +375,11 @@ public class BackendOps {
             if (oldOtp != null) {
                 // delete oldOtp
                 try {
-                    deleteOtp(otp);
+                    deleteOtp(oldOtp);
                 } catch(Exception e) {
                     // ignore
-                    logger.error("Exception in generateOtp: "+e.toString());
-                    logger.error(stackTraceStr(e));
+                    edr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_OTP_DELETE_FAILED;
+                    logger.error("Exception in generateOtp: Delete Otp: "+e.toString(),e);
                 }
                 /*
                 oldOtp.setOtp_value(CommonUtils.generateOTP());
@@ -392,18 +393,9 @@ public class BackendOps {
             newOtp = Backendless.Persistence.save(otp);
 
             // Send SMS through HTTP
-            String smsText = String.format(SmsConstants.SMS_OTP,
-                    newOtp.getOpcode(),
-                    BackendUtils.getHalfVisibleId(newOtp.getUser_id()),
-                    newOtp.getOtp_value(),
-                    MyGlobalSettings.OTP_VALID_MINS);
-
-            if (SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), edr, logger)){
-                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                String errorMsg = "In generateOtp: Failed to send SMS";
-                throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), errorMsg);
+            String smsText = SmsHelper.buildOtpSMS(newOtp.getUser_id(), newOtp.getOtp_value(), newOtp.getOpcode());
+            if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), edr, logger)){
+                throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "Failed to send OTP SMS");
             }
         } catch (Exception e) {
             String errorMsg = "Exception in generateOtp: "+e.toString();
@@ -445,6 +437,7 @@ public class BackendOps {
         dataQuery.setWhereClause("user_id = '" + userId + "' AND opcode = '"+opcode+"'");
 
         QueryOptions options = new QueryOptions();
+        // let the latest on top
         options.addSortByOption("created DESC");
         dataQuery.setQueryOptions(options);
 
@@ -523,7 +516,7 @@ public class BackendOps {
         dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
         QueryOptions options = new QueryOptions();
-        options.addSortByOption("created DESC");
+        options.addSortByOption("createTime ASC");
         dataQuery.setQueryOptions(options);
 
         BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
@@ -533,13 +526,13 @@ public class BackendOps {
             ArrayList<MerchantOps> objects = new ArrayList<>();
             while (collection.getCurrentPage().size() > 0)
             {
-                int size  = collection.getCurrentPage().size();
-
+                objects.addAll(collection.getData());
+                /*int size  = collection.getCurrentPage().size();
                 Iterator<MerchantOps> iterator = collection.getCurrentPage().iterator();
                 while( iterator.hasNext() )
                 {
                     objects.add(iterator.next());
-                }
+                }*/
                 collection = collection.nextPage();
             }
             return objects;
@@ -561,13 +554,13 @@ public class BackendOps {
      * Customer operations ops
      */
     public static ArrayList<CustomerOps> fetchCustomerOps(String whereClause) {
-        // fetch cashback objects from DB
+        // fetch objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause(whereClause);
         dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
 
         QueryOptions options = new QueryOptions();
-        options.addSortByOption("created DESC");
+        options.addSortByOption("createTime ASC");
         dataQuery.setQueryOptions(options);
 
         BackendlessCollection<CustomerOps> collection = Backendless.Data.of(CustomerOps.class).find(dataQuery);
@@ -577,13 +570,13 @@ public class BackendOps {
             ArrayList<CustomerOps> objects = new ArrayList<>();
             while (collection.getCurrentPage().size() > 0)
             {
-                int size  = collection.getCurrentPage().size();
-
-                Iterator<CustomerOps> iterator = collection.getCurrentPage().iterator();
+                //int size  = collection.getCurrentPage().size();
+                objects.addAll(collection.getData());
+                /*Iterator<CustomerOps> iterator = collection.getCurrentPage().iterator();
                 while( iterator.hasNext() )
                 {
                     objects.add(iterator.next());
-                }
+                }*/
                 collection = collection.nextPage();
             }
             return objects;
@@ -635,14 +628,14 @@ public class BackendOps {
         todayMidnight.toMidnight();
 
         dataQuery.setWhereClause("user_id = '" + userId +
-                "' AND attempt_type = '" + type +
-                "' AND create_time < '" + todayMidnight.getTime().getTime() + "'");
+                "' AND param_type = '" + type +
+                "' AND created < '" + todayMidnight.getTime().getTime() + "'");
 
         BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
         return collection.getTotalObjects();
     }
 
-    public static WrongAttempts fetchWrongAttempts(String userId, String type) {
+    /*public static WrongAttempts fetchWrongAttempts(String userId, String type) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause("user_id = '" + userId + "'" + "AND attempt_type = '" + type + "'");
 
@@ -652,7 +645,7 @@ public class BackendOps {
         } else {
             return null;
         }
-    }
+    }*/
 
     public static WrongAttempts saveWrongAttempt(WrongAttempts attempt) {
         return Backendless.Persistence.save( attempt );

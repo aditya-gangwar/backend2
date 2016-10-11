@@ -54,7 +54,7 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
 
                 // Fetch customer
                 String mobileNum = CommonUtils.addMobileCC(customerops.getMobile_num());
-                Customers customer = BackendOps.getCustomer(mobileNum, BackendConstants.CUSTOMER_ID_MOBILE);
+                Customers customer = BackendOps.getCustomer(mobileNum, BackendConstants.ID_TYPE_MOBILE);
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
                 // check if customer is enabled
                 CommonUtils.checkCustomerStatus(customer);

@@ -179,7 +179,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {
                     // fetch customer object
-                    Customers customer = BackendOps.getCustomer(userId, BackendConstants.CUSTOMER_ID_MOBILE, false);
+                    Customers customer = BackendOps.getCustomer(userId, BackendConstants.ID_TYPE_MOBILE, false);
                     mLogger.setProperties(customer.getMobile_num(), DbConstants.USER_TYPE_CUSTOMER, customer.getDebugLogs());
                     mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
 
@@ -257,7 +257,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                         case DbConstants.USER_TYPE_CUSTOMER:
                             // fetch customer
-                            Customers customer = BackendOps.getCustomer(login, BackendConstants.CUSTOMER_ID_MOBILE, false);
+                            Customers customer = BackendOps.getCustomer(login, BackendConstants.ID_TYPE_MOBILE, false);
                             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
                             BackendUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);

@@ -96,6 +96,7 @@ public class AdminServices implements IBackendlessService {
 
             // Add merchant op first - then update status
             MerchantOps op = new MerchantOps();
+            op.setCreateTime(new Date());
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
@@ -230,6 +231,7 @@ public class AdminServices implements IBackendlessService {
 
             // Add merchant op first - then update status
             MerchantOps op = new MerchantOps();
+            op.setCreateTime(new Date());
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);

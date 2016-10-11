@@ -1,5 +1,9 @@
 package in.myecash.messaging;
 
+import com.backendless.exceptions.BackendlessException;
+import in.myecash.common.MyGlobalSettings;
+import in.myecash.common.constants.DbConstants;
+import in.myecash.common.constants.ErrorCodes;
 import in.myecash.constants.BackendConstants;
 
 import java.io.BufferedReader;
@@ -96,7 +100,7 @@ public class SmsHelper {
     }
 
     public static String buildPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_PASSWD,userId,password);
+        return String.format(SmsConstants.SMS_PASSWD,BackendUtils.getHalfVisibleId(userId),password);
     }
 
     public static String buildCustPinResetSMS(String userId, String pin) {
@@ -107,6 +111,28 @@ public class SmsHelper {
         return String.format(SmsConstants.SMS_PIN_CHANGED, BackendUtils.getHalfVisibleId(userId));
     }
 
+    public static String buildOtpSMS(String userId, String otp, String opCode) {
+        switch(opCode) {
+            case DbConstants.OP_REG_CUSTOMER:
+                return String.format(SmsConstants.SMS_REG_CUST_OTP, otp, MyGlobalSettings.OTP_VALID_MINS);
+
+            case DbConstants.OP_LOGIN:
+                // OTP to add trusted device
+                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+
+            case DbConstants.OP_CHANGE_MOBILE:
+                return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp, MyGlobalSettings.OTP_VALID_MINS);
+
+            case DbConstants.OP_NEW_CARD:
+                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+
+            case DbConstants.OP_RESET_PIN:
+                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+
+            default:
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Invalid OTP request: "+opCode);
+        }
+    }
 }
 
 

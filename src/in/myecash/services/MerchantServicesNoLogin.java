@@ -138,6 +138,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             } else {
                 // create row in MerchantOps table
                 MerchantOps op = new MerchantOps();
+                op.setCreateTime(new Date());
                 op.setMerchant_id(merchant.getAuto_id());
                 op.setMobile_num(merchant.getMobile_num());
                 op.setOp_code(DbConstants.OP_RESET_PASSWD);
@@ -248,7 +249,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         // created within last 'cool off mins'
         long time = (new Date().getTime()) - (MyGlobalSettings.getMchntPasswdResetMins() * 60 * 1000);
-        whereClause.append(" AND created > ").append(time);
+        whereClause.append(" AND createTime > ").append(time);
         return whereClause.toString();
     }
 }

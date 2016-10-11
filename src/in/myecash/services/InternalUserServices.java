@@ -31,7 +31,7 @@ public class InternalUserServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
-    public void registerMerchant(Merchants merchant)
+    public String registerMerchant(Merchants merchant)
     {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -76,6 +76,7 @@ public class InternalUserServices implements IBackendlessService {
             merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
             merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
+            merchant.setLastRenewDate(new Date());
             //merchant.setAdmin_remarks("New registered merchant");
             merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
@@ -143,6 +144,7 @@ public class InternalUserServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return merchantId;
 
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
@@ -179,6 +181,7 @@ public class InternalUserServices implements IBackendlessService {
 
             // Add merchant op first - then update status
             MerchantOps op = new MerchantOps();
+            op.setCreateTime(new Date());
             op.setMerchant_id(merchant.getAuto_id());
             op.setMobile_num(merchant.getMobile_num());
             op.setOp_code(DbConstants.OP_DISABLE_ACC);

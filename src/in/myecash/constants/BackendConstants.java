@@ -6,7 +6,7 @@ package in.myecash.constants;
  */
 public class BackendConstants {
 
-    public static final String BULK_API_URL  = "http://52.66.162.23:8080/api/v1/data/bulk/";
+    public static final String BULK_API_URL  = "http://52.66.27.123:8080/api/v1/data/bulk/";
     public static final String APP_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
     public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
     //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
@@ -44,6 +44,10 @@ public class BackendConstants {
     public static final String IGNORED_ERROR_MOBILE_NUM_NA = "MobileNumNotAvailable";
     public static final String IGNORED_ERROR_ACC_STATUS_CHANGE_FAILED = "AccStatusChangeFailed";
     public static final String IGNORED_ERROR_WRONG_ATTEMPT_SAVE_FAILED = "WrongAttemptSaveFailed";
+    public static final String IGNORED_ERROR_OTP_DELETE_FAILED = "otpDeleteFailed";
+    public static final String IGNORED_ERROR_MCHNT_PASSWD_RESET_FAILED = "mchntPsswdResetFailed";
+    public static final String IGNORED_ERROR_CUST_PASSWD_RESET_FAILED = "custPsswdResetFailed";
+    public static final String IGNORED_ERROR_CUST_PIN_RESET_FAILED = "custPinResetFailed";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;
@@ -103,13 +107,9 @@ public class BackendConstants {
     public static final int DEVICE_INFO_VALID_SECS = 300;
 
     // Customer id type to fetch record
-    public static final int CUSTOMER_ID_MOBILE = 0;
-    public static final int CUSTOMER_ID_CARD = 1;
-    public static final int CUSTOMER_ID_PRIVATE_ID = 2;
-
-    // Merchant id type to fetch record
-    public static final int MERCHANT_ID_MOBILE = 0;
-    public static final int MERCHANT_ID_AUTO_ID = 1;
+    public static final int ID_TYPE_MOBILE = 0;
+    public static final int ID_TYPE_CARD = 1;
+    public static final int ID_TYPE_AUTO = 2;
 
     // Merchant id constants
     public static final int MERCHANT_ID_MAX_BATCH_ID_PER_RANGE = 99; // 2 digit batchId

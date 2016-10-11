@@ -39,11 +39,18 @@ public class SmsConstants {
     public static String SMS_TXN_DEBIT_CL = "Mycash: %s debited Rs %d from your Account on %s. Balance:- Account:Rs %d, Cashback:Rs %d.";
     public static String SMS_TXN_DEBIT_CB = "Mycash: %s debited Rs %d from your Cashback on %s. Balance:- Account:Rs %d, Cashback:Rs %d";
 
-    // Password/PIN/OTP messages
+    // Password/PIN messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyCash family !! Your User ID is %s, and your password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD = "MyeCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PASSWD_CHANGED = "MyeCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
-    public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
+
+    // OTP messages
+    //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
+    public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device. PLS CALL US IF NOT REQUESTED BY YOU.";
+    public static String SMS_LOGIN_OTP = "Login attempt detected from New Device. Use OTP %s to add it as 'Trusted Device' for account %s. PLS CALL US IF NOT REQUESTED BY YOU.";
+    public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
+    public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
+    public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
 
     public static String SMS_CUSTOMER_REGISTER = "Dear Customer - Welcome to MyeCash family. Your User ID is %s. Download MyeCash App from Android store to manage your account.";
     public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. PLS KEEP IT SECRET AND DO NOT SHARE WITH ANYONE.";

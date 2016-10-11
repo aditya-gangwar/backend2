@@ -281,7 +281,8 @@ public class BackendUtils {
     /*
      * Handles 'wrong attempt' by any type of user
      */
-    public static void handleWrongAttempt(String userId, Object userObject, int userType, String wrongParamType, String opCode, String[] edr, MyLogger logger) {
+    public static void handleWrongAttempt(String userId, Object userObject, int userType,
+                                          String wrongParamType, String opCode, String[] edr, MyLogger logger) {
 
         // check similar wrong attempts today
         int cnt = BackendOps.getTodayWrongAttemptCnt(userId, wrongParamType);
@@ -420,11 +421,11 @@ public class BackendUtils {
     public static int getCustomerIdType(String id) {
         switch (id.length()) {
             case CommonConstants.MOBILE_NUM_LENGTH:
-                return BackendConstants.CUSTOMER_ID_MOBILE;
+                return BackendConstants.ID_TYPE_MOBILE;
             case CommonConstants.CUSTOMER_CARDID_LEN:
-                return BackendConstants.CUSTOMER_ID_CARD;
+                return BackendConstants.ID_TYPE_CARD;
             case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
-                return BackendConstants.CUSTOMER_ID_PRIVATE_ID;
+                return BackendConstants.ID_TYPE_AUTO;
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid customer ID: "+id);
         }
@@ -433,9 +434,9 @@ public class BackendUtils {
     public static int getMerchantIdType(String id) {
         switch (id.length()) {
             case CommonConstants.MOBILE_NUM_LENGTH:
-                return BackendConstants.MERCHANT_ID_MOBILE;
+                return BackendConstants.ID_TYPE_MOBILE;
             case CommonConstants.MERCHANT_ID_LEN:
-                return BackendConstants.MERCHANT_ID_AUTO_ID;
+                return BackendConstants.ID_TYPE_AUTO;
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid Merchant ID: "+id);
         }
@@ -508,7 +509,7 @@ public class BackendUtils {
             logger.error(stackTraceStr(e));
         }
 
-        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
+        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",",":");
         if(e instanceof BackendlessException) {
             edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
         }

@@ -70,12 +70,14 @@ public class TxnTableEventHelper {
             // credit txns not allowed under expiry duration
             if(merchant.getAdmin_status()== DbConstants.USER_STATUS_READY_TO_REMOVE) {
                 if(transaction.getCb_credit() > 0 || transaction.getCl_credit() > 0) {
+                    // ideally it shudn't reach here
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
                 }
             }
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(transaction.getCustomer_id(), BackendConstants.CUSTOMER_ID_MOBILE, true);
+            Customers customer = BackendOps.getCustomer(transaction.getCustomer_id(), BackendConstants.ID_TYPE_MOBILE, true);
             String customerId = customer.getMobile_num();
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerId;
 

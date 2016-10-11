@@ -6,6 +6,8 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.persistence.BackendlessDataQuery;
 import in.myecash.common.database.Future;
 
+import java.util.Date;
+
 public class CustomerOps
 {
   private String extra_op_params;
@@ -24,6 +26,15 @@ public class CustomerOps
   private String op_status;
   private String reason;
   private String remarks;
+  private java.util.Date createTime;
+
+  public Date getCreateTime() {
+    return createTime;
+  }
+
+  public void setCreateTime(Date createTime) {
+    this.createTime = createTime;
+  }
 
   public String getInitiatedBy() {
     return initiatedBy;

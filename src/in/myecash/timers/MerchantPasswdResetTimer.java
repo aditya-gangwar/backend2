@@ -113,7 +113,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             mLogger.debug("Updated merchant for password reset: " + merchant.getAuto_id());
 
             // Send SMS through HTTP
-            String smsText = buildPwdResetSMS(op.getMerchant_id(), passwd);
+            String smsText = SmsHelper.buildPwdResetSMS(op.getMerchant_id(), passwd);
             if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
@@ -126,8 +126,16 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         } catch(Exception e) {
             // ignore exception - mark op as failed
             mLogger.error("Exception in handlePasswdReset: "+e.toString(),e);
-            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_ERROR);
-            BackendOps.saveMerchantOp(op);
+            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_MCHNT_PASSWD_RESET_FAILED;
+
+            try {
+                op.setOp_status(DbConstantsBackend.USER_OP_STATUS_ERROR);
+                BackendOps.saveMerchantOp(op);
+            } catch(Exception ex) {
+                // ignore
+                mLogger.error("Exception in handlePasswdReset: Rollback Failed: "+e.toString(),ex);
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+            }
         }
     }
 
@@ -149,16 +157,13 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         long startTime = now - MyGlobalSettings.getMchntPasswdResetMins();
         long endTime = startTime + MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
 
-        whereClause.append(" AND created >= ").append(startTime);
-        whereClause.append(" AND created < ").append(endTime);
+        whereClause.append(" AND createTime >= ").append(startTime);
+        whereClause.append(" AND createTime < ").append(endTime);
 
         mLogger.debug("whereClasue: "+whereClause.toString());
         return whereClause.toString();
     }
 
-    private String buildPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_PASSWD, BackendUtils.getHalfVisibleId(userId),password);
-    }
 }
 
     /*

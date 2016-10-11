@@ -40,7 +40,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             mLogger.debug("In resetCustomerPassword: " + mobileNum);
 
             // check if any request already pending
-            if( BackendOps.fetchMerchantOps(custPwdResetWhereClause(mobileNum)) != null) {
+            if( BackendOps.fetchCustomerOps(custPwdResetWhereClause(mobileNum)) != null) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
 
@@ -82,6 +82,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
                 op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
+                op.setCreateTime(new Date());
 
                 BackendOps.saveCustomerOp(op);
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
@@ -130,7 +131,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
         // created within last 'cool off' mins
         long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * 60 * 1000);
-        whereClause.append(" AND created > ").append(time);
+        whereClause.append(" AND createTime > ").append(time);
         return whereClause.toString();
     }
 
