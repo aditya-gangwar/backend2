@@ -38,6 +38,7 @@ public class CommonServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "changePassword";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
 
+        boolean validException = false;
         try {
             mLogger.debug("In changePassword: "+userId);
 
@@ -74,6 +75,7 @@ public class CommonServices implements IBackendlessService {
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
                     if(verifyFailed) {
+                        validException = true;
                         BackendUtils.handleWrongAttempt(userId, merchant, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                         throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
@@ -89,6 +91,7 @@ public class CommonServices implements IBackendlessService {
                     mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
 
                     if(verifyFailed) {
+                        validException = true;
                         BackendUtils.handleWrongAttempt(userId, customer, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                         throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
@@ -102,6 +105,12 @@ public class CommonServices implements IBackendlessService {
                     InternalUser agent = (InternalUser)user.getProperty("agent");
                     mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
                     mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = agent.getId();
+                    if(verifyFailed) {
+                        validException = true;
+                        BackendUtils.handleWrongAttempt(userId, agent, userType,
+                                DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                    }
                     mobileNum = agent.getMobile_num();
                     break;
             }
@@ -114,13 +123,8 @@ public class CommonServices implements IBackendlessService {
             // Send SMS through HTTP
             if(mobileNum!=null) {
                 String smsText = SmsHelper.buildPwdChangeSMS(userId);
-                if( SmsHelper.sendSMS(smsText, mobileNum, mEdr, mLogger) ){
-                    mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-                } else {
-                    mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                };
+                SmsHelper.sendSMS(smsText, mobileNum, mEdr, mLogger);
             } else {
-                //TODO: raise alarm
                 mLogger.error("In changePassword: mobile number is null");
                 mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_MOBILE_NUM_NA;
             }
@@ -130,7 +134,7 @@ public class CommonServices implements IBackendlessService {
             BackendOps.logoutUser();
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -156,18 +160,16 @@ public class CommonServices implements IBackendlessService {
             if (userType == DbConstants.USER_TYPE_MERCHANT) {
                 merchant = (Merchants) userObj;
                 if (!merchant.getAuto_id().equals(merchantId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
-                            "Invalid merchant id provided: " + merchantId);
+                            "Provided Merchant Id dont match: " + merchantId);
                 }
             } else if (userType == DbConstants.USER_TYPE_CC ||
                     userType == DbConstants.USER_TYPE_AGENT) {
-                // fetching merchant user instead of direct merchant object - for lastLogin value
-                //BackendlessUser user = BackendOps.fetchUser(merchantId, DbConstants.USER_TYPE_MERCHANT, true);
-                //merchant = (Merchants)user.getProperty("merchant");
-                //merchant.setLastLogin((Date)user.getProperty("lastLogin"));
                 merchant = BackendOps.getMerchant(merchantId, true, true);
                 mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
@@ -189,6 +191,7 @@ public class CommonServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCustomer";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = custId;
 
+        boolean validException = false;
         try {
             mLogger.debug("In getCustomer");
 
@@ -201,17 +204,23 @@ public class CommonServices implements IBackendlessService {
             if (userType == DbConstants.USER_TYPE_CUSTOMER) {
                 customer = (Customers) userObj;
                 if (!customer.getMobile_num().equals(custId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
                             "Invalid customer id provided: " + custId);
                 }
             } else if (userType == DbConstants.USER_TYPE_CC) {
-                // fetching merchant user instead of direct merchant object - for lastLogin value
-                //BackendlessUser user = BackendOps.fetchUser(merchantId, DbConstants.USER_TYPE_MERCHANT, true);
-                //merchant = (Merchants)user.getProperty("merchant");
-                //merchant.setLastLogin((Date)user.getProperty("lastLogin"));
-                customer = BackendOps.getCustomer(custId, BackendUtils.getCustomerIdType(custId), true);
+                try {
+                    customer = BackendOps.getCustomer(custId, BackendUtils.getCustomerIdType(custId), true);
+                } catch(BackendlessException e) {
+                    if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
+                        // CC agent may enter wrong customer id by mistake
+                        validException = true;
+                    }
+                    throw e;
+                }
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
@@ -219,7 +228,7 @@ public class CommonServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
             return customer;
         } catch (Exception e) {
-            BackendUtils.handleException(e, false, mLogger, mEdr);
+            BackendUtils.handleException(e, validException, mLogger, mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
@@ -245,7 +254,7 @@ public class CommonServices implements IBackendlessService {
                 pin+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 opParam;
 
-        boolean positiveException = false;
+        boolean validException = false;
 
         try {
             // Both merchant and customer users are allowed
@@ -308,6 +317,7 @@ public class CommonServices implements IBackendlessService {
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
             // if customer still in 'restricted access' mode - dont allow customer ops
             if(customer.getAdmin_status()==DbConstants.USER_STATUS_MOB_CHANGE_RECENT) {
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.USER_MOB_CHANGE_RESTRICTED_ACCESS), "");
             }
 
@@ -317,12 +327,13 @@ public class CommonServices implements IBackendlessService {
             // for others generate the same, if not provided
             if ( (otp == null || otp.isEmpty()) &&
                     !opCode.equals(DbConstants.OP_CHANGE_PIN) &&
-                    (opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
+                    !(opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
 
                 // Don't verify QR card# for 'new card' operation
                 if (!opCode.equals(DbConstants.OP_NEW_CARD) &&
                         !cardIdDb.equals(cardId)) {
 
+                    validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, opCode, mEdr, mLogger);
                     throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
@@ -332,6 +343,7 @@ public class CommonServices implements IBackendlessService {
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
                         !customer.getTxn_pin().equals(pin)) {
 
+                    validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, opCode, mEdr, mLogger);
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
@@ -349,7 +361,7 @@ public class CommonServices implements IBackendlessService {
                 BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
-                positiveException = true;
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
@@ -366,6 +378,7 @@ public class CommonServices implements IBackendlessService {
                 if (!opCode.equals(DbConstants.OP_NEW_CARD) &&
                         !cardIdDb.equals(cardId)) {
 
+                    validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, opCode, mEdr, mLogger);
                     throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
@@ -374,6 +387,7 @@ public class CommonServices implements IBackendlessService {
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
                         !customer.getTxn_pin().equals(pin)) {
 
+                    validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, opCode, mEdr, mLogger);
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
@@ -382,6 +396,7 @@ public class CommonServices implements IBackendlessService {
                 // For PIN reset request - check if any already pending
                 if( opCode.equals(DbConstants.OP_RESET_PIN) &&
                         BackendOps.fetchCustomerOps(custPinResetWhereClause(mobileNum)) != null) {
+                    validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
                 }
 
@@ -446,7 +461,7 @@ public class CommonServices implements IBackendlessService {
 
                         case DbConstants.OP_RESET_PIN:
                             //resetCustomerPin(customer);
-                            positiveException = true;
+                            validException = true;
                             throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
 
                         case DbConstants.OP_CHANGE_PIN:
@@ -458,7 +473,7 @@ public class CommonServices implements IBackendlessService {
                             break;
                     }
                 } catch(Exception e) {
-                    if(!positiveException) {
+                    if(!validException) {
                         mLogger.error("execCustomerOp: Exception while customer operation: "+customer.getPrivate_id());
                         // Rollback - delete customer op added
                         try {
@@ -478,7 +493,7 @@ public class CommonServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -539,7 +554,8 @@ public class CommonServices implements IBackendlessService {
         // update status to 'restricted access'
         // not using setCustomerStatus() fx. - to avoid two DB operations
         customer.setAdmin_status(DbConstants.USER_STATUS_MOB_CHANGE_RECENT);
-        customer.setStatus_reason("Mobile number changed");
+        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustHrsAfterMobChange()+" hours");
+        customer.setStatus_reason("Mobile Number changed recently");
         customer.setStatus_update_time(new Date());
 
         custUser.setProperty("customer", customer);

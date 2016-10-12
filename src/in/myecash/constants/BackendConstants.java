@@ -5,9 +5,6 @@ package in.myecash.constants;
  * and not for the user apps.
  */
 public class BackendConstants {
-
-    public static final String BULK_API_URL  = "http://52.66.27.123:8080/api/v1/data/bulk/";
-    public static final String APP_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
     public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
     //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
 
@@ -48,6 +45,7 @@ public class BackendConstants {
     public static final String IGNORED_ERROR_MCHNT_PASSWD_RESET_FAILED = "mchntPsswdResetFailed";
     public static final String IGNORED_ERROR_CUST_PASSWD_RESET_FAILED = "custPsswdResetFailed";
     public static final String IGNORED_ERROR_CUST_PIN_RESET_FAILED = "custPinResetFailed";
+    public static final String IGNORED_ERROR_CUST_WITH_NO_CB_RECORD = "custWithNoCbRecord";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;
@@ -61,13 +59,14 @@ public class BackendConstants {
     public static final int EDR_CUST_ID_IDX = 8;
     public static final int EDR_CUST_CARD_ID_IDX = 9;
     public static final int EDR_RESULT_IDX = 10;
-    public static final int EDR_EXP_CODE_IDX = 11;
-    public static final int EDR_EXP_MSG_IDX = 12;
-    public static final int EDR_IGNORED_ERROR_IDX = 13;
-    public static final int EDR_SPECIAL_FLAG_IDX = 14;
-    public static final int EDR_SMS_STATUS_IDX = 15;
-    public static final int EDR_API_PARAMS_IDX = 16;
-    public static final int BACKEND_EDR_MAX_FIELDS = 17;
+    public static final int EDR_EXP_EXPECTED = 11;
+    public static final int EDR_EXP_CODE_IDX = 12;
+    public static final int EDR_EXP_MSG_IDX = 13;
+    public static final int EDR_IGNORED_ERROR_IDX = 14;
+    public static final int EDR_SPECIAL_FLAG_IDX = 15;
+    public static final int EDR_SMS_STATUS_IDX = 16;
+    public static final int EDR_API_PARAMS_IDX = 17;
+    public static final int BACKEND_EDR_MAX_FIELDS = 18;
 
 
     public static final String TIMEZONE = "Asia/Kolkata";

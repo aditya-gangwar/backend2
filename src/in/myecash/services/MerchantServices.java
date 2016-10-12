@@ -46,7 +46,7 @@ public class MerchantServices implements IBackendlessService {
                 newMobile+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 otp;
 
-        boolean positiveException = false;
+        boolean validException = false;
 
         try {
             mLogger.debug("In changeMobile: " + verifyparam + "," + newMobile);
@@ -61,6 +61,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // Validate based on given current number
                 if (!merchant.getDob().equals(verifyparam)) {
+                    validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
                 }
 
@@ -72,7 +73,7 @@ public class MerchantServices implements IBackendlessService {
                 BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
-                positiveException = true;
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
@@ -124,7 +125,7 @@ public class MerchantServices implements IBackendlessService {
             return merchant;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -153,6 +154,7 @@ public class MerchantServices implements IBackendlessService {
             // check merchant status
             BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
             if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
             }
 
@@ -190,6 +192,8 @@ public class MerchantServices implements IBackendlessService {
 
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if(trustedDevices.size() <= 1) {
+                // already restricted in app
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "You are not allowed to delete last device");
             }
 
@@ -204,6 +208,7 @@ public class MerchantServices implements IBackendlessService {
             if(matched!=null){
                 BackendOps.deleteMchntDevice(matched);
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "No such trusted device: "+deviceId);
             }
 
@@ -226,7 +231,7 @@ public class MerchantServices implements IBackendlessService {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
-        boolean positiveException = false;
+        boolean validException = false;
         try {
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
             mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashback";
@@ -247,6 +252,7 @@ public class MerchantServices implements IBackendlessService {
                 merchant = (Merchants) userObj;
                 // check to ensure that merchant is request CB for itself only
                 if (!merchant.getAuto_id().equals(merchantId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid merchant id provided: " + merchantId);
                 }
                 merchantCbTable = merchant.getCashback_table();
@@ -255,6 +261,7 @@ public class MerchantServices implements IBackendlessService {
                 // use provided merchant values
                 byCCUser = true;
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
@@ -265,16 +272,16 @@ public class MerchantServices implements IBackendlessService {
 
             // Fetch customer using mobile or cardId
             // Required as we need the private id of the customer to fetch the cashback
-            Customers customer = BackendOps.getCustomer(customerId, customerIdType, true);
-            if(customer==null) {
-                if(customerIdType!=BackendConstants.ID_TYPE_AUTO) {
-                    // it may not be positive exception
-                    // but using it to avoid getting this logged as 'error edr'
-                    // as this will happen always in case of 'user registration' etc
-                    positiveException = true;
+            Customers customer = null;
+            try {
+                customer = BackendOps.getCustomer(customerId, customerIdType, true);
+            } catch(BackendlessException e) {
+                if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER)) &&
+                        customerIdType!=BackendConstants.ID_TYPE_AUTO) {
+                    // this will happen always in case of 'user registration' etc
+                    validException = true;
                 }
-                String errorMsg = "No user found: "+customerId;
-                throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
+                throw e;
             }
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
 
@@ -286,7 +293,7 @@ public class MerchantServices implements IBackendlessService {
             if(data == null) {
                 if(byCCUser) {
                     // if called by CC, return from here - to skip cb creation logic
-                    positiveException = true;
+                    validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.CUST_NOT_REG_WITH_MCNT), "");
                 }
                 cashback = handleCashbackCreate(merchant, customer);
@@ -308,7 +315,7 @@ public class MerchantServices implements IBackendlessService {
             return cashback;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -340,6 +347,7 @@ public class MerchantServices implements IBackendlessService {
                 merchant = BackendOps.getMerchant(mchntId, false, false);
                 callByCC = true;
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
@@ -480,12 +488,14 @@ public class MerchantServices implements IBackendlessService {
                 merchant = (Merchants) userObj;
                 // check to ensure that merchant is request CB for itself only
                 if (!merchant.getAuto_id().equals(merchantId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid merchant id provided: " + merchantId);
                 }
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // use provided merchant values
                 byCCUser = true;
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 

@@ -36,7 +36,7 @@ public class CustomerServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCashbacks";
 
-        boolean positiveException = false;
+        boolean validException = false;
         try {
             mLogger.debug("In getCashbacks");
 
@@ -54,10 +54,19 @@ public class CustomerServices implements IBackendlessService {
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = custPrivateId;
 
             } else if(userType==DbConstants.USER_TYPE_CC) {
-                // fetch merchant
-                customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
+                // fetch customer
+                try {
+                    customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
+                } catch(BackendlessException e) {
+                    if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
+                        // CC agent may enter wrong customer id by mistake
+                        validException = true;
+                    }
+                    throw e;
+                }
                 //callByCC = true;
             } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
@@ -92,7 +101,8 @@ public class CustomerServices implements IBackendlessService {
             }
 
             if(cbs==null || cbs.size()==0) {
-                positiveException = true;
+                // should have atleast single record created during registration
+                mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CUST_WITH_NO_CB_RECORD;
                 throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
             }
 
@@ -101,7 +111,7 @@ public class CustomerServices implements IBackendlessService {
             return cbs;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

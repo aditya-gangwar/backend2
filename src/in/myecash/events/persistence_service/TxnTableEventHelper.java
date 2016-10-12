@@ -46,12 +46,14 @@ public class TxnTableEventHelper {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-beforeCreate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = transaction.getCustomer_id();
 
+        boolean validException = false;
         try {
             mLogger.debug("In Transaction handleBeforeCreate");
             if(context==null) {
                 mLogger.error("Context itself is null");
             } else if(context.getUserToken()==null) {
                 mLogger.error("In handleBeforeCreate: RunnerContext: "+context.toString());
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.NOT_LOGGED_IN), "User not logged in");
             } else {
                 HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
@@ -70,7 +72,7 @@ public class TxnTableEventHelper {
             // credit txns not allowed under expiry duration
             if(merchant.getAdmin_status()== DbConstants.USER_STATUS_READY_TO_REMOVE) {
                 if(transaction.getCb_credit() > 0 || transaction.getCl_credit() > 0) {
-                    // ideally it shudn't reach here
+                    // ideally it shudn't reach here - as both cl and cb settings are disabled and not allowed to be edited in app
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
                 }
@@ -87,6 +89,7 @@ public class TxnTableEventHelper {
             // if customer in 'restricted access' mode - allow only credit txns
             if(customer.getAdmin_status()==DbConstants.USER_STATUS_MOB_CHANGE_RECENT &&
                     (transaction.getCl_debit()>0 || transaction.getCb_debit()>0)) {
+                validException = true; // to avoid logging of this exception
                 throw new BackendlessException(String.valueOf(ErrorCodes.USER_MOB_CHANGE_RESTRICTED_ACCESS), "");
             }
 
@@ -96,11 +99,13 @@ public class TxnTableEventHelper {
                     if (!transaction.getCpin().equals(customer.getTxn_pin())) {
                         BackendUtils.handleWrongAttempt(customerId, customer, DbConstants.USER_TYPE_CUSTOMER,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
+                        validException = true; // to avoid logging of this exception
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customerId);
                     } else {
                         transaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
                     }
                 } else {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "PIN Missing: " + customerId);
                 }
             } else {
@@ -111,9 +116,11 @@ public class TxnTableEventHelper {
             if(BackendUtils.customerCardRequired(transaction)) {
                 if(transaction.getUsedCardId()!=null) {
                     if(!transaction.getUsedCardId().equals(customer.getCardId())) {
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + customerId);
                     }
                 } else {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Missing: " + customerId);
                 }
             }
@@ -135,6 +142,7 @@ public class TxnTableEventHelper {
                 cashback.setCl_debit(cashback.getCl_debit() + transaction.getCl_debit());
                 // check for cash account limit
                 if ((cashback.getCl_credit() - cashback.getCl_debit()) > MyGlobalSettings.getCashAccLimit()) {
+                    validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + customerId);
                 }
                 cashback.setCb_credit(cashback.getCb_credit() + transaction.getCb_credit());
@@ -167,7 +175,7 @@ public class TxnTableEventHelper {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             if(e instanceof BackendlessException) {
                 throw BackendUtils.getNewException((BackendlessException) e);
             }

@@ -23,8 +23,6 @@ import in.myecash.database.*;
  */
 public class BackendUtils {
 
-    private static final SimpleDateFormat mSdfOnlyDateFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_FILENAME, CommonConstants.DATE_LOCALE);
-
     /*
      * Password & ID generators
      */
@@ -500,8 +498,9 @@ public class BackendUtils {
                 CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode()+"/"+be.getMessage());
     }
 
-    public static void handleException(Exception e, boolean positiveException, MyLogger logger, String[] edr) {
-        if(positiveException) {
+    public static void handleException(Exception e, boolean validException, MyLogger logger, String[] edr) {
+        edr[BackendConstants.EDR_EXP_EXPECTED] = String.valueOf(validException);
+        if(validException) {
             edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
         } else {
             edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
@@ -509,7 +508,7 @@ public class BackendUtils {
             logger.error(stackTraceStr(e));
         }
 
-        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",",":");
+        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",",BackendConstants.BACKEND_EDR_SUB_DELIMETER);
         if(e instanceof BackendlessException) {
             edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
         }
@@ -539,7 +538,7 @@ public class BackendUtils {
         mEdr[BackendConstants.EDR_EXP_MSG_IDX] = mEdr[BackendConstants.EDR_API_NAME_IDX]+" not allowed.";
         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
         logger.edr(mEdr);
-        logger.flush();
+        //logger.flush();
     }
 
 

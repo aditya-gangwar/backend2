@@ -41,7 +41,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "afterLogin";
         mEdr[BackendConstants.EDR_USER_ID_IDX] = login;
         //initCommon();
-        boolean positiveException = false;
+        boolean validException = false;
 
         try {
             mLogger.debug("In GenericUserEventHandler: afterLogin: "+login);
@@ -78,7 +78,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     // This is set in setDeviceId() backend API
                     String deviceInfo = merchant.getTempDevId();
                     if(deviceInfo==null || deviceInfo.isEmpty()) {
-                        // TODO : Raise critical alarm
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                     }
 
@@ -96,7 +96,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         // deviceInfo is old than 5 mins = 300 secs
                         // most probably from last login call - setDeviceInfo not called before this login
                         // can indicate sabotage
-                        // TODO : Raise critical alarm
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "Device data is old");
                     }
 
@@ -111,6 +111,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // Check for max devices allowed per user
                             int deviceCnt = (merchant.getTrusted_devices()!=null) ? merchant.getTrusted_devices().size() : 0;
                             if (deviceCnt >= CommonConstants.MAX_DEVICES_PER_MERCHANT) {
+                                validException = true;
                                 throw new BackendlessException(String.valueOf(ErrorCodes.TRUSTED_DEVICE_LIMIT_RCHD), "Trusted device limit reached");
                             }
                             // Generate OTP
@@ -121,7 +122,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                             // OTP generated successfully - return exception to indicate so
-                            positiveException = true;
+                            validException = true;
                             throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
                         } else {
@@ -148,16 +149,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                             // Update merchant
                             merchant.setTrusted_devices(trustedDevices);
-                            // when USER_STATUS_NEW_REGISTERED, the device will also be new
+                            // when Ufirst login, the device will also be new
                             // so it is not required to update this outside this if block
-                            /*
-                            if(merchant.getAdmin_status() == DbConstants.USER_STATUS_NEW_REGISTERED) {
-                                // not using fx. CommonUtils.setMerchantStatus() - as the status update is internal and not relevant for end user
-                                merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-                                merchant.setStatus_reason(DbConstants.ENABLED_ACTIVE);
-                                merchant.setStatus_update_time(new Date());
-                                merchant.setAdmin_remarks("Last status was USER_STATUS_NEW_REGISTERED");
-                            }*/
                             if(!merchant.getFirst_login_ok()) {
                                 merchant.setFirst_login_ok(true);
                                 //merchant.setAdmin_remarks("Last state was new registered");
@@ -167,6 +160,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                 BackendOps.updateMerchant(merchant);
                             } catch(BackendlessException e) {
                                 if(e.getCode().equals(ErrorCodes.BL_ERROR_DUPLICATE_ENTRY)) {
+                                    // there's unique index on device id
                                     throw new BackendlessException(String.valueOf(ErrorCodes.DEVICE_ALREADY_REGISTERED),
                                             deviceId+" is already registered");
                                 }
@@ -203,7 +197,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     // fetch device data
                     InternalUserDevice deviceData = BackendOps.fetchInternalUserDevice(userId);
                     if(deviceData==null || deviceData.getTempId()==null || deviceData.getTempId().isEmpty()) {
-                        // TODO : Raise critical alarm
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         mLogger.fatal("In afterLogin for internal user: Temp instance id not available: "+userId);
                         throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "SubCode1");
                     }
@@ -223,7 +217,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     } else {
                         // compare instanceIds
                         if(!deviceData.getInstanceId().equals(deviceData.getTempId())) {
-                            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "SubCode3");
+                            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "Agent Device Id not matching");
                         }
                     }
                     // update device data
@@ -232,6 +227,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 }
 
             } else {
+                // Login failed for some reason
                 Integer userType = BackendUtils.getUserType(login);
                 mEdr[BackendConstants.EDR_USER_TYPE_IDX] = userType.toString();
 
@@ -250,7 +246,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             if(!merchant.getFirst_login_ok()) {
                                 // first login not done yet
                                 mLogger.debug("First login pending");
-                                positiveException = true;
+                                validException = true;
                                 throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                             }
                             break;
@@ -264,7 +260,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             if(!customer.getFirst_login_ok()) {
                                 // first login not done yet
                                 mLogger.debug("First login pending");
-                                positiveException = true;
+                                validException = true;
                                 throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                             }
                             break;
@@ -292,7 +288,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             if(e instanceof BackendlessException) {
                 throw BackendUtils.getNewException((BackendlessException) e);
             }

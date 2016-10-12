@@ -39,6 +39,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         try {
             if (deviceInfo == null || deviceInfo.isEmpty()) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "");
             }
 
@@ -86,7 +87,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 deviceId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 dob;
-        boolean positiveException = false;
+        boolean validException = false;
 
         try {
             mLogger.debug("In resetMerchantPwd: " + userId + ": " + deviceId);
@@ -95,6 +96,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // check if any request already pending
             if( BackendOps.fetchMerchantOps(mchntPwdResetWhereClause(userId)) != null) {
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
 
@@ -102,6 +104,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             BackendlessUser user = BackendOps.fetchUser(userId, DbConstants.USER_TYPE_MERCHANT, false);
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_MERCHANT) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),userId+" is not a merchant.");
             }
 
@@ -119,6 +122,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
                 if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
@@ -126,6 +130,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String storedDob = merchant.getDob();
             if (storedDob == null || !storedDob.equalsIgnoreCase(dob)) {
+
+                validException = true;
                 BackendUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
@@ -149,7 +155,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
 
-                positiveException = true;
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
             }
 
@@ -157,7 +163,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -172,6 +178,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "sendMerchantId";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mobileNum;
 
+        boolean validException = false;
         try {
             mLogger.debug("In sendMerchantId: " + mobileNum);
 
@@ -188,6 +195,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
                 if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
             }
@@ -197,23 +205,21 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
                 BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_FORGOT_USERID, mEdr, mLogger);
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
             // send merchant id by SMS
             String smsText = SmsHelper.buildUserIdSMS(merchant.getAuto_id());
-            if (SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_OK;
-            } else {
-                mEdr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
-            };
+            }
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

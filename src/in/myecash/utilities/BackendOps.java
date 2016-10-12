@@ -28,14 +28,6 @@ import static in.myecash.utilities.BackendUtils.stackTraceStr;
  */
 public class BackendOps {
 
-    //public String mLastOpStatus;
-    //public String mLastOpErrorMsg;
-    //private Logger mLogger;
-    /*
-    public BackendOps(Logger logger) {
-        mLogger = logger;
-    }*/
-
     /*
      * BackendlessUser operations
      */
@@ -268,7 +260,9 @@ public class BackendOps {
         BackendlessCollection<Customers> user = Backendless.Data.of( Customers.class ).find(query);
         if( user.getTotalObjects() == 0) {
             // No customer found is not an error
-            return null;
+            //return null;
+            String errorMsg = "No Customer found: "+custId;
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             if(fetchCard && user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;

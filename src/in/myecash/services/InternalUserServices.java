@@ -173,6 +173,7 @@ public class InternalUserServices implements IBackendlessService {
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT ) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 

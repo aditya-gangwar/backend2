@@ -34,13 +34,14 @@ public class CustomerServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetInternalUserPassword";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 secret;
-       boolean positiveException = false;
+       boolean validException = false;
 
         try {
             mLogger.debug("In resetCustomerPassword: " + mobileNum);
 
             // check if any request already pending
             if( BackendOps.fetchCustomerOps(custPwdResetWhereClause(mobileNum)) != null) {
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
 
@@ -49,6 +50,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             BackendlessUser user = BackendOps.fetchUser(mobileNum, DbConstants.USER_TYPE_CUSTOMER, false);
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_CUSTOMER) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),mobileNum+" is not a customer.");
             }
 
@@ -66,6 +68,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             if (cardId == null || !cardId.equalsIgnoreCase(secret)) {
                 BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
@@ -87,7 +90,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 BackendOps.saveCustomerOp(op);
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
 
-                positiveException = true;
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
             }
 
@@ -95,7 +98,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

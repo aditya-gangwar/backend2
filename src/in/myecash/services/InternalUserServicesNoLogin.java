@@ -37,6 +37,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
 
         try {
             if (deviceId == null || deviceId.isEmpty()) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "");
             }
 
@@ -75,6 +76,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 secret1;
 
+        boolean validException = false;
         try {
             mLogger.debug("In resetInternalUserPassword: " + userId);
 
@@ -85,6 +87,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             if(userType != DbConstants.USER_TYPE_AGENT &&
                     userType != DbConstants.USER_TYPE_CC &&
                     userType != DbConstants.USER_TYPE_CNT) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),userId+" is not an internal user.");
             }
 
@@ -103,6 +106,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
                 BackendUtils.handleWrongAttempt(userId, internalUser, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
             }
 
@@ -113,7 +117,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

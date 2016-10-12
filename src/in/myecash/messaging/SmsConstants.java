@@ -53,7 +53,7 @@ public class SmsConstants {
     public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
 
     public static String SMS_CUSTOMER_REGISTER = "Dear Customer - Welcome to MyeCash family. Your User ID is %s. Download MyeCash App from Android store to manage your account.";
-    public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. PLS KEEP IT SECRET AND DO NOT SHARE WITH ANYONE.";
+    public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. KEEP YOUR PIN SECRET AND NEVER SHARE WITH ANYONE";
     public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // Registration / User ID messages
