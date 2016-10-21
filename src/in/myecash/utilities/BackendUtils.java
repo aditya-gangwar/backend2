@@ -499,28 +499,41 @@ public class BackendUtils {
     }
 
     public static void handleException(Exception e, boolean validException, MyLogger logger, String[] edr) {
-        edr[BackendConstants.EDR_EXP_EXPECTED] = String.valueOf(validException);
-        if(validException) {
-            edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-        } else {
-            edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
-            logger.error("Exception in "+edr[BackendConstants.EDR_API_NAME_IDX]+": "+e.toString());
-            logger.error(stackTraceStr(e));
-        }
+        try {
+            edr[BackendConstants.EDR_EXP_EXPECTED] = String.valueOf(validException);
 
-        edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",",BackendConstants.BACKEND_EDR_SUB_DELIMETER);
-        if(e instanceof BackendlessException) {
-            edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
+            if (validException) {
+                edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            } else {
+                edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
+                logger.error("Exception in " + edr[BackendConstants.EDR_API_NAME_IDX] + ": " + e.toString());
+                logger.error(stackTraceStr(e));
+            }
+
+            //edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",", BackendConstants.BACKEND_EDR_SUB_DELIMETER);
+            edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
+            if (e instanceof BackendlessException) {
+                edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
+            }
+        } catch(Exception ex) {
+            logger.fatal("Exception in handleException: " + ex.toString());
+            logger.fatal(stackTraceStr(ex));
         }
     }
 
     public static void finalHandling(long startTime, MyLogger logger, String[] edr) {
-        long endTime = System.currentTimeMillis();
-        long execTime = endTime - startTime;
-        edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
-        edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
-        logger.edr(edr);
-        //logger.flush();
+        try {
+            long endTime = System.currentTimeMillis();
+            long execTime = endTime - startTime;
+            edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
+            edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
+            logger.debug(edr[BackendConstants.EDR_USER_TYPE_IDX]);
+            logger.edr(edr);
+            //logger.flush();
+        } catch(Exception e) {
+            logger.fatal("Exception in finalHandling: " + e.toString());
+            logger.fatal(stackTraceStr(e));
+        }
     }
 
     public static String stackTraceStr(Exception e) {

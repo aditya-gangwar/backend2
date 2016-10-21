@@ -99,7 +99,9 @@ public class MyLogger {
 
     public void edr(String[] edrData) {
         // replace constants with corresponding string values
-        edrData[BackendConstants.EDR_USER_TYPE_IDX] = DbConstants.userTypeDesc[Integer.parseInt(edrData[BackendConstants.EDR_USER_TYPE_IDX])];
+        if(edrData[BackendConstants.EDR_USER_TYPE_IDX]!=null) {
+            edrData[BackendConstants.EDR_USER_TYPE_IDX] = DbConstants.userTypeDesc[Integer.parseInt(edrData[BackendConstants.EDR_USER_TYPE_IDX])];
+        }
 
         StringBuilder sbEdr = new StringBuilder(BackendConstants.BACKEND_EDR_MAX_SIZE);
         for (String s: edrData)

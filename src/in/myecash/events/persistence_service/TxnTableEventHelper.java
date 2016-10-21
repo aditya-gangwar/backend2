@@ -158,7 +158,6 @@ public class TxnTableEventHelper {
                 transaction.setTrans_id(BackendUtils.generateTxnId(merchantId));
                 transaction.setCreate_time(new Date());
                 transaction.setArchived(false);
-                transaction.setCpin(null);
                 // following are uses to adding cashback object to txn:
                 // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
                 // 2) updated cashback object will be automatically returned,

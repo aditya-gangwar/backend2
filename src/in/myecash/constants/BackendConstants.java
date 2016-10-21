@@ -26,7 +26,7 @@ public class BackendConstants {
     // <cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
     public static final int BACKEND_EDR_MAX_SIZE = 500;
-    public static final String BACKEND_EDR_DELIMETER = ",";
+    public static final String BACKEND_EDR_DELIMETER = "#";
     public static final String BACKEND_EDR_SUB_DELIMETER = ":";
     public static final String BACKEND_EDR_RESULT_OK = "SUCCESS";
     public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
@@ -46,6 +46,7 @@ public class BackendConstants {
     public static final String IGNORED_ERROR_CUST_PASSWD_RESET_FAILED = "custPsswdResetFailed";
     public static final String IGNORED_ERROR_CUST_PIN_RESET_FAILED = "custPinResetFailed";
     public static final String IGNORED_ERROR_CUST_WITH_NO_CB_RECORD = "custWithNoCbRecord";
+    public static final String IGNORED_ERROR_CB_WITH_NO_CUST = "cbWithNoLinkedCust";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;

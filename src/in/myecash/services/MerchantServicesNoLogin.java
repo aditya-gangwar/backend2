@@ -49,8 +49,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // fetch merchant
             Merchants merchant = BackendOps.getMerchant(loginId, false, false);
-            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
             mLogger.setProperties(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, merchant.getDebugLogs());
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = merchant.getAuto_id();
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_MERCHANT);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             // deviceInfo format (from app): <device id>,<manufacturer>,<model>,<os version>
             // add time and otp at the end

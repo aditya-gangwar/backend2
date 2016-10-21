@@ -403,7 +403,7 @@ public class MerchantServices implements IBackendlessService {
                     //sb.append(CommonConstants.CSV_NEWLINE);
 
                     // Add first line as header - to give the file creation time in epoch
-                    sb.append(String.valueOf((new Date()).getTime())).append(CommonConstants.CSV_DELIMETER).append(CommonConstants.CSV_NEWLINE);
+                    sb.append(String.valueOf((new Date()).getTime())).append(CommonConstants.CSV_DELIMETER);
 
                     for (int k = 0; k < data.size(); k++) {
                         Cashback cb = data.get(k);
@@ -430,9 +430,14 @@ public class MerchantServices implements IBackendlessService {
                         // write record as csv string
                         if(cb.getCustomer()!=null) {
                             cb.setOther_details(MyCustomer.toCsvString(cb.getCustomer(), callByCC));
+                            //sb.append(buildCashbackDetails(cb, callByCC)).append(CommonConstants.CSV_NEWLINE);
+                            sb.append(CommonConstants.CSV_NEWLINE).append(CsvConverter.csvStrFromCb(cb));
+                        } else {
+                            // All cb shud have linked customer
+                            // ignore error - but log the same
+                            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CB_WITH_NO_CUST;
                         }
-                        //sb.append(buildCashbackDetails(cb, callByCC)).append(CommonConstants.CSV_NEWLINE);
-                        sb.append(CsvConverter.csvStrFromCb(cb)).append(CommonConstants.CSV_NEWLINE);
+
                     }
 
                     // upload data as CSV file

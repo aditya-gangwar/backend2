@@ -618,12 +618,16 @@ public class BackendOps {
     public static int getTodayWrongAttemptCnt(String userId, String type) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
 
-        DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
-        todayMidnight.toMidnight();
+        long now = (new Date()).getTime();
+        long expiryTime = now - (MyGlobalSettings.getWrongAttemptResetHrs()*CommonConstants.MILLISECS_IN_HOUR);
+
+        //DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
+        //todayMidnight.toMidnight();
 
         dataQuery.setWhereClause("user_id = '" + userId +
                 "' AND param_type = '" + type +
-                "' AND created < '" + todayMidnight.getTime().getTime() + "'");
+                //"' AND created < '" + todayMidnight.getTime().getTime() + "'");
+                "' AND created < '" + expiryTime + "'");
 
         BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
         return collection.getTotalObjects();
