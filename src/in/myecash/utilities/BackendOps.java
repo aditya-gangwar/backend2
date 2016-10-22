@@ -325,6 +325,8 @@ public class BackendOps {
         }
         if(mchntData) {
             queryOptions.addRelated("merchant");
+            queryOptions.addRelated("merchant.buss_category");
+            queryOptions.addRelated("merchant.address");
         }
         dataQuery.setQueryOptions(queryOptions);
 

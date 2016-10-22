@@ -44,6 +44,7 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "CustomerPasswdPinResetTimer";
+        mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_CUSTOMER);
 
         try {
             mLogger.debug("In CustomerPasswdPinResetTimer execute");
@@ -63,6 +64,9 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
                     }
                 }
             }
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;

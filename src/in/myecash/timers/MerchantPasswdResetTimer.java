@@ -43,6 +43,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantPasswdResetTimer";
+        mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_MERCHANT);
 
         try {
             mLogger.debug("In MerchantPasswdResetTimer execute");
@@ -88,6 +89,10 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
                     mLogger.debug("Processed passwd reset op for: " + op.getMerchant_id());
                 }
             }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
