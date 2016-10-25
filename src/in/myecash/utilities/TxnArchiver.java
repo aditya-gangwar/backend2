@@ -21,9 +21,6 @@ import in.myecash.common.constants.*;
 
 public class TxnArchiver
 {
-    //transid(10),time(20),merchantid(6),merchantname(50),customermobile(10),customerprivid(5),amts(6x4=24),rate(2) = 115 chars = 115x2 = 250 bytes
-    private static final int TXN_CSV_RECORD_MAX_CHARS = 250;
-
     private MyLogger mLogger;
 
     private List<Transaction> mLastFetchTransactions;
@@ -113,17 +110,15 @@ public class TxnArchiver
                 // update txn status
                 int recordsUpdated = updateTxnArchiveStatus(txnTableName,merchantId,true);
                 if(recordsUpdated == -1) {
-                    String error = "Failed to update txn archive status";
+                    String error = "Failed to update txn archive status: "+merchantId;
                     mLogger.error( error);
-                    //TODO: raise alarm
                     // rollback
                     deleteCsvFiles();
                     edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
                     throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), error);
 
                 } else if(recordsUpdated != mLastFetchTransactions.size()) {
-                    String error = "Count of txns updated for status does not match.";
-                    //TODO: raise critical alarm
+                    String error = "Count of txns updated for status does not match: "+merchantId;
                     // rollback
                     if( updateTxnArchiveStatus(txnTableName,merchantId,false) == -1) {
                         //TODO: raise critical alarm
@@ -138,8 +133,12 @@ public class TxnArchiver
                     // update archive date in merchant record
                     // set to current time
                     mLastFetchMerchant.setLast_txn_archive(mToday);
-                    // dont care even if below update fails
-                    BackendOps.updateMerchant(mLastFetchMerchant);
+                    // ignore any failure to update
+                    try {
+                        BackendOps.updateMerchant(mLastFetchMerchant);
+                    } catch(Exception e) {
+                        mLogger.error("archiveMerchantTxns: Failed to update archive time in merchant record: "+merchantId);
+                    }
                     mLogger.debug("Txns archived successfully: "+recordsUpdated+", "+merchantId);
                 }
             }
@@ -264,7 +263,7 @@ public class TxnArchiver
             StringBuilder sb = mCsvDataMap.get(filename);
             if(sb==null) {
                 mLogger.debug("buildCsvString, new day : "+filename);
-                sb = new StringBuilder(TXN_CSV_RECORD_MAX_CHARS *size);
+                sb = new StringBuilder(CsvConverter.TXN_CSV_MAX_SIZE *size);
                 // new file - write first line as header
                 sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
                 sb.append(CommonConstants.CSV_NEWLINE);
@@ -273,30 +272,6 @@ public class TxnArchiver
 
             sb.append(CsvConverter.csvStrFromTxn(txn));
             sb.append(CommonConstants.CSV_NEWLINE);
-            /*
-             * Format:
-             *    trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,used_card_id
-             *    total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent,cpin,img_filename\n
-             * The sequence in format should match 'index constants' defined in CommonConstants class
-             */
-            /*sb.append(txn.getTrans_id()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(mSdfDateWithTime.format(txnDate)).append(CommonConstants.CSV_DELIMETER);
-            sb.append(mLastFetchMerchant.getAuto_id()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(mLastFetchMerchant.getName()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(txn.getCustomer_id()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(txn.getCust_private_id()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(txn.getUsedCardId()).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getTotal_billed())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_billed())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCl_debit())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCl_credit())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_debit())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_credit())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(String.valueOf(txn.getCb_percent())).append(CommonConstants.CSV_DELIMETER);
-            sb.append(txn.getCpin()).append(CommonConstants.CSV_DELIMETER);
-            String imgFilename = txn.getImgFileName();
-            sb.append( (imgFilename==null||imgFilename.isEmpty())?"":imgFilename ).append(CommonConstants.CSV_DELIMETER);
-            sb.append(CommonConstants.CSV_NEWLINE);*/
         }
     }
 
@@ -321,7 +296,6 @@ public class TxnArchiver
     /*
     private String buildMerchantWhereClause() {
         StringBuilder whereClause = new StringBuilder();
-        //TODO: use mMerchantIdSuffix in production
         //whereClause.append("auto_id LIKE '%").append(mMerchantIdSuffix).append("'");
         whereClause.append("auto_id LIKE '1%").append("'");
 
