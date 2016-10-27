@@ -631,6 +631,7 @@ public class MerchantServices implements IBackendlessService {
                 // set fields
                 // new record - so set it directly
                 customer.setCashback_table(merchant.getCashback_table());
+                customer.setTxn_tables(merchant.getTxn_table());
                 customer.setMobile_num(customerMobile);
                 //customer.setName(name);
                 customer.setCardId(cardId);
@@ -832,7 +833,7 @@ public class MerchantServices implements IBackendlessService {
             //cbTableUpdated = true;
 
         } else if(!currCbTables.contains(merchant.getCashback_table())) {
-            String newCbTables = currCbTables+","+merchant.getCashback_table();
+            String newCbTables = currCbTables+CommonConstants.CSV_DELIMETER+merchant.getCashback_table();
             mLogger.debug("Setting new CB tables for customer: "+newCbTables+","+currCbTables);
             customer.setCashback_table(newCbTables);
             //cbTableUpdated = true;

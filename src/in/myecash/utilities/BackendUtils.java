@@ -582,6 +582,10 @@ public class BackendUtils {
         return false;
     }
 
+    public static String getMchntDpFilename(String mchntId) {
+        return "dp_" + String.valueOf(System.currentTimeMillis()) + "_" + mchntId + CommonConstants.PHOTO_FILE_FORMAT;
+    }
+
     public static void initAll() {
 
         MyGlobalSettings.initSync(MyGlobalSettings.RunMode.backend);

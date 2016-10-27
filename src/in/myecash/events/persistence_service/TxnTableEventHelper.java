@@ -130,6 +130,9 @@ public class TxnTableEventHelper {
             mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = customer.getCardId();
             BackendUtils.checkCardForUse(customer.getMembership_card());
 
+            // update customer for txn table
+            updateTxnTables(customer, merchant.getTxn_table());
+
             // Fetch cashback record
             String whereClause = "rowid = '" + customer.getPrivate_id() + merchantId + "'";
             Cashback cashback = null;
@@ -156,6 +159,8 @@ public class TxnTableEventHelper {
                 transaction.setMerchant_id(merchantId);
                 transaction.setMerchant_name(merchant.getName());
                 transaction.setTrans_id(BackendUtils.generateTxnId(merchantId));
+                mEdr[BackendConstants.EDR_API_PARAMS_IDX]=mEdr[BackendConstants.EDR_API_PARAMS_IDX]+
+                        BackendConstants.BACKEND_EDR_SUB_DELIMETER+transaction.getTrans_id();
                 transaction.setCreate_time(new Date());
                 transaction.setArchived(false);
                 // following are uses to adding cashback object to txn:
@@ -221,6 +226,19 @@ public class TxnTableEventHelper {
     /*
      * Private helper methods
      */
+    private Customers updateTxnTables(Customers customer, String mchntTable) {
+
+        String currTables = customer.getTxn_tables();
+        if(!currTables.contains(mchntTable)) {
+            String newTables = currTables+CommonConstants.CSV_DELIMETER+mchntTable;
+            mLogger.debug("Setting new Txn tables for customer: "+newTables+","+currTables);
+            customer.setTxn_tables(newTables);
+            // update customer object
+            return BackendOps.updateCustomer(customer);
+        }
+        return null;
+    }
+
     private void buildAndSendTxnSMS(Transaction transaction)
     {
         String custMobile = transaction.getCustomer_id();

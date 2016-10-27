@@ -118,6 +118,80 @@ public class CustomerServices implements IBackendlessService {
         }
     }
 
+    public List<Transaction> getTransactions(String custPrivateId, String whereClause) {
+
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getTransactions";
+
+        boolean validException = false;
+        try {
+            mLogger.debug("In getTransactions");
+
+            // Fetch customer - send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediately after
+            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            //boolean callByCC = false;
+            Customers customer = null;
+            if(userType==DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                custPrivateId = customer.getPrivate_id();
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = custPrivateId;
+
+            } else if(userType==DbConstants.USER_TYPE_CC) {
+                // fetch customer
+                try {
+                    customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
+                } catch(BackendlessException e) {
+                    if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
+                        // CC agent may enter wrong customer id by mistake
+                        validException = true;
+                    }
+                    throw e;
+                }
+                //callByCC = true;
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // not checking for customer account status
+
+            List<Transaction> txns= null;
+            String[] csvFields = customer.getTxn_tables().split(CommonConstants.CSV_DELIMETER);
+
+            // fetch cashback records from each table
+            for(int i=0; i<csvFields.length; i++) {
+
+                // fetch txns for this customer in this table
+                List<Transaction> data = BackendOps.fetchTransactions(whereClause,csvFields[i]);
+                if (data != null) {
+                    if(txns==null) {
+                        txns= new ArrayList<>();
+                    }
+                    // add all fetched records from this table to final set
+                    txns.addAll(data);
+                }
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return txns;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+}
+
     /*
     public Customers changeMobile(String verifyParam, String newMobile, String otp) {
 
@@ -331,4 +405,3 @@ public class CustomerServices implements IBackendlessService {
     }*/
 
 
-}

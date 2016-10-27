@@ -72,7 +72,7 @@ public class BackendOps {
                     if (allChilds) {
                         queryOptions.addRelated("merchant.address");
                         //queryOptions.addRelated("merchant.address.city");
-                        queryOptions.addRelated("merchant.buss_category");
+                        //queryOptions.addRelated("merchant.buss_category");
                     }
                 case DbConstants.USER_TYPE_AGENT:
                 case DbConstants.USER_TYPE_CC:
@@ -104,13 +104,12 @@ public class BackendOps {
             relationProps.add("merchant.trusted_devices");
             relationProps.add("merchant.address");
             //relationProps.add("merchant.address.city");
-            relationProps.add("merchant.buss_category");
+            //relationProps.add("merchant.buss_category");
         }
 
         return Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
         //BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
 
-        //TODO: remove below
         /*
         Merchants merchant = (Merchants) user.getProperty("merchant");
         if (merchant == null) {
@@ -157,7 +156,7 @@ public class BackendOps {
             queryOptions.addRelated("trusted_devices");
             queryOptions.addRelated("address");
             //queryOptions.addRelated("address.city");
-            queryOptions.addRelated("buss_category");
+            //queryOptions.addRelated("buss_category");
             query.setQueryOptions(queryOptions);
 
         } else if(onlyTrustedDevicesChild) {
@@ -325,7 +324,7 @@ public class BackendOps {
         }
         if(mchntData) {
             queryOptions.addRelated("merchant");
-            queryOptions.addRelated("merchant.buss_category");
+            //queryOptions.addRelated("merchant.buss_category");
             queryOptions.addRelated("merchant.address");
         }
         dataQuery.setQueryOptions(queryOptions);
@@ -861,6 +860,11 @@ public class BackendOps {
     public static void describeTable(String tableName) {
         Backendless.Persistence.describe(tableName);
     }
+
+    public static String renameFile(String oldPathName, String newName) {
+        return Backendless.Files.renameFile( oldPathName, newName );
+    }
+
 
 }
 

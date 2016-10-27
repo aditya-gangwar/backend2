@@ -68,10 +68,17 @@ public class InternalUserServices implements IBackendlessService {
             // get merchant counter value and use the same to generate merchant id
             Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             mLogger.debug("Fetched merchant cnt: "+merchantCnt);
-            // set merchant id
+            // generate merchant id
             merchantId = BackendUtils.generateMerchantId(batch, countryCode, merchantCnt);
             mLogger.debug("Generated merchant id: "+merchantId);
 
+            // rename mchnt dp to include 'merchant id'
+            String currFilePath = CommonConstants.MERCHANT_DISPLAY_IMAGES_DIR + merchant.getDisplayImage();
+            String newName = BackendUtils.getMchntDpFilename(merchantId);
+            BackendOps.renameFile(currFilePath, newName);
+            merchant.setDisplayImage(newName);
+
+            // set or update other fields
             merchant.setAuto_id(merchantId);
             merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
             merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
