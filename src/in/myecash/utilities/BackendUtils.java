@@ -583,7 +583,7 @@ public class BackendUtils {
     }
 
     public static String getMchntDpFilename(String mchntId) {
-        return "dp_" + String.valueOf(System.currentTimeMillis()) + "_" + mchntId + CommonConstants.PHOTO_FILE_FORMAT;
+        return "dp_" + String.valueOf(System.currentTimeMillis()) + "_" + mchntId + "."+CommonConstants.PHOTO_FILE_FORMAT;
     }
 
     public static void initAll() {

@@ -5,6 +5,7 @@ import com.backendless.exceptions.BackendlessException;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.CsvConverter;
 import in.myecash.common.DateUtil;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.BackendConstants;
 
 import java.io.BufferedReader;
@@ -281,12 +282,18 @@ public class TxnArchiver
         // for particular merchant
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
-        DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
+        /*DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
         //todayMidnight.toTZ(BackendConstants.TIMEZONE);
         todayMidnight.toMidnight();
+        whereClause.append(" AND create_time < '").append(todayMidnight.getTime().getTime()).append("'");*/
 
-        // all txns older than today 00:00 hrs - the timer runs 1 AM each day
-        whereClause.append(" AND create_time < '").append(todayMidnight.getTime().getTime()).append("'");
+        // time after which txns should be in DB
+        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        // -1 as 'today' is inclusive
+        now.removeDays(MyGlobalSettings.getTxnsIntableKeepDays()-1);
+        Date txnInDbFrom = now.toMidnight().getTime();
+        whereClause.append(" AND create_time < '").append(txnInDbFrom.getTime()).append("'");
+
         whereClause.append(" AND archived=").append("false");
 
         mLogger.debug("Txn where clause: " + whereClause.toString());
