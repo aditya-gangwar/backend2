@@ -700,6 +700,28 @@ public class BackendOps {
         return transactions;
     }
 
+    public static Transaction fetchTxn(String txnId, String tableName) {
+        Backendless.Data.mapTableToClass(tableName, Transaction.class);
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        QueryOptions queryOptions = new QueryOptions();
+        queryOptions.addRelated("cashback");
+
+        dataQuery.setQueryOptions(queryOptions);
+        dataQuery.setWhereClause("trans_id = '"+txnId+"'");
+
+        BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
+
+        if( collection.getTotalObjects() == 0) {
+            // no data found
+            String errorMsg = "No Txn found: "+txnId;
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_DATA_FOUND), errorMsg);
+        } else {
+            return collection.getData().get(0);
+        }
+    }
+
     /*
      * InternalUser operations
      */

@@ -10,6 +10,7 @@ import in.myecash.common.CommonUtils;
 import in.myecash.common.CsvConverter;
 import in.myecash.common.MyCustomer;
 import in.myecash.common.MyGlobalSettings;
+import in.myecash.events.persistence_service.TxnTableEventHelper;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.*;
@@ -572,6 +573,12 @@ public class MerchantServices implements IBackendlessService {
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
+    }
+
+    public void cancelTxn(String txnId, String cardId, String pin) {
+
+        TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
+        txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
     }
 
     /*
