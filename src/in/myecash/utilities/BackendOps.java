@@ -722,6 +722,11 @@ public class BackendOps {
         }
     }
 
+    public static Transaction updateTxn(Transaction txn, String tableName) {
+        Backendless.Data.mapTableToClass(tableName, Transaction.class);
+        return Backendless.Persistence.save(txn);
+    }
+
     /*
      * InternalUser operations
      */

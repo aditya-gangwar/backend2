@@ -101,7 +101,6 @@ public class TxnTableEventHelper {
                 cashback.setCb_billed(cashback.getCb_billed() + mTransaction.getCb_billed());
 
                 // add/update transaction fields
-                //transaction.setCustomer_id(mCustomer.getMobile_num());
                 mTransaction.setCust_private_id(mCustomer.getPrivate_id());
                 mTransaction.setMerchant_id(mMerchantId);
                 mTransaction.setMerchant_name(mMerchant.getName());
@@ -110,6 +109,10 @@ public class TxnTableEventHelper {
                         BackendConstants.BACKEND_EDR_SUB_DELIMETER+mTransaction.getTrans_id();
                 mTransaction.setCreate_time(new Date());
                 mTransaction.setArchived(false);
+                if(mTransaction.getImgFileName()!=null && !mTransaction.getImgFileName().isEmpty()) {
+                    // calling app will need to upload 'card image file' with this name
+                    mTransaction.setImgFileName(BackendUtils.getTxnImgFilename(mTransaction.getTrans_id()));
+                }
                 // following are uses to adding cashback object to txn:
                 // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
                 // 2) updated cashback object will be automatically returned,
@@ -172,16 +175,16 @@ public class TxnTableEventHelper {
         }
     }
 
-    public void cancelTxn(String ctxtUserId, String txnId, String cardId, String pin) {
+    public Transaction cancelTxn(String ctxtUserId, String txnId, String cardId, String pin) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-beforeCreate";
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "cancelTxn";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txnId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+cardId;
 
         mValidException = false;
         try {
-            mLogger.debug("In Transaction cancelTxn");
+            mLogger.debug("In cancelTxn");
 
             // Fetch mMerchant
             mMerchant = (Merchants) BackendUtils.fetchCurrentUser(ctxtUserId,
@@ -236,8 +239,9 @@ public class TxnTableEventHelper {
                 cashback.setTotal_billed(cashback.getTotal_billed() - mTransaction.getTotal_billed());
                 cashback.setCb_billed(cashback.getCb_billed() - mTransaction.getCb_billed());
 
-                // add/update transaction fields
+                // cashback will be updated along with txn
                 mTransaction.setCashback(cashback);
+                BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
 
             } else {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
@@ -246,6 +250,7 @@ public class TxnTableEventHelper {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return mTransaction;
 
         } catch(Exception e) {
             BackendUtils.handleException(e, mValidException,mLogger,mEdr);

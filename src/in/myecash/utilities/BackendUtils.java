@@ -587,6 +587,10 @@ public class BackendUtils {
         return "dp_" + String.valueOf(System.currentTimeMillis()) + "_" + mchntId + "."+CommonConstants.PHOTO_FILE_FORMAT;
     }
 
+    public static String getTxnImgFilename(String txnId) {
+        return CommonConstants.PREFIX_TXN_IMG_FILE_NAME +txnId+CommonConstants.PHOTO_FILE_FORMAT;
+    }
+
     public static void initAll() {
 
         MyGlobalSettings.initSync(MyGlobalSettings.RunMode.backend);

@@ -575,10 +575,10 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public void cancelTxn(String txnId, String cardId, String pin) {
+    public Transaction cancelTxn(String txnId, String cardId, String pin) {
 
         TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-        txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
+        return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
     }
 
     /*
