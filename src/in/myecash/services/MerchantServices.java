@@ -133,7 +133,8 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public Merchants updateSettings(String cbRate, boolean addClEnabled, String email) {
+    public Merchants updateSettings(String cbRate, boolean addClEnabled, String email,
+                                    boolean askLinkedInvNum, boolean linkedInvNumOptional, boolean invNumOnlyNmbrs) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -163,6 +164,9 @@ public class MerchantServices implements IBackendlessService {
             merchant.setCb_rate(cbRate);
             merchant.setCl_add_enable(addClEnabled);
             merchant.setEmail(email);
+            merchant.setInvoiceNumAsk(askLinkedInvNum);
+            merchant.setInvoiceNumOptional(linkedInvNumOptional);
+            merchant.setInvoiceNumOnlyNumbers(invNumOnlyNmbrs);
             merchant = BackendOps.updateMerchant(merchant);
 
             // no exception - means function execution success

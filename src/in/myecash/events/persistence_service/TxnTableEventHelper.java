@@ -362,7 +362,7 @@ public class TxnTableEventHelper {
 
         // Send SMS only in cases of 'redeem > INR 10' and 'add cash in account'
         if( cl_debit > BackendConstants.SEND_TXN_SMS_CL_MIN_AMOUNT
-                || cl_credit > BackendConstants.SEND_TXN_SMS_CL_MIN_AMOUNT
+            || cl_credit > BackendConstants.SEND_TXN_SMS_CL_MIN_AMOUNT
             || cb_debit > BackendConstants.SEND_TXN_SMS_CB_MIN_AMOUNT
                 ) {
             Cashback cashback = mTransaction.getCashback();
