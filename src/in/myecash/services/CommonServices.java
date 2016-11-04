@@ -241,7 +241,7 @@ public class CommonServices implements IBackendlessService {
      * OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
      * OP_CHANGE_PIN - Need PIN(existing) - only from customer app
      */
-    public void execCustomerOp(String opCode, String mobileNum, String cardId, String otp, String pin, String opParam) {
+    public String execCustomerOp(String opCode, String mobileNum, String cardId, String otp, String pin, String opParam) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -269,6 +269,7 @@ public class CommonServices implements IBackendlessService {
             String merchantId = null;
             Customers customer = null;
             BackendlessUser custUser = null;
+            CustomerOps customerOp = null;
             switch (userType) {
                 case DbConstants.USER_TYPE_MERCHANT:
                     // OP_CHANGE_PIN not allowed to merchant
@@ -410,16 +411,18 @@ public class CommonServices implements IBackendlessService {
                 // Doing so, as its easy to rollback by deleting added customerOp record
                 // then the other way round.
                 // Need to ensure that CustomerOp table record is always there, in case update is successful
-                CustomerOps customerOp = new CustomerOps();
+                customerOp = new CustomerOps();
                 customerOp.setCreateTime(new Date());
                 customerOp.setPrivateId(customer.getPrivate_id());
                 customerOp.setOp_code(opCode);
                 customerOp.setMobile_num(customer.getMobile_num());
                 if(userType==DbConstants.USER_TYPE_CUSTOMER) {
                     customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
+                    customerOp.setImgFilename("");
                 } else {
                     customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
                     customerOp.setRequestor_id(merchantId);
+                    customerOp.setImgFilename(BackendUtils.getCustOpImgFilename(opCode, customer.getPrivate_id()));
                 }
                 customerOp.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
                 if(opCode.equals(DbConstants.OP_RESET_PIN)) {
@@ -462,7 +465,8 @@ public class CommonServices implements IBackendlessService {
                         case DbConstants.OP_RESET_PIN:
                             //resetCustomerPin(customer);
                             validException = true;
-                            throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
+                            // send imageFilename as part of exception - hack as no value can be returned in this case
+                            throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), customerOp.getImgFilename());
 
                         case DbConstants.OP_CHANGE_PIN:
                             if (opParam == null || opParam.isEmpty() || opParam.length() != CommonConstants.PIN_LEN) {
@@ -491,6 +495,8 @@ public class CommonServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            // return image filename - which if initiated by merchant app - should use to upload card image
+            return customerOp.getImgFilename();
 
         } catch(Exception e) {
             BackendUtils.handleException(e,validException,mLogger,mEdr);

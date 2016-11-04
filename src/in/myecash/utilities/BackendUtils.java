@@ -23,6 +23,8 @@ import in.myecash.database.*;
  */
 public class BackendUtils {
 
+    private static final SimpleDateFormat mSdfDateTimeFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME_FILENAME, CommonConstants.DATE_LOCALE);
+
     /*
      * Password & ID generators
      */
@@ -588,7 +590,17 @@ public class BackendUtils {
     }
 
     public static String getTxnImgFilename(String txnId) {
-        return CommonConstants.PREFIX_TXN_IMG_FILE_NAME +txnId+CommonConstants.PHOTO_FILE_FORMAT;
+        return CommonConstants.PREFIX_TXN_IMG_FILE_NAME +txnId+"."+CommonConstants.PHOTO_FILE_FORMAT;
+    }
+
+    public static String getTxnCancelImgFilename(String txnId) {
+        return CommonConstants.PREFIX_TXN_CANCEL_IMG_FILE_NAME +txnId+"."+CommonConstants.PHOTO_FILE_FORMAT;
+    }
+
+    public static String getCustOpImgFilename(String opCode, String custPrivateId) {
+        String time = mSdfDateTimeFilename.format(new Date());
+        String filename = opCode+"_"+custPrivateId+"_"+time+"."+CommonConstants.PHOTO_FILE_FORMAT;
+        return filename.replace(" ","_");
     }
 
     public static void initAll() {

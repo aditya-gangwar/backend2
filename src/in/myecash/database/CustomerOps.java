@@ -11,9 +11,9 @@ import java.util.Date;
 public class CustomerOps
 {
   private String extra_op_params;
-  private java.util.Date created;
+  private Date created;
   private String mobile_num;
-  private java.util.Date updated;
+  private Date updated;
   private String qr_card;
   private String ownerId;
   private String requestor_id;
@@ -26,7 +26,16 @@ public class CustomerOps
   private String op_status;
   private String reason;
   private String remarks;
-  private java.util.Date createTime;
+  private Date createTime;
+  private String imgFilename;
+
+  public String getImgFilename() {
+    return imgFilename;
+  }
+
+  public void setImgFilename(String imgFilename) {
+    this.imgFilename = imgFilename;
+  }
 
   public Date getCreateTime() {
     return createTime;
@@ -102,7 +111,7 @@ public class CustomerOps
     this.extra_op_params = extra_op_params;
   }
 
-  public java.util.Date getCreated()
+  public Date getCreated()
   {
     return created;
   }
@@ -117,7 +126,7 @@ public class CustomerOps
     this.mobile_num = mobile_num;
   }
 
-  public java.util.Date getUpdated()
+  public Date getUpdated()
   {
     return updated;
   }

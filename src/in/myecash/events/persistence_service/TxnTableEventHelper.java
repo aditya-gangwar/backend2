@@ -219,6 +219,7 @@ public class TxnTableEventHelper {
             // restore values
             mTransaction.setUsedCardId(oldCardId);
             mTransaction.setCpin(oldPin);
+            mTransaction.setCanImgFileName(BackendUtils.getTxnCancelImgFilename(mTransaction.getTrans_id()));
 
             // Fetch cashback record
             Cashback cashback = mTransaction.getCashback();
@@ -242,6 +243,13 @@ public class TxnTableEventHelper {
                 // cashback will be updated along with txn
                 mTransaction.setCashback(cashback);
                 BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
+
+                // Build SMS
+                String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,mTransaction.getTrans_id(),cl_balance,cb_balance);
+                if(smsText!=null) {
+                    // Send SMS through HTTP
+                    SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger);
+                }
 
             } else {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
