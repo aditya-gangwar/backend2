@@ -100,9 +100,13 @@ public class CustomerServices implements IBackendlessService {
                 }
             }
 
-            if(cbs==null || cbs.size()==0) {
-                // should have atleast single record created during registration
-                mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CUST_WITH_NO_CB_RECORD;
+            if( cbs==null || cbs.size()==0 ) {
+                if(updatedSince==0) {
+                    // should have atleast single record created during registration
+                    mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CUST_WITH_NO_CB_RECORD;
+                } else {
+                    validException = true;
+                }
                 throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
             }
 
