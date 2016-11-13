@@ -57,7 +57,8 @@ public class AdminServices implements IBackendlessService {
      *
      * These ops are always done - upon manual submission of application and documents.
      */
-    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks, String newMobileNum, String adminPwd) {
+    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks,
+                                           String newMobileNum, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
             BackendUtils.initAll();
@@ -252,9 +253,9 @@ public class AdminServices implements IBackendlessService {
                 // set time when request is made
                 merchant.setRemoveReqDate(new Date());
                 // update status and save merchant object
-                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_REMOVE, reason,
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_UNDER_CLOSURE, reason,
                         mEdr, mLogger);
-                /*merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_REMOVE);
+                /*merchant.setAdmin_status(DbConstants.USER_STATUS_UNDER_CLOSURE);
                 merchant.setStatus_update_time(new Date());
                 merchant.setStatus_reason(reason);
                 merchant = BackendOps.updateMerchant(merchant);*/

@@ -155,7 +155,7 @@ public class MerchantServices implements IBackendlessService {
 
             // check merchant status
             BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
-            if(merchant.getAdmin_status()==DbConstants.USER_STATUS_READY_TO_REMOVE) {
+            if(merchant.getAdmin_status()==DbConstants.USER_STATUS_UNDER_CLOSURE) {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
             }
@@ -589,7 +589,7 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Customer operations by merchant
      */
-    public Cashback registerCustomer(String customerMobile, String cardId, String otp) {
+    public Cashback registerCustomer(String customerMobile, String cardId, String otp, String firstName, String lastName) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -644,6 +644,8 @@ public class MerchantServices implements IBackendlessService {
                 customer.setCashback_table(merchant.getCashback_table());
                 customer.setTxn_tables(merchant.getTxn_table());
                 customer.setMobile_num(customerMobile);
+                customer.setFirstName(firstName);
+                customer.setLastName(lastName);
                 //customer.setName(name);
                 customer.setCardId(cardId);
                 // set membership card

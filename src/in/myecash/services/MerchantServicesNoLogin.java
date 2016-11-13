@@ -120,9 +120,12 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
             // Check if from trusted device
-            // don't check for first time after merchant is registered
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-            if (merchant.getFirst_login_ok()) {
+            // don't check if trsuted device list empty
+            // Can happen in 2 cases:
+            // 1) first login after merchant is registered
+            // 2) first login after 'reset trusted device' from backend by admin - based on manual request by merchant
+            if (trustedDevices!=null && trustedDevices.size() > 0) {
                 if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");

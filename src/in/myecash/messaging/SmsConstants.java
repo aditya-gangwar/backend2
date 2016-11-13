@@ -54,13 +54,13 @@ public class SmsConstants {
     public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
 
-    public static String SMS_CUSTOMER_REGISTER = "Dear Customer - Welcome to MyeCash family. Your User ID is %s. Download MyeCash App from Android store to manage your account.";
     public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. KEEP YOUR PIN SECRET AND NEVER SHARE WITH ANYONE";
     public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family !! Your Merchant ID for login is %s. Happy Customers to you.";
+    public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family. Your Merchant ID for login is %s. Happy Customers to you.";
+    public static String SMS_CUSTOMER_REGISTER = "Welcome to MyeCash family. Your registered name is '%s'. Your Mobile number '$s' is customer ID. To manage your account, download MyeCash Customer App from Android store.";
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages

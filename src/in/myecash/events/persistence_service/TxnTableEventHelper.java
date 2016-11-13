@@ -284,7 +284,7 @@ public class TxnTableEventHelper {
 
         // credit txns not allowed under expiry duration
         // txn cancellation is allowed
-        if(mMerchant.getAdmin_status()== DbConstants.USER_STATUS_READY_TO_REMOVE) {
+        if(mMerchant.getAdmin_status()== DbConstants.USER_STATUS_UNDER_CLOSURE) {
             if( (mTransaction.getCb_credit() > 0 || mTransaction.getCl_credit() > 0) &&
                    mTransaction.getCancelTime()==null ) {
                 // ideally it shudn't reach here - as both cl and cb settings are disabled and not allowed to be edited in app
