@@ -1,6 +1,7 @@
 package in.myecash.messaging;
 
 import com.backendless.exceptions.BackendlessException;
+import in.myecash.common.CommonUtils;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.common.constants.DbConstants;
 import in.myecash.common.constants.ErrorCodes;
@@ -12,8 +13,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
+
+import static in.myecash.utilities.BackendUtils.stackTraceStr;
 
 
 /**
@@ -49,6 +53,7 @@ public class SmsHelper {
             if (uc.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 logger.error("Failed to send SMS ("+message+") to "+recipients+". HTTP response: "+uc.getResponseCode());
                 edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+                BackendOps.addFailedSms(message, recipients);
                 return false;
             }
             logger.debug(uc.getResponseMessage());
@@ -63,7 +68,9 @@ public class SmsHelper {
         } catch (Exception e) {
             logger.error("Failed to send SMS ("+message+") to "+recipients);
             logger.error("Failed to send SMS:"+e.toString());
+            logger.error(stackTraceStr(e));
             edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
+            BackendOps.addFailedSms(message, recipients);
             return false;
 
         } finally {
@@ -79,12 +86,13 @@ public class SmsHelper {
     /*
      * Methods to build SMS texts
      */
+
     public static String buildNewCardSMS(String userId, String card_num) {
-        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, BackendUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getPartialVisibleStr(userId));
     }
 
     public static String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE, BackendUtils.getHalfVisibleId(userId), BackendUtils.getHalfVisibleId(mobile_num));
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getPartialVisibleStr(userId), CommonUtils.getPartialVisibleStr(mobile_num));
     }
 
     public static String buildFirstPwdResetSMS(String userId, String password) {
@@ -96,19 +104,19 @@ public class SmsHelper {
     }
 
     public static String buildPwdChangeSMS(String userId) {
-        return String.format(SmsConstants.SMS_PASSWD_CHANGED, BackendUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getPartialVisibleStr(userId));
     }
 
     public static String buildPwdResetSMS(String userId, String password) {
-        return String.format(SmsConstants.SMS_PASSWD,BackendUtils.getHalfVisibleId(userId),password);
+        return String.format(SmsConstants.SMS_PASSWD,CommonUtils.getPartialVisibleStr(userId),password);
     }
 
     public static String buildCustPinResetSMS(String userId, String pin) {
-        return String.format(SmsConstants.SMS_PIN, BackendUtils.getHalfVisibleId(userId),pin);
+        return String.format(SmsConstants.SMS_PIN, CommonUtils.getPartialVisibleStr(userId),pin);
     }
 
     public static String buildPinChangeSMS(String userId) {
-        return String.format(SmsConstants.SMS_PIN_CHANGED, BackendUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_PIN_CHANGED, CommonUtils.getPartialVisibleStr(userId));
     }
 
     public static String buildOtpSMS(String userId, String otp, String opCode) {
@@ -118,16 +126,16 @@ public class SmsHelper {
 
             case DbConstants.OP_LOGIN:
                 // OTP to add trusted device
-                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
 
             case DbConstants.OP_CHANGE_MOBILE:
                 return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp, MyGlobalSettings.OTP_VALID_MINS);
 
             case DbConstants.OP_NEW_CARD:
-                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
 
             case DbConstants.OP_RESET_PIN:
-                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, BackendUtils.getHalfVisibleId(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
 
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Invalid OTP request: "+opCode);

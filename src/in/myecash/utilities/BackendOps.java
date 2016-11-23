@@ -504,6 +504,22 @@ public class BackendOps {
     /*
      * Merchant operations ops
      */
+    public static ArrayList<MerchantOps> findActiveMchntPwdResetReqs(String merchantId) {
+
+        //create where clause
+        StringBuilder whereClause = new StringBuilder();
+
+        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PASSWD).append("'");
+        whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
+        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
+
+        // created within last 'cool off mins'
+        long time = (new Date().getTime()) - (MyGlobalSettings.getMchntPasswdResetMins() * 60 * 1000);
+        whereClause.append(" AND createTime > ").append(time);
+
+        return fetchMerchantOps(whereClause.toString());
+    }
+
     public static ArrayList<MerchantOps> fetchMerchantOps(String whereClause) {
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -892,6 +908,61 @@ public class BackendOps {
         return Backendless.Files.renameFile( oldPathName, newName );
     }
 
+    /*
+     * Failed SMS ops
+     */
+    public static ArrayList<FailedSms> findRecentFailedSms() {
+
+        // created within last 'cool off mins'
+        long time = (new Date().getTime()) - (MyGlobalSettings.getFailedSmsRetryMins() * 60 * 1000);
+        String whereClause = "created > "+String.valueOf(time);
+
+        return fetchFailedSms(whereClause);
+    }
+
+    public static ArrayList<FailedSms> fetchFailedSms(String whereClause) {
+        // fetch cashback objects from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setWhereClause(whereClause);
+        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+
+        QueryOptions options = new QueryOptions();
+        options.addSortByOption("createTime ASC");
+        dataQuery.setQueryOptions(options);
+
+        BackendlessCollection<FailedSms> collection = Backendless.Data.of(FailedSms.class).find(dataQuery);
+
+        int cnt = collection.getTotalObjects();
+        if(cnt > 0) {
+            ArrayList<FailedSms> objects = new ArrayList<>();
+            while (collection.getCurrentPage().size() > 0)
+            {
+                objects.addAll(collection.getData());
+                collection = collection.nextPage();
+            }
+            return objects;
+        } else {
+            // no object is not an error
+            return null;
+        }
+    }
+
+    public static FailedSms addFailedSms(String text, String recipients) {
+        FailedSms data = new FailedSms();
+        data.setRecipients(recipients);
+        data.setText(text);
+        data.setStatus(DbConstantsBackend.FAILED_SMS_STATUS_PENDING);
+
+        //TODO: encode SMS text
+
+        Backendless.Data.mapTableToClass("FailedSms", FailedSms.class);
+        return Backendless.Persistence.save( data );
+    }
+
+    public static FailedSms saveFailedSms(FailedSms sms) {
+        Backendless.Data.mapTableToClass("FailedSms", FailedSms.class);
+        return Backendless.Persistence.save( sms );
+    }
 
 }
 

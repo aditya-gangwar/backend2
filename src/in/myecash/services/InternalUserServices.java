@@ -229,7 +229,7 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // send SMS with user id
-            String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, BackendUtils.getHalfVisibleId(merchantId));
+            String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(merchantId));
             SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success

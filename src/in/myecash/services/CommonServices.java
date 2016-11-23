@@ -317,7 +317,7 @@ public class CommonServices implements IBackendlessService {
             // check if customer is enabled
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
             // if customer still in 'restricted access' mode - dont allow customer ops
-            if(customer.getAdmin_status()==DbConstants.USER_STATUS_MOB_CHANGE_RECENT) {
+            if(customer.getAdmin_status()==DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY) {
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.USER_MOB_CHANGE_RESTRICTED_ACCESS), "");
             }
@@ -559,7 +559,7 @@ public class CommonServices implements IBackendlessService {
         customer.setMobile_num(newMobile);
         // update status to 'restricted access'
         // not using setCustomerStatus() fx. - to avoid two DB operations
-        customer.setAdmin_status(DbConstants.USER_STATUS_MOB_CHANGE_RECENT);
+        customer.setAdmin_status(DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY);
         //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustHrsAfterMobChange()+" hours");
         customer.setStatus_reason("Mobile Number changed recently");
         customer.setStatus_update_time(new Date());

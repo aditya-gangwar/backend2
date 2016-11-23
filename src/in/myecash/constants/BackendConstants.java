@@ -69,14 +69,9 @@ public class BackendConstants {
     public static final int EDR_API_PARAMS_IDX = 17;
     public static final int BACKEND_EDR_MAX_FIELDS = 18;
 
-
     public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";
     public static final String DUMMY_FILENAME = "dummy.txt";
-
-    // Cashback table pool values
-    public static final int CASHBACK_TABLE_POOL_START = 0;
-    public static final int CASHBACK_TABLE_POOL_SIZE = 2;
 
     public static final int PASSWORD_LEN = 5;
     public static final int LOG_ID_LEN = 8;

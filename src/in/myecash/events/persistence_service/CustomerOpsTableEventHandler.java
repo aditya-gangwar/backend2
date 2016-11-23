@@ -278,15 +278,15 @@ public class CustomerOpsTableEventHandler extends com.backendless.servercode.ext
     }
 
     private String buildPwdResetSMS(String userId, String pin) {
-        return String.format(SmsConstants.SMS_PIN, CommonUtils.getHalfVisibleId(userId),pin);
+        return String.format(SmsConstants.SMS_PIN, CommonUtils.CommonUtils.getPartialVisibleStr(userId),pin);
     }
 
     private String buildNewCardSMS(String userId, String card_num) {
-        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_CUSTOMER_NEW_CARD, card_num, CommonUtils.CommonUtils.getPartialVisibleStr(userId));
     }
 
     private String buildMobileChangeSMS(String userId, String mobile_num) {
-        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.getHalfVisibleId(userId), CommonUtils.getHalfVisibleId(mobile_num));
+        return String.format(SmsConstants.SMS_MOBILE_CHANGE, CommonUtils.CommonUtils.getPartialVisibleStr(userId), CommonUtils.CommonUtils.getPartialVisibleStr(mobile_num));
     }
 
 }*/

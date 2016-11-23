@@ -117,7 +117,7 @@ public class MerchantServices implements IBackendlessService {
                 mLogger.debug("Processed mobile change for: " + merchant.getAuto_id());
 
                 // Send SMS on old and new mobile - ignore sent status
-                String smsText = SmsHelper.buildMobileChangeSMS(oldMobile, newMobile);
+                String smsText = SmsHelper.buildMobileChangeSMS(merchant.getAuto_id(), newMobile);
                 SmsHelper.sendSMS(smsText, oldMobile + "," + newMobile, mEdr, mLogger);
             }
 
@@ -1080,7 +1080,7 @@ public class MerchantServices implements IBackendlessService {
         //return BackendResponseCodes.NO_ERROR;
     }
     private String buildPwdChangeSMS(String userId) {
-        return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.getHalfVisibleId(userId));
+        return String.format(SmsConstants.SMS_PASSWD_CHANGED, CommonUtils.CommonUtils.getPartialVisibleStr(userId));
     }
 
     */

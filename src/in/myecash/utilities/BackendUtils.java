@@ -3,6 +3,7 @@ package in.myecash.utilities;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
+import in.myecash.common.CommonUtils;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
@@ -143,7 +144,7 @@ public class BackendUtils {
         switch (merchant.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
-            case DbConstants.USER_STATUS_READY_TO_ACTIVE:
+            //case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = ErrorCodes.USER_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
@@ -169,12 +170,12 @@ public class BackendUtils {
         switch(customer.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
             case DbConstants.USER_STATUS_DISABLED:
-            case DbConstants.USER_STATUS_READY_TO_ACTIVE:
+            //case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = ErrorCodes.USER_ACC_DISABLED;
                 errorMsg = "Account is not active";
                 break;
 
-            case DbConstants.USER_STATUS_MOB_CHANGE_RECENT:
+            case DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY:
                 // Credit txns and data view is allowed when in this mode
                 // Only Debit txns and profile/setting changes (like pin, passwd change etc) are not allowed
                 // As this fx. does not have all this info to decide - so it will not raise any exception
@@ -340,9 +341,9 @@ public class BackendUtils {
      * Sets user admin status to given value, and saves in DB
      * Sends SMS only if given stats is DISABLED or LOCKED
      */
-    public static void setMerchantStatus(Merchants merchant, int status, String reason, String[] edr, MyLogger logger) {
+    public static Merchants setMerchantStatus(Merchants merchant, int status, String reason, String[] edr, MyLogger logger) {
         if(status == merchant.getAdmin_status()) {
-            return;
+            return merchant;
         }
         // update merchant account
         merchant.setAdmin_status(status);
@@ -354,10 +355,14 @@ public class BackendUtils {
         String smsText = null;
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, reason);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger);
+
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
-            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, getHalfVisibleId(merchant.getAuto_id()));
+            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(merchant.getAuto_id()));
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger);
         }
-        SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger);
+
+        return merchant;
     }
 
     public static void setCustomerStatus(Customers customer, int status, String reason, String[] edr, MyLogger logger) {
@@ -375,7 +380,7 @@ public class BackendUtils {
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(customer.getMobile_num(), DbConstants.USER_TYPE_MERCHANT, reason);
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
-            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, getHalfVisibleId(customer.getMobile_num()));
+            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
         }
         SmsHelper.sendSMS(smsText, customer.getMobile_num(), edr, logger);
     }
@@ -395,7 +400,7 @@ public class BackendUtils {
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(agent.getId(), DbConstants.USER_TYPE_MERCHANT, reason);
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
-            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, getHalfVisibleId(agent.getId()));
+            smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(agent.getId()));
         }
         SmsHelper.sendSMS(smsText, agent.getMobile_num(), edr, logger);
     }
@@ -404,11 +409,11 @@ public class BackendUtils {
 
         switch(statusReason) {
             case DbConstantsBackend.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, getHalfVisibleId(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
             case DbConstantsBackend.LOCKED_WRONG_PIN_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, getHalfVisibleId(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
             case DbConstantsBackend.LOCKED_WRONG_VERIFICATION_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_VERIFY_FAILED, getHalfVisibleId(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_VERIFY_FAILED, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
         }
 
         return null;
@@ -466,7 +471,6 @@ public class BackendUtils {
                 throw new BackendlessException(String.valueOf(ErrorCodes.USER_WRONG_ID_PASSWD),"Invalid user type for id: "+userdId);
         }
     }
-
 
     /*
      * Checks if for particular transaction - Card/PIN is required
@@ -561,17 +565,6 @@ public class BackendUtils {
     /*
      * Other Miscellaneous functions
      */
-    public static String getHalfVisibleId(String userId) {
-        // build half visible userid : XXXXX91535
-        StringBuilder halfVisibleUserid = new StringBuilder();
-        int halflen = userId.length() / 2;
-        for(int i=0; i<halflen; i++) {
-            halfVisibleUserid.append("X");
-        }
-        halfVisibleUserid.append(userId.substring(halflen));
-        return halfVisibleUserid.toString();
-    }
-
     public static boolean isTrustedDevice(String deviceId, List<MerchantDevice> trustedDevices) {
         //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
         if (trustedDevices != null &&

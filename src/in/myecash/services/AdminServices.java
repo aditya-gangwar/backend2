@@ -4,6 +4,7 @@ import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
+import in.myecash.common.CommonUtils;
 import in.myecash.common.DateUtil;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
@@ -19,6 +20,8 @@ import in.myecash.common.constants.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import static in.myecash.common.constants.DbConstants.OP_RESET_PASSWD;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -45,25 +48,39 @@ public class AdminServices implements IBackendlessService {
         registerInternalUser(argUserId, DbConstants.USER_TYPE_CNT, mobile, name, dob, pwd);
     }
 
+
     /*
-     * Performs either of below two operations
-     *
-     * 1) only reset login data i.e.
-     * Delete all trusted devices, and set status to indicate that 'forget password' is allowed from
-     * non-trusted devices also - first time only - just like in case of first login.
-     *
-     * 2) Change mobile number
-     * This involves above 'reset login data' operation also.
-     *
-     * These ops are always done - upon manual submission of application and documents.
+     * Merchant Manual Request Operations
      */
-    public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks,
-                                           String newMobileNum, String adminPwd) {
+    public void mchntSendPasswdResetHint(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_SEND_PASSWD_RESET_HINT, merchantId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void mchntEnableAccount(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_ENABLE_ACC, merchantId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void mchntResetTrustedDevices(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_RESET_TRUSTED_DEVICES, merchantId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void mchntChangeMobileNum(String newMobile, String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_CHANGE_MOBILE, merchantId, ticketNum, reason, remarks, newMobile, adminPwd);
+    }
+    public void mchntAccountClosure(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_ACC_CLOSURE, merchantId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void mchntCancelAccountClosure(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_CANCEL_ACC_CLOSURE, merchantId, ticketNum, reason, remarks, "", adminPwd);
+    }
+
+    /*
+     * Single function for all Merchant Manual Request Operations
+     */
+    private void execMchntManualOp(String manualOp, String merchantId, String ticketNum, String reason, String remarks,
+                                   String newMobileNum, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
             BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-            mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMchntLoginOrChangeMob";
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = manualOp;
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                     ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                     reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -72,22 +89,12 @@ public class AdminServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
             mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
 
-            // just for easier comparisons later on - change empty string to null
-            if(newMobileNum!=null && newMobileNum.isEmpty()) {
-                newMobileNum = null;
-            }
-
             // login using 'admin' user
             BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
-            // fetch user with the given id with related merchant object
+            // fetch merchant object
             Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-
-            // merchant should be in disabled state
-            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_DISABLED) {
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not disabled yet");
-            }
 
             int oldStatus = merchant.getAdmin_status();
             Date oldUpdateTime = merchant.getStatus_update_time();
@@ -107,88 +114,104 @@ public class AdminServices implements IBackendlessService {
             op.setAgentId(ADMIN_LOGINID);
             op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
             op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
-            if(newMobileNum==null) {
-                op.setOp_code(DbConstants.OP_RESET_ACC_FOR_LOGIN);
-            } else {
-                op.setOp_code(DbConstants.OP_CHANGE_MOBILE);
-                // set extra params in presentable format
+            op.setOp_code(manualOp);
+            // set extra params - as per op value
+            if(manualOp.equals(DbConstants.OP_CHANGE_MOBILE)) {
                 String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
                 op.setExtra_op_params(extraParams);
-                //op.setExtra_op_params(newMobileNum);
             }
             op = BackendOps.saveMerchantOp(op);
 
-            // update merchant status (and mobile num, if required)
+            // process as per possible manual operation
+            int newStatus;
+            String smsExtraParam = null;
             try {
-                if(newMobileNum!=null) {
-                    merchant.setMobile_num(newMobileNum);
+                switch (manualOp) {
+                    case DbConstants.OP_SEND_PASSWD_RESET_HINT:
+                        smsExtraParam = merchant.getDob();
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    case DbConstants.OP_ENABLE_ACC:
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    case DbConstants.OP_CHANGE_MOBILE:
+                        // disable if not already disabled
+                        // if already disabled - fx will simply return same object
+                        //merchant = BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_DISABLED, reason, mEdr, mLogger);
+                        merchant.setMobile_num(newMobileNum);
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        smsExtraParam = oldMobile;
+                        break;
+
+                    case DbConstants.OP_RESET_TRUSTED_DEVICES:
+                        merchant.setTrusted_devices(null);
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    case DbConstants.OP_ACC_CLOSURE:
+                        // merchant should be in active state
+                        if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
+                            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not active");
+                        }
+                        // disable cb and cl add
+                        merchant.setCb_rate("0");
+                        merchant.setCl_add_enable(false);
+                        merchant.setRemoveReqDate(new Date());
+
+                        newStatus = DbConstants.USER_STATUS_UNDER_CLOSURE;
+                        break;
+
+                    case DbConstants.OP_CANCEL_ACC_CLOSURE:
+                        // merchant should be in closure state
+                        if(merchant.getAdmin_status() != DbConstants.USER_STATUS_UNDER_CLOSURE) {
+                            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not under closure state");
+                        }
+                        merchant.setRemoveReqDate(null);
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    default:
+                        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Invalid Manual operation");
                 }
-                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_ACTIVE, reason,
-                        mEdr, mLogger);
-                /*merchant.setAdmin_status(DbConstants.USER_STATUS_READY_TO_ACTIVE);
-                merchant.setStatus_reason(reason);
-                merchant.setStatus_update_time(new Date());
-                merchant = BackendOps.updateMerchant(merchant);*/
+
+                // any applicable merchant updates done
+                if(merchant.getAdmin_status().equals(newStatus)) {
+                    // old and new status is same
+                    // update merchant object
+                    merchant = BackendOps.updateMerchant(merchant);
+                } else {
+                    // old and new status are different
+                    // change status - this will save the updated merchant object too
+                    merchant = BackendUtils.setMerchantStatus(merchant, newStatus, reason, mEdr, mLogger);
+                }
+
+                try {
+                    sendManualReqSms(manualOp, merchant, smsExtraParam);
+                } catch (Exception ex) {
+                    // ignore status for all oders
+                    if(manualOp.equals(DbConstants.OP_SEND_PASSWD_RESET_HINT)) {
+                        // can afford to throw exception in this case
+                        // as for OP_SEND_PASSWD_RESET_HINT - no change in merchant object is done
+                        // so nothing to rollback - except merchant op row deletion - which is happening
+                        throw ex;
+                    }
+                }
 
             } catch(Exception e) {
-                mLogger.error("resetMchntLoginOrChangeMob: Exception while updating merchant status: "+merchantId);
+                mLogger.error("execMchntManualOp: Exception while processing manual op: "+manualOp+", "+merchantId);
                 // Rollback - delete merchant op added
                 try {
                     BackendOps.deleteMerchantOp(op);
                 } catch(Exception ex) {
-                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    mLogger.fatal("execMchntManualOp: Failed to rollback: merchant op deletion failed: "+merchantId);
                     // Rollback also failed
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
                     throw ex;
                 }
                 throw e;
             }
-
-            // Delete all trusted devices
-            try {
-                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-                int i = 0;
-                if (trustedDevices.size() > 0) {
-                    mLogger.debug("Available devices: " + trustedDevices.size());
-                    // iterate and delete one by one
-                    for (MerchantDevice device : trustedDevices) {
-                        BackendOps.deleteMchntDevice(device);
-                        i++;
-                    }
-                }
-                mLogger.debug("Deleted devices: " + i);
-            } catch(Exception e) {
-                mLogger.error("resetMchntLoginOrChangeMob: Exception while deleting trusted devices: "+merchantId);
-                // Rollback - delete merchant op added, and rollback merchant status
-                try {
-                    BackendOps.deleteMerchantOp(op);
-                    if(newMobileNum!=null) {
-                        merchant.setMobile_num(oldMobile);
-                    }
-                    BackendUtils.setMerchantStatus(merchant, oldStatus, oldReason,
-                            mEdr, mLogger);
-                    /*merchant.setAdmin_status(oldStatus);
-                    merchant.setStatus_reason(oldReason);
-                    merchant.setStatus_update_time(oldUpdateTime);
-                    BackendOps.updateMerchant(merchant);*/
-                } catch(Exception ex) {
-                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: "+merchantId);
-                    // Rollback also failed
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw ex;
-                }
-                throw e;
-            }
-
-            // send SMS
-            String smsText = null;
-            if(newMobileNum==null) {
-                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, BackendUtils.getHalfVisibleId(merchantId));
-            } else {
-                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, BackendUtils.getHalfVisibleId(merchantId), newMobileNum);
-            }
-
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -202,99 +225,57 @@ public class AdminServices implements IBackendlessService {
         }
     }
 
-    public void removeMerchant(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
-        long startTime = System.currentTimeMillis();
-        try {
-            BackendUtils.initAll();
-            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-            mEdr[BackendConstants.EDR_API_NAME_IDX] = "removeMerchant";
-            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                    ticketNum;
-            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
-            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
-            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+    private void sendManualReqSms(String manualOp, Merchants merchant, String extraParam) {
+        boolean status = true;
 
-            // login using 'admin' user
-            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+        switch (manualOp) {
+            case DbConstants.OP_SEND_PASSWD_RESET_HINT:
+                String smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_SEND_PSWD_RESET_HINT,extraParam);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            // fetch user with the given id with related merchant object
-            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
-            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+            case DbConstants.OP_ENABLE_ACC:
+                smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_ACC_ENABLE,CommonUtils.getPartialVisibleStr(merchant.getAuto_id()));
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            // merchant should be in active state
-            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not active");
-            }
+            case DbConstants.OP_CHANGE_MOBILE:
+                // Send SMS on old and new mobile
+                smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_MOBILE_CHANGE,
+                        CommonUtils.getPartialVisibleStr(merchant.getAuto_id()),
+                        CommonUtils.getPartialVisibleStr(merchant.getMobile_num()));
+                status = SmsHelper.sendSMS(smsText, extraParam + "," + merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            int oldStatus = merchant.getAdmin_status();
-            Date oldUpdateTime = merchant.getStatus_update_time();
-            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+            case DbConstants.OP_RESET_TRUSTED_DEVICES:
+                smsText = SmsConstants.SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES;
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            // Add merchant op first - then update status
-            MerchantOps op = new MerchantOps();
-            op.setCreateTime(new Date());
-            op.setMerchant_id(merchant.getAuto_id());
-            op.setMobile_num(merchant.getMobile_num());
-            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
-            op.setTicketNum(ticketNum);
-            op.setReason(reason);
-            op.setRemarks(remarks);
-            op.setAgentId(ADMIN_LOGINID);
-            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
-            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
-            op.setOp_code(DbConstants.OP_REMOVE_ACC);
-            op = BackendOps.saveMerchantOp(op);
+            case DbConstants.OP_ACC_CLOSURE:
+                DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+                now.addDays(MyGlobalSettings.getMchntExpiryDays());
+                SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
 
-            // update merchant status (and mobile num, if required)
-            try {
-                // disable cb and cl add
-                merchant.setCb_rate("0");
-                merchant.setCl_add_enable(false);
-                // set time when request is made
-                merchant.setRemoveReqDate(new Date());
-                // update status and save merchant object
-                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_UNDER_CLOSURE, reason,
-                        mEdr, mLogger);
-                /*merchant.setAdmin_status(DbConstants.USER_STATUS_UNDER_CLOSURE);
-                merchant.setStatus_update_time(new Date());
-                merchant.setStatus_reason(reason);
-                merchant = BackendOps.updateMerchant(merchant);*/
+                smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_ACC_CLOSURE,
+                        CommonUtils.getPartialVisibleStr(merchant.getAuto_id()),
+                        String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
+                        sdf.format(now.getTime()));
 
-            } catch(Exception e) {
-                mLogger.error("removeMerchant: Exception while updating merchant status: "+merchantId);
-                // Rollback - delete merchant op added
-                try {
-                    BackendOps.deleteMerchantOp(op);
-                } catch(Exception ex) {
-                    mLogger.fatal("removeMerchant: Failed to rollback: merchant op deletion failed: "+merchantId);
-                    // Rollback also failed
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw ex;
-                }
-                throw e;
-            }
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
-            now.addDays(MyGlobalSettings.getMchntExpiryDays());
-            SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
+            case DbConstants.OP_CANCEL_ACC_CLOSURE:
+                smsText = SmsConstants.SMS_ADMIN_MCHNT_CANCEL_ACC_CLOSURE;
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                break;
 
-            // send SMS
-            String smsText = String.format(SmsConstants.SMS_MERCHANT_REMOVE,
-                    merchantId,
-                    String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
-                    sdf.format(now.getTime()));
+            default:
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Invalid Manual operation");
+        }
 
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-
-        } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
-            throw e;
-        } finally {
-            BackendOps.logoutUser();
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        if(!status) {
+            throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
     }
 
@@ -748,6 +729,272 @@ public class AdminServices implements IBackendlessService {
             BackendOps.logoutUser();
             Backendless.Logging.flush();
             throw e;
+        }
+    }*/
+
+    /*private String resetMchntPassword(Merchants merchant) {
+
+        // check if any request already pending
+        if( BackendOps.findActiveMchntPwdResetReqs(merchant.getAuto_id()) != null) {
+            throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
+        }
+
+        // fetch user with the given id with related merchant object
+        BackendlessUser user = BackendOps.fetchUser(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, false);
+        int userType = (Integer)user.getProperty("user_type");
+        if(userType != DbConstants.USER_TYPE_MERCHANT) {
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),merchant.getAuto_id()+" is not a merchant.");
+        }
+
+        // reset password immediatly
+        // generate password
+        String passwd = BackendUtils.generateTempPassword();
+        // update user account for the password
+        user.setPassword(passwd);
+        BackendOps.updateUser(user);
+
+        return passwd;
+    }*/
+
+    /*
+     * Performs either of below two operations
+     *
+     * 1) only reset login data i.e.
+     * Delete all trusted devices, and set status to indicate that 'forget password' is allowed from
+     * non-trusted devices also - first time only - just like in case of first login.
+     *
+     * 2) Change mobile number
+     * This involves above 'reset login data' operation also.
+     *
+     * These ops are always done - upon manual submission of application and documents.
+     */
+    /*public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks,
+                                           String newMobileNum, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            BackendUtils.initAll();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMchntLoginOrChangeMob";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    newMobileNum;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // just for easier comparisons later on - change empty string to null
+            if(newMobileNum!=null && newMobileNum.isEmpty()) {
+                newMobileNum = null;
+            }
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // fetch user with the given id with related merchant object
+            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+            // merchant should be in disabled state
+            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_DISABLED) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not disabled yet");
+            }
+
+            int oldStatus = merchant.getAdmin_status();
+            Date oldUpdateTime = merchant.getStatus_update_time();
+            String oldMobile = merchant.getMobile_num();
+            String oldReason = merchant.getStatus_reason();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+
+            // Add merchant op first - then update status
+            MerchantOps op = new MerchantOps();
+            op.setCreateTime(new Date());
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setAgentId(ADMIN_LOGINID);
+            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
+            if(newMobileNum==null) {
+                op.setOp_code(DbConstants.OP_RESET_ACC_FOR_LOGIN);
+            } else {
+                op.setOp_code(DbConstants.OP_CHANGE_MOBILE);
+                // set extra params in presentable format
+                String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
+                op.setExtra_op_params(extraParams);
+                //op.setExtra_op_params(newMobileNum);
+            }
+            op = BackendOps.saveMerchantOp(op);
+
+            // update merchant status (and mobile num, if required)
+            try {
+                if(newMobileNum!=null) {
+                    merchant.setMobile_num(newMobileNum);
+                }
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_ACTIVE, reason,
+                        mEdr, mLogger);
+
+            } catch(Exception e) {
+                mLogger.error("resetMchntLoginOrChangeMob: Exception while updating merchant status: "+merchantId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // Delete all trusted devices
+            try {
+                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                int i = 0;
+                if (trustedDevices.size() > 0) {
+                    mLogger.debug("Available devices: " + trustedDevices.size());
+                    // iterate and delete one by one
+                    for (MerchantDevice device : trustedDevices) {
+                        BackendOps.deleteMchntDevice(device);
+                        i++;
+                    }
+                }
+                mLogger.debug("Deleted devices: " + i);
+            } catch(Exception e) {
+                mLogger.error("resetMchntLoginOrChangeMob: Exception while deleting trusted devices: "+merchantId);
+                // Rollback - delete merchant op added, and rollback merchant status
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                    if(newMobileNum!=null) {
+                        merchant.setMobile_num(oldMobile);
+                    }
+                    BackendUtils.setMerchantStatus(merchant, oldStatus, oldReason,
+                            mEdr, mLogger);
+                } catch(Exception ex) {
+                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // send SMS
+            String smsText = null;
+            if(newMobileNum==null) {
+                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, CommonUtils.getPartialVisibleStr(merchantId));
+            } else {
+                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, CommonUtils.getPartialVisibleStr(merchantId), newMobileNum);
+            }
+
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void removeMerchant(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            BackendUtils.initAll();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "removeMerchant";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    ticketNum;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // fetch user with the given id with related merchant object
+            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+            // merchant should be in active state
+            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not active");
+            }
+
+            int oldStatus = merchant.getAdmin_status();
+            Date oldUpdateTime = merchant.getStatus_update_time();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+
+            // Add merchant op first - then update status
+            MerchantOps op = new MerchantOps();
+            op.setCreateTime(new Date());
+            op.setMerchant_id(merchant.getAuto_id());
+            op.setMobile_num(merchant.getMobile_num());
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setAgentId(ADMIN_LOGINID);
+            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
+            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
+            op.setOp_code(DbConstants.OP_REMOVE_ACC);
+            op = BackendOps.saveMerchantOp(op);
+
+            // update merchant status (and mobile num, if required)
+            try {
+                // disable cb and cl add
+                merchant.setCb_rate("0");
+                merchant.setCl_add_enable(false);
+                // set time when request is made
+                merchant.setRemoveReqDate(new Date());
+                // update status and save merchant object
+                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_UNDER_CLOSURE, reason,
+                        mEdr, mLogger);
+
+            } catch(Exception e) {
+                mLogger.error("removeMerchant: Exception while updating merchant status: "+merchantId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteMerchantOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("removeMerchant: Failed to rollback: merchant op deletion failed: "+merchantId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+            now.addDays(MyGlobalSettings.getMchntExpiryDays());
+            SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
+
+            // send SMS
+            String smsText = String.format(SmsConstants.SMS_MERCHANT_REMOVE,
+                    merchantId,
+                    String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
+                    sdf.format(now.getTime()));
+
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }*/
 

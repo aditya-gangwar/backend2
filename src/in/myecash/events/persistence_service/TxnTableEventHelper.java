@@ -298,7 +298,7 @@ public class TxnTableEventHelper {
 
         // if mCustomer in 'restricted access' mode - allow only credit txns
         // txn cancellation is also not allowed
-        if(mCustomer.getAdmin_status()==DbConstants.USER_STATUS_MOB_CHANGE_RECENT &&
+        if(mCustomer.getAdmin_status()==DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY &&
                 ( mTransaction.getCl_debit()>0 || mTransaction.getCb_debit()>0 ||
                         mTransaction.getCancelTime()==null )) {
             mValidException = true; // to avoid logging of this exception

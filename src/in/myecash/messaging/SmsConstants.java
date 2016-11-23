@@ -23,6 +23,14 @@ public class SmsConstants {
 
     // TODO: Review all SMS text
 
+    // SMS against Manual Requests by Merchant
+    public static String SMS_ADMIN_MCHNT_SEND_PSWD_RESET_HINT = "Dear MyeCash Merchant - As per request, your password reset hint is '%s'. You can use the same to generate new password. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_MOBILE_CHANGE = "Dear MyeCash Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Don't forget to remove any Lost Mobile device from your Trusted Device List. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES = "Dear MyeCash Merchant - As per request, all devices are removed from your 'Trusted Device List'. You can now try login from new device. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have put your account '%s' under %s days of Account Closure Notice period. No 'Credit' transactions are allowed now. Your account will be automatically removed on %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_CANCEL_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have cancelled your earlier Account closure request. You can do 'Credit' transactions also now. Thanks. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_ACC_ENABLE = "Dear MyeCash Merchant - As per request, we have enabled back your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+
     // Account Status change SMS
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyeCash account '%s' is locked due to multiple wrong password attempts. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyeCash account '%s' is locked due to multiple wrong PIN attempts. It will be unlocked automatically after %s hours.";
@@ -64,12 +72,7 @@ public class SmsConstants {
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
-    public static String SMS_MOBILE_CHANGE = "Registered mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE = "Registered Mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
 
-    // Account enable/disable
-    public static String SMS_MCHNT_LOGIN_RESET = "Dear Merchant - As per request, the login access for account '%s' is reset successfully. Pls use 'Forgot Password' link to restore your access.";
-    public static String SMS_MCHNT_MOBILE_CHANGE_ADMIN = "Dear Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Pls use 'Forgot Password' link to restore your access.";
-
-    public static String SMS_MERCHANT_REMOVE = "Dear Merchant - As per your request, your account '%s' is under %s days of expiry period now. 'Credit' transactions are not allowed from now. Your account will be automatically deleted on %s.";
 }

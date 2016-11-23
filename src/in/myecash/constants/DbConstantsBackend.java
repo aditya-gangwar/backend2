@@ -82,4 +82,8 @@ public class DbConstantsBackend {
     public static final String BATCH_STATUS_OPEN = "open";
     public static final String BATCH_STATUS_CLOSED = "closed";
 
+    // Failed SMS status
+    public static final String FAILED_SMS_STATUS_PENDING = "pending";
+    public static final String FAILED_SMS_STATUS_SENT = "sent";
+
 }

@@ -3,7 +3,6 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
-import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
@@ -97,7 +96,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // check if any request already pending
-            if( BackendOps.fetchMerchantOps(mchntPwdResetWhereClause(userId)) != null) {
+            if( BackendOps.findActiveMchntPwdResetReqs(userId) != null) {
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
             }
@@ -121,10 +120,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // Check if from trusted device
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-            // don't check if trsuted device list empty
+            // don't check if trusted device list empty
             // Can happen in 2 cases:
             // 1) first login after merchant is registered
-            // 2) first login after 'reset trusted device' from backend by admin - based on manual request by merchant
+            // 2) first login after 'reset trusted devices' from backend by admin - based on manual request by merchant
             if (trustedDevices!=null && trustedDevices.size() > 0) {
                 if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
@@ -144,7 +143,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // For new registered merchant - send the password immediately
             if (!merchant.getFirst_login_ok()) {
-                resetMchntPasswdImmediate(user, merchant);
+                generateFirstMchntPasswd(user, merchant);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
             } else {
                 // create row in MerchantOps table
@@ -234,14 +233,12 @@ public class MerchantServicesNoLogin implements IBackendlessService {
     /*
      * Private helper methods
      */
-    private void resetMchntPasswdImmediate(BackendlessUser user, Merchants merchant) {
+    private void generateFirstMchntPasswd(BackendlessUser user, Merchants merchant) {
         // generate password
         String passwd = BackendUtils.generateTempPassword();
         // update user account for the password
         user.setPassword(passwd);
         BackendOps.updateUser(user);
-        //TODO: remove printing passwd
-        mLogger.debug("Updated merchant for password reset: "+merchant.getAuto_id()+": "+passwd);
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
@@ -249,18 +246,5 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
-    }
-
-    private String mchntPwdResetWhereClause(String merchantId) {
-        StringBuilder whereClause = new StringBuilder();
-
-        whereClause.append("op_code = '").append(DbConstants.OP_RESET_PASSWD).append("'");
-        whereClause.append(" AND op_status = '").append(DbConstantsBackend.USER_OP_STATUS_PENDING).append("'");
-        whereClause.append("AND merchant_id = '").append(merchantId).append("'");
-
-        // created within last 'cool off mins'
-        long time = (new Date().getTime()) - (MyGlobalSettings.getMchntPasswdResetMins() * 60 * 1000);
-        whereClause.append(" AND createTime > ").append(time);
-        return whereClause.toString();
     }
 }
