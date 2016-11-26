@@ -127,7 +127,10 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                         } else {
                             // OTP available - validate the same
-                            BackendOps.validateOtp(userId, DbConstants.OP_LOGIN, rcvdOtp);
+                            if(!BackendOps.validateOtp(userId, DbConstants.OP_LOGIN, rcvdOtp)) {
+                                validException = true;
+                                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
+                            }
 
                             // OTP is valid - add this device to trusted list
                             // Trusted device may be null - create new if so
@@ -234,6 +237,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // login failed - increase count if failed due to wrong password
                 //if(result.getException().getCode() == Integer.parseInt(BackendResponseCodes.BL_ERROR_INVALID_ID_PASSWD)) {
                 //if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
+                // crude way to check for failure due to wrong password - but above ones were not working properly
                 if(result.getException().getExceptionMessage().contains("password")) {
                     mLogger.debug("Login failed for user: "+login+" due to wrong id/passwd");
                     switch(userType) {

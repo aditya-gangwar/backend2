@@ -5,7 +5,6 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.MyGlobalSettings;
-import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
@@ -119,7 +118,8 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
             // Send SMS through HTTP
             String smsText = SmsHelper.buildPwdResetSMS(op.getMerchant_id(), passwd);
-            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
+            // set Retry flag ON - however raise exception so as next resetTimer in queue dont try
+            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
             mLogger.debug("Sent password reset SMS: " + merchant.getAuto_id());

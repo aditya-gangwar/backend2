@@ -7,7 +7,6 @@ import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.*;
 import in.myecash.database.CustomerOps;
-import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
@@ -57,10 +56,15 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
                 mEdr[BackendConstants.EDR_API_PARAMS_IDX] = String.valueOf(ops.size());
 
                 for (CustomerOps op:ops) {
+                    // fetch customer
+                    Customers customer = BackendOps.getCustomer(op.getPrivateId(), BackendConstants.ID_TYPE_AUTO, false);
+                    // check admin status
+                    BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
+
                     if(op.getOp_code().equals(DbConstants.OP_RESET_PASSWD)) {
-                        handlePasswdReset(op);
+                        handlePasswdReset(op, customer);
                     } else {
-                        handlePinReset(op);
+                        handlePinReset(op, customer);
                     }
                 }
             }
@@ -75,13 +79,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         }
     }
 
-    private void handlePinReset(CustomerOps op) {
+    private void handlePinReset(CustomerOps op, Customers customer) {
         try {
-            // fetch customer
-            Customers customer = BackendOps.getCustomer(op.getMobile_num(), BackendConstants.ID_TYPE_MOBILE, false);
-            // check admin status
-            BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
-
             // generate pin
             String newPin = BackendUtils.generateCustomerPIN();
 
@@ -96,7 +95,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
 
             // Send SMS through HTTP
             String smsText = SmsHelper.buildCustPinResetSMS(customer.getMobile_num(), newPin);
-            if (!SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger)) {
+            // keep retry flag ON - but return exception, so as next reset in queue are not retried
+            if (!SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
             mLogger.debug("Sent PIN reset SMS: " + customer.getMobile_num());
@@ -117,13 +117,10 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         }
     }
 
-    private void handlePasswdReset(CustomerOps op) {
+    private void handlePasswdReset(CustomerOps op, Customers customer) {
         try {
             // fetch user with the given id with related customer object
-            BackendlessUser user = BackendOps.fetchUser(op.getMobile_num(), DbConstants.USER_TYPE_CUSTOMER, false);
-            Customers customer = (Customers) user.getProperty("customer");
-            // check admin status
-            BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
+            BackendlessUser user = BackendOps.fetchUser(customer.getMobile_num(), DbConstants.USER_TYPE_CUSTOMER, false);
 
             // generate password
             String passwd = BackendUtils.generateTempPassword();
@@ -138,8 +135,9 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
             BackendOps.saveCustomerOp(op);
 
             // Send SMS through HTTP
-            String smsText = SmsHelper.buildPwdResetSMS(op.getMobile_num(), passwd);
-            if (!SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger)) {
+            String smsText = SmsHelper.buildPwdResetSMS(customer.getMobile_num(), passwd);
+            // keep retry flag ON - but return exception, so as next reset in queue are not retried
+            if (!SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
             mLogger.debug("Sent password reset SMS: " + customer.getMobile_num());

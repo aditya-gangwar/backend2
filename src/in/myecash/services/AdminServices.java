@@ -21,8 +21,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import static in.myecash.common.constants.DbConstants.OP_RESET_PASSWD;
-
 /**
  * Created by adgangwa on 19-07-2016.
  */
@@ -80,7 +78,7 @@ public class AdminServices implements IBackendlessService {
         try {
             BackendUtils.initAll();
             mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-            mEdr[BackendConstants.EDR_API_NAME_IDX] = manualOp;
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "execMchntManualOp:"+manualOp;
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                     ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                     reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
@@ -187,17 +185,8 @@ public class AdminServices implements IBackendlessService {
                     merchant = BackendUtils.setMerchantStatus(merchant, newStatus, reason, mEdr, mLogger);
                 }
 
-                try {
-                    sendManualReqSms(manualOp, merchant, smsExtraParam);
-                } catch (Exception ex) {
-                    // ignore status for all oders
-                    if(manualOp.equals(DbConstants.OP_SEND_PASSWD_RESET_HINT)) {
-                        // can afford to throw exception in this case
-                        // as for OP_SEND_PASSWD_RESET_HINT - no change in merchant object is done
-                        // so nothing to rollback - except merchant op row deletion - which is happening
-                        throw ex;
-                    }
-                }
+                // ignore status - as will be entered in failedSMS table and retried itself
+                sendMchntManualReqSms(manualOp, merchant, smsExtraParam);
 
             } catch(Exception e) {
                 mLogger.error("execMchntManualOp: Exception while processing manual op: "+manualOp+", "+merchantId);
@@ -225,18 +214,18 @@ public class AdminServices implements IBackendlessService {
         }
     }
 
-    private void sendManualReqSms(String manualOp, Merchants merchant, String extraParam) {
+    private boolean sendMchntManualReqSms(String manualOp, Merchants merchant, String extraParam) {
         boolean status = true;
 
         switch (manualOp) {
             case DbConstants.OP_SEND_PASSWD_RESET_HINT:
                 String smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_SEND_PSWD_RESET_HINT,extraParam);
-                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             case DbConstants.OP_ENABLE_ACC:
                 smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_ACC_ENABLE,CommonUtils.getPartialVisibleStr(merchant.getAuto_id()));
-                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             case DbConstants.OP_CHANGE_MOBILE:
@@ -244,12 +233,12 @@ public class AdminServices implements IBackendlessService {
                 smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_MOBILE_CHANGE,
                         CommonUtils.getPartialVisibleStr(merchant.getAuto_id()),
                         CommonUtils.getPartialVisibleStr(merchant.getMobile_num()));
-                status = SmsHelper.sendSMS(smsText, extraParam + "," + merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, extraParam + "," + merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             case DbConstants.OP_RESET_TRUSTED_DEVICES:
                 smsText = SmsConstants.SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES;
-                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             case DbConstants.OP_ACC_CLOSURE:
@@ -262,23 +251,212 @@ public class AdminServices implements IBackendlessService {
                         String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
                         sdf.format(now.getTime()));
 
-                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             case DbConstants.OP_CANCEL_ACC_CLOSURE:
                 smsText = SmsConstants.SMS_ADMIN_MCHNT_CANCEL_ACC_CLOSURE;
-                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+                status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Invalid Manual operation");
         }
 
-        if(!status) {
-            throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
+        return status;
+    }
+
+    /*
+     * Customer Manual Request Operations
+     */
+    public void custResetPin(String customerId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execCustManualOp(DbConstants.OP_RESET_PIN, customerId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void custEnableAccount(String customerId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_ENABLE_ACC, customerId, ticketNum, reason, remarks, "", adminPwd);
+    }
+    public void custChangeMobileNum(String newMobile, String customerId, String ticketNum, String reason, String remarks, String adminPwd) {
+        execMchntManualOp(DbConstants.OP_CHANGE_MOBILE, customerId, ticketNum, reason, remarks, newMobile, adminPwd);
+    }
+
+    /*
+     * Single function for all Merchant Manual Request Operations
+     */
+    private void execCustManualOp(String manualOp, String customerId, String ticketNum, String reason, String remarks,
+                                   String newMobileNum, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            BackendUtils.initAll();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "execCustManualOp:"+manualOp;
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = customerId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                    newMobileNum;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // fetch customer object
+            Customers customer = BackendOps.getCustomer(customerId, BackendUtils.getCustomerIdType(customerId), false);
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = customer.getPrivate_id();
+
+            int oldStatus = customer.getAdmin_status();
+            Date oldUpdateTime = customer.getStatus_update_time();
+            String oldMobile = customer.getMobile_num();
+            String oldReason = customer.getStatus_reason();
+            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
+
+            // Add customer op first - then update status
+            CustomerOps op = new CustomerOps();
+            op.setCreateTime(new Date());
+            op.setPrivateId(customer.getPrivate_id());
+            op.setMobile_num(customer.getMobile_num());
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setRequestor_id(ADMIN_LOGINID);
+            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
+            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
+            op.setOp_code(manualOp);
+            op.setImgFilename("");
+            // set extra params - as per op value
+            if(manualOp.equals(DbConstants.OP_CHANGE_MOBILE)) {
+                String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
+                op.setExtra_op_params(extraParams);
+            }
+            op = BackendOps.saveCustomerOp(op);
+
+            // process as per possible manual operation
+            int newStatus = DbConstants.USER_STATUS_ACTIVE;
+            String smsExtraParam = null;
+            boolean dntUpdate = false;
+            try {
+                switch (manualOp) {
+                    case DbConstants.OP_RESET_PIN:
+                        // For PIN reset request - check if any already pending
+                        if( BackendOps.findActiveCustPinResetReqs(customer.getPrivate_id()) != null) {
+                            throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
+                        }
+                        String newPin = BackendUtils.generateCustomerPIN();
+                        customer.setTxn_pin(newPin);
+                        smsExtraParam = newPin;
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    case DbConstants.OP_ENABLE_ACC:
+                        newStatus = DbConstants.USER_STATUS_ACTIVE;
+                        break;
+
+                    case DbConstants.OP_CHANGE_MOBILE:
+                        // disable if not already disabled
+                        // if already disabled - fx will simply return same object
+                        //merchant = BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_DISABLED, reason, mEdr, mLogger);
+                        customer = changeCustomerMobile(oldMobile, newMobileNum);
+                        smsExtraParam = oldMobile;
+                        dntUpdate = true;
+                        break;
+
+                    default:
+                        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Invalid Manual operation");
+                }
+
+                // any applicable merchant updates done
+                if(!dntUpdate) {
+                    if (customer.getAdmin_status().equals(newStatus)) {
+                        // old and new status is same - update customer object only
+                        customer = BackendOps.updateCustomer(customer);
+                    } else {
+                        // old and new status are different
+                        // change status - this will save the updated merchant object too
+                        BackendUtils.setCustomerStatus(customer, newStatus, reason, mEdr, mLogger);
+                    }
+                }
+
+                // ignore status - as will be entered in failedSMS table and retried itself
+                sendCustManualReqSms(manualOp, customer, smsExtraParam);
+
+            } catch(Exception e) {
+                mLogger.error("execCustManualOp: Exception while processing manual op: "+manualOp+", "+customerId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteCustomerOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("execCustManualOp: Failed to rollback: customer op deletion failed: "+customerId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
 
+    private Customers changeCustomerMobile(String oldMobile, String newMobile) {
+
+        BackendlessUser custUser = BackendOps.fetchUser(oldMobile, DbConstants.USER_TYPE_CUSTOMER, false);
+        Customers customer = (Customers) custUser.getProperty("customer");
+
+        // update mobile number
+        custUser.setProperty("user_id", newMobile);
+        customer.setMobile_num(newMobile);
+        // update status to 'restricted access'
+        // not using setCustomerStatus() fx. - to avoid two DB operations
+        customer.setAdmin_status(DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY);
+        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustHrsAfterMobChange()+" hours");
+        customer.setStatus_reason("Mobile Number changed recently");
+        customer.setStatus_update_time(new Date());
+
+        custUser.setProperty("customer", customer);
+        BackendOps.updateUser(custUser);
+        return customer;
+    }
+
+    private boolean sendCustManualReqSms(String manualOp, Customers customer, String extraParam) {
+        boolean status = true;
+
+        switch (manualOp) {
+            case DbConstants.OP_RESET_PIN:
+                String smsText = String.format(SmsConstants.SMS_ADMIN_CUST_RESET_PIN,extraParam);
+                status = SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
+                break;
+
+            case DbConstants.OP_ENABLE_ACC:
+                smsText = String.format(SmsConstants.SMS_ADMIN_CUST_ACC_ENABLE,CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+                status = SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
+                break;
+
+            case DbConstants.OP_CHANGE_MOBILE:
+                // Send SMS on old and new mobile
+                smsText = String.format(SmsConstants.SMS_ADMIN_CUST_MOBILE_CHANGE,
+                        CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+                status = SmsHelper.sendSMS(smsText, extraParam + "," + customer.getMobile_num(), mEdr, mLogger, true);
+                break;
+
+            default:
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Invalid Manual operation");
+        }
+
+        return status;
+    }
+
+    /*
+     * Merchant ID and Card ID Batch create/open methods
+     */
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         long startTime = System.currentTimeMillis();
         try {
@@ -609,9 +787,7 @@ public class AdminServices implements IBackendlessService {
 
             // Send sms to the customer with PIN
             String smsText = String.format(SmsConstants.SMS_REG_INTERNAL_USER, userId);
-            if (!SmsHelper.sendSMS(smsText, mobile, mEdr, mLogger)) {
-                // TODO: write to alarm table for retry later
-            }
+            SmsHelper.sendSMS(smsText, mobile, mEdr, mLogger, true);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;

@@ -79,7 +79,10 @@ public class MerchantServices implements IBackendlessService {
 
             } else {
                 // Second run, as OTP available
-                BackendOps.validateOtp(merchant.getAuto_id(), DbConstants.OP_CHANGE_MOBILE, otp);
+                if(!BackendOps.validateOtp(merchant.getAuto_id(), DbConstants.OP_CHANGE_MOBILE, otp)) {
+                    validException = true;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
+                }
                 mLogger.debug("OTP matched for given merchant operation: " + merchant.getAuto_id());
 
                 // first add record in merchant ops table
@@ -118,7 +121,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // Send SMS on old and new mobile - ignore sent status
                 String smsText = SmsHelper.buildMobileChangeSMS(merchant.getAuto_id(), newMobile);
-                SmsHelper.sendSMS(smsText, oldMobile + "," + newMobile, mEdr, mLogger);
+                SmsHelper.sendSMS(smsText, oldMobile + "," + newMobile, mEdr, mLogger, true);
             }
 
             // no exception - means function execution success
@@ -602,7 +605,7 @@ public class MerchantServices implements IBackendlessService {
         CustomerCards card = null;
         BackendlessUser customerUser = null;
         Cashback cashback = null;
-        boolean positiveException = false;
+        boolean validException = false;
 
         try {
             // Fetch merchant
@@ -629,13 +632,16 @@ public class MerchantServices implements IBackendlessService {
                 BackendOps.generateOtp(newOtp,mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
-                positiveException = true;
+                validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
 
             } else {
                 // Second run, as OTP available
                 // Verify OTP
-                BackendOps.validateOtp(customerMobile, DbConstants.OP_REG_CUSTOMER, otp);
+                if(!BackendOps.validateOtp(customerMobile, DbConstants.OP_REG_CUSTOMER, otp)) {
+                    validException = true;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
+                }
 
                 // Create customer object
                 customer = createCustomer();
@@ -687,13 +693,11 @@ public class MerchantServices implements IBackendlessService {
 
                 // Send welcome sms to the customer
                 String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, customerMobile);
-                SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger);
+                SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
 
                 // Send SMS containing PIN
                 smsText = String.format(SmsConstants.SMS_PIN, customerMobile, customer.getTxn_pin());
-                if (!SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger)) {
-                    // TODO: write to alarm table for retry later
-                }
+                SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
             }
 
             // no exception - means function execution success
@@ -701,7 +705,7 @@ public class MerchantServices implements IBackendlessService {
             return cashback;
 
         } catch(Exception e) {
-            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

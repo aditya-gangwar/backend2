@@ -5,7 +5,6 @@ import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.constants.DbConstants;
 import in.myecash.constants.BackendConstants;
 import in.myecash.constants.DbConstantsBackend;
-import in.myecash.database.CustomerOps;
 import in.myecash.database.FailedSms;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
@@ -50,7 +49,7 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
 
                 for (FailedSms sms:smses) {
                     // try to resend the SMS
-                    if(SmsHelper.sendSMS(sms.getText(), sms.getRecipients(), mEdr, mLogger)) {
+                    if(SmsHelper.sendSMS(sms.getText(), sms.getRecipients(), mEdr, mLogger, false)) {
                         // update status if success
                         sms.setStatus(DbConstantsBackend.FAILED_SMS_STATUS_SENT);
                         BackendOps.saveFailedSms(sms);

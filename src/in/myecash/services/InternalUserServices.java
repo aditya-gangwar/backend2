@@ -147,7 +147,7 @@ public class InternalUserServices implements IBackendlessService {
 
             // send SMS with user id
             String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -179,7 +179,7 @@ public class InternalUserServices implements IBackendlessService {
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
-            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_CNT ) {
+            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_ADMIN ) {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
@@ -228,9 +228,84 @@ public class InternalUserServices implements IBackendlessService {
                 throw e;
             }
 
-            // send SMS with user id
+            // send SMS
             String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(merchantId));
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void disableCustomer(String privateId, String ticketNum, String reason, String remarks) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "disableCustomer";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = privateId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                reason;
+
+        try {
+            // Fetch customer care user
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_ADMIN) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // Fetch customer
+            Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, false);
+
+            // Add customer op first - then update status
+            CustomerOps op = new CustomerOps();
+            op.setCreateTime(new Date());
+            op.setPrivateId(privateId);
+            op.setMobile_num(customer.getMobile_num());
+            op.setOp_code(DbConstants.OP_DISABLE_ACC);
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setRequestor_id(internalUser.getId());
+            op.setInitiatedBy( (userType==DbConstants.USER_TYPE_CC)?
+                    DbConstantsBackend.USER_OP_INITBY_MCHNT :
+                    DbConstantsBackend.USER_OP_INITBY_ADMIN);
+            if(userType==DbConstants.USER_TYPE_CC) {
+                op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_CC);
+            }
+            op = BackendOps.saveCustomerOp(op);
+
+            // Update status
+            try {
+                BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_DISABLED, reason,
+                        mEdr, mLogger);
+            } catch(Exception e) {
+                mLogger.error("disableMerchant: Exception while updating merchant status: "+privateId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteCustomerOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("disableMerchant: Failed to rollback: merchant op deletion failed: "+privateId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // send SMS
+            String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+            SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;

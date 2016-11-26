@@ -14,7 +14,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import in.myecash.utilities.BackendOps;
-import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import static in.myecash.utilities.BackendUtils.stackTraceStr;
@@ -26,7 +25,7 @@ import static in.myecash.utilities.BackendUtils.stackTraceStr;
 public class SmsHelper {
     //private static MyLogger mLogger;
 
-    public static boolean sendSMS(String message, String recipients, String[] edr, MyLogger logger) {
+    public static boolean sendSMS(String message, String recipients, String[] edr, MyLogger logger, boolean retry) {
 
         logger.debug("SMS: " + message);
 
@@ -53,7 +52,9 @@ public class SmsHelper {
             if (uc.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 logger.error("Failed to send SMS ("+message+") to "+recipients+". HTTP response: "+uc.getResponseCode());
                 edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-                BackendOps.addFailedSms(message, recipients);
+                if(retry) {
+                    BackendOps.addFailedSms(message, recipients);
+                }
                 return false;
             }
             logger.debug(uc.getResponseMessage());
@@ -70,7 +71,9 @@ public class SmsHelper {
             logger.error("Failed to send SMS:"+e.toString());
             logger.error(stackTraceStr(e));
             edr[BackendConstants.EDR_SMS_STATUS_IDX] = BackendConstants.BACKEND_EDR_SMS_NOK;
-            BackendOps.addFailedSms(message, recipients);
+            if(retry) {
+                BackendOps.addFailedSms(message, recipients);
+            }
             return false;
 
         } finally {

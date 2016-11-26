@@ -143,6 +143,9 @@ public class BackendUtils {
 
         switch (merchant.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
+                errorCode = ErrorCodes.NO_SUCH_USER;
+                errorMsg = "No such registered user";
+                break;
             case DbConstants.USER_STATUS_DISABLED:
             //case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = ErrorCodes.USER_ACC_DISABLED;
@@ -169,6 +172,9 @@ public class BackendUtils {
         String errorMsg = null;
         switch(customer.getAdmin_status()) {
             case DbConstants.USER_STATUS_REG_ERROR:
+                errorCode = ErrorCodes.NO_SUCH_USER;
+                errorMsg = "No such registered user";
+                break;
             case DbConstants.USER_STATUS_DISABLED:
             //case DbConstants.USER_STATUS_READY_TO_ACTIVE:
                 errorCode = ErrorCodes.USER_ACC_DISABLED;
@@ -177,7 +183,7 @@ public class BackendUtils {
 
             case DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY:
                 // Credit txns and data view is allowed when in this mode
-                // Only Debit txns and profile/setting changes (like pin, passwd change etc) are not allowed
+                // Debit txns and profile/setting changes (like pin, passwd change etc) are not allowed
                 // As this fx. does not have all this info to decide - so it will not raise any exception
                 // calling fx. should check it itself for this status
                 // However, if 'restricted duration' is passed, the status will be changed to 'Enabled' here only
@@ -286,7 +292,7 @@ public class BackendUtils {
                                           String wrongParamType, String opCode, String[] edr, MyLogger logger) {
 
         // check similar wrong attempts today
-        int cnt = BackendOps.getTodayWrongAttemptCnt(userId, wrongParamType);
+        int cnt = BackendOps.getWrongAttemptCnt(userId, wrongParamType);
         int confMaxAttempts = MyGlobalSettings.userTypeToWrongLimit.get(userType);
 
         if(cnt > confMaxAttempts) {
@@ -355,11 +361,11 @@ public class BackendUtils {
         String smsText = null;
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, reason);
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger, true);
 
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
             smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(merchant.getAuto_id()));
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), edr, logger, true);
         }
 
         return merchant;
@@ -379,10 +385,11 @@ public class BackendUtils {
         String smsText = null;
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(customer.getMobile_num(), DbConstants.USER_TYPE_MERCHANT, reason);
+            SmsHelper.sendSMS(smsText, customer.getMobile_num(), edr, logger, true);
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
             smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+            SmsHelper.sendSMS(smsText, customer.getMobile_num(), edr, logger, true);
         }
-        SmsHelper.sendSMS(smsText, customer.getMobile_num(), edr, logger);
     }
 
     public static void setAgentStatus(InternalUser agent, int status, String reason, String[] edr, MyLogger logger) {
@@ -399,10 +406,11 @@ public class BackendUtils {
         String smsText = null;
         if(status==DbConstants.USER_STATUS_LOCKED) {
             smsText = getAccLockedSmsText(agent.getId(), DbConstants.USER_TYPE_MERCHANT, reason);
+            SmsHelper.sendSMS(smsText, agent.getMobile_num(), edr, logger, true);
         } else if(status==DbConstants.USER_STATUS_DISABLED) {
             smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(agent.getId()));
+            SmsHelper.sendSMS(smsText, agent.getMobile_num(), edr, logger, true);
         }
-        SmsHelper.sendSMS(smsText, agent.getMobile_num(), edr, logger);
     }
 
     private static String getAccLockedSmsText(String userId, int userType, String statusReason) {

@@ -138,7 +138,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildPwdResetSMS(internalUser.getId(), passwd);
-        if( !SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), mEdr, mLogger) ){
+        if( !SmsHelper.sendSMS(smsText, internalUser.getMobile_num(), mEdr, mLogger, false) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+internalUser.getMobile_num());

@@ -215,7 +215,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // send merchant id by SMS
             String smsText = SmsHelper.buildUserIdSMS(merchant.getAuto_id());
-            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger)) {
+            if (!SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, false)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
             }
 
@@ -242,7 +242,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = SmsHelper.buildFirstPwdResetSMS(merchant.getAuto_id(), passwd);
-        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger) ){
+        if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, false) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
         mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());

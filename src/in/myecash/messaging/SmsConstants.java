@@ -29,13 +29,20 @@ public class SmsConstants {
     public static String SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES = "Dear MyeCash Merchant - As per request, all devices are removed from your 'Trusted Device List'. You can now try login from new device. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have put your account '%s' under %s days of Account Closure Notice period. No 'Credit' transactions are allowed now. Your account will be automatically removed on %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_CANCEL_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have cancelled your earlier Account closure request. You can do 'Credit' transactions also now. Thanks. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_ADMIN_MCHNT_ACC_ENABLE = "Dear MyeCash Merchant - As per request, we have enabled back your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_MCHNT_ACC_ENABLE = "Dear MyeCash Merchant - As per request, we have enabled your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+
+    // SMS against Manual Requests by Customer
+    public static String SMS_ADMIN_CUST_RESET_PIN = "Dear MyeCash Customer - As per request, your new PIN after reset is '%s'. You can change it to your choice from App Menu. ALWAYS KEEP YOUR PIN SECRET. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_CUST_MOBILE_CHANGE = "Dear MyeCash Customer - As per request, registered mobile number of your account is changed successfully to '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_ADMIN_CUST_ACC_ENABLE = "Dear MyeCash Customer - As per request, we have enabled your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+
 
     // Account Status change SMS
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyeCash account '%s' is locked due to multiple wrong password attempts. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyeCash account '%s' is locked due to multiple wrong PIN attempts. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_LOCKED_VERIFY_FAILED = "Your MyeCash account '%s' is locked due to multiple wrong verifications. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_DISABLE = "Your MyeCash account number '%s' is Disabled now. You can call us for further help.";
+    public static String SMS_ACCOUNT_ENABLE = "Your MyeCash account number '%s' is Enabled now. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     //public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
     //public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
 

@@ -248,7 +248,7 @@ public class TxnTableEventHelper {
                 String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,mTransaction.getTrans_id(),cl_balance,cb_balance);
                 if(smsText!=null) {
                     // Send SMS through HTTP
-                    SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger);
+                    SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger, true);
                 }
 
             } else {
@@ -302,7 +302,7 @@ public class TxnTableEventHelper {
                 ( mTransaction.getCl_debit()>0 || mTransaction.getCb_debit()>0 ||
                         mTransaction.getCancelTime()==null )) {
             mValidException = true; // to avoid logging of this exception
-            throw new BackendlessException(String.valueOf(ErrorCodes.USER_MOB_CHANGE_RESTRICTED_ACCESS), "");
+            throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
         }
 
         // verify PIN
@@ -391,7 +391,7 @@ public class TxnTableEventHelper {
                 String smsText = buildSMS();
                 if(smsText!=null) {
                     // Send SMS through HTTP
-                    SmsHelper.sendSMS(smsText,custMobile, mEdr, mLogger);
+                    SmsHelper.sendSMS(smsText,custMobile, mEdr, mLogger, true);
                 }
             }
         }
