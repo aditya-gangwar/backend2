@@ -270,7 +270,7 @@ public class BackendUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
             case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card not allocated to any customer yet");
         }
     }
 
@@ -290,12 +290,13 @@ public class BackendUtils {
      */
     public static void handleWrongAttempt(String userId, Object userObject, int userType,
                                           String wrongParamType, String opCode, String[] edr, MyLogger logger) {
-
         // check similar wrong attempts today
         int cnt = BackendOps.getWrongAttemptCnt(userId, wrongParamType);
         int confMaxAttempts = MyGlobalSettings.userTypeToWrongLimit.get(userType);
 
-        if(cnt > confMaxAttempts) {
+        logger.debug("In handleWrongAttempt: "+cnt+", "+confMaxAttempts);
+
+        if(cnt >= confMaxAttempts) {
             // lock user account - if 'max attempts per day' crossed
             try {
                 switch(userType) {
@@ -515,6 +516,19 @@ public class BackendUtils {
 
     public static void handleException(Exception e, boolean validException, MyLogger logger, String[] edr) {
         try {
+            // We are not able to mark all validExceptions - so checking again here
+            if(!validException) {
+                if (e instanceof BackendlessException) {
+                    // Below exceptions are considered valid and not logged
+                    int errorCode = Integer.valueOf( ((BackendlessException)e).getCode() );
+                    if( errorCode==ErrorCodes.FAILED_ATTEMPT_LIMIT_RCHD ||
+                            errorCode==ErrorCodes.USER_ACC_LOCKED ||
+                            errorCode==ErrorCodes.USER_ACC_DISABLED ) {
+                        validException = true;
+                    }
+                }
+            }
+
             edr[BackendConstants.EDR_EXP_EXPECTED] = String.valueOf(validException);
 
             if (validException) {

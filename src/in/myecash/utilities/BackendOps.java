@@ -665,7 +665,7 @@ public class BackendOps {
         dataQuery.setWhereClause("user_id = '" + userId +
                 "' AND param_type = '" + type +
                 //"' AND created < '" + todayMidnight.getTime().getTime() + "'");
-                "' AND created > '" + expiryTime + "'");
+                "' AND created > " + expiryTime);
 
         BackendlessCollection<WrongAttempts> collection = Backendless.Data.of(WrongAttempts.class).find(dataQuery);
         return collection.getTotalObjects();
@@ -936,7 +936,7 @@ public class BackendOps {
 
         // created within last 'cool off mins'
         long time = (new Date().getTime()) - (MyGlobalSettings.FAILED_SMS_RETRY_MINS * 60 * 1000);
-        String whereClause = "created > "+String.valueOf(time)+" AND status = "+DbConstantsBackend.FAILED_SMS_STATUS_PENDING;
+        String whereClause = "created > "+String.valueOf(time)+" AND status = '"+DbConstantsBackend.FAILED_SMS_STATUS_PENDING+"'";
 
         return fetchFailedSms(whereClause);
     }
