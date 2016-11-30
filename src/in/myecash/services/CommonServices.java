@@ -246,7 +246,7 @@ public class CommonServices implements IBackendlessService {
 
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
-     * OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number
+     * OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number - only from customer app
      * OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
      * OP_CHANGE_PIN - Need PIN(existing) - only from customer app
      */
@@ -282,7 +282,7 @@ public class CommonServices implements IBackendlessService {
             switch (userType) {
                 case DbConstants.USER_TYPE_MERCHANT:
                     // OP_CHANGE_PIN not allowed to merchant
-                    if(opCode.equals(DbConstants.OP_CHANGE_PIN)) {
+                    if( opCode.equals(DbConstants.OP_CHANGE_PIN) || opCode.equals(DbConstants.OP_CHANGE_MOBILE) ) {
                         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
                     }

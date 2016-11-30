@@ -19,7 +19,7 @@ import in.myecash.utilities.MyLogger;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-
+/*
 @Asset( "MerchantDevice" )
 public class MerchantDeviceTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<MerchantDevice>
 {
@@ -38,4 +38,4 @@ public class MerchantDeviceTableEventHandler extends com.backendless.servercode.
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
 
-}
+}*/

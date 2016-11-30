@@ -16,7 +16,7 @@ import in.myecash.utilities.MyLogger;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-
+/*
 @Asset( "Merchants" )
 public class MerchantsTableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Merchants>
 {
@@ -74,3 +74,4 @@ public class MerchantsTableEventHandler extends com.backendless.servercode.exten
         }
     }
 }
+*/

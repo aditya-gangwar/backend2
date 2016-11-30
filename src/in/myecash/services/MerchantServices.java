@@ -663,7 +663,7 @@ public class MerchantServices implements IBackendlessService {
                 customerUser = new BackendlessUser();
                 customerUser.setProperty("user_id", customerMobile);
                 // use generated PIN as password
-                customerUser.setPassword(customer.getTxn_pin());
+                customerUser.setPassword(BackendUtils.generateTempPassword());
                 customerUser.setProperty("user_type", DbConstants.USER_TYPE_CUSTOMER);
                 // Both 'user' and 'customer' objects get created in single go
                 // This also ensures that 'customer' object's 'ownerId' remains null

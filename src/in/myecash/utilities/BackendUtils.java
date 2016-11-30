@@ -57,6 +57,7 @@ public class BackendUtils {
     }
 
     public static String generateOTP() {
+        // TODO: encrypt OTP
         // random numeric string
         Random random = new Random();
         char[] id = new char[CommonConstants.OTP_LEN];
