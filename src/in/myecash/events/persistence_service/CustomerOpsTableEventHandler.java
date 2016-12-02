@@ -6,7 +6,7 @@ import com.backendless.servercode.RunnerContext;
 import com.backendless.servercode.annotation.Asset;
 import in.myecash.common.constants.ErrorCodes;
 import in.myecash.constants.BackendConstants;
-import in.myecash.database.CustomerOps;
+import in.myecash.common.database.CustomerOps;
 import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 

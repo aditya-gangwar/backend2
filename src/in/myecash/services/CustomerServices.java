@@ -5,6 +5,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import in.myecash.common.MyMerchant;
+import in.myecash.common.database.CustomerOps;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
@@ -188,6 +189,81 @@ public class CustomerServices implements IBackendlessService {
 
         } catch(Exception e) {
             BackendUtils.handleException(e,validException,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public List<CustomerOps> getCustomerOps(String internalId) {
+
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        boolean positiveException = false;
+
+        try {
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCustomerOps";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = internalId;
+
+            // send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediately after
+            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+                    null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            Customers customer = null;
+            boolean byCCUser = false;
+            if(userType==DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                // check to ensure that merchant is request CB for itself only
+                if (!customer.getPrivate_id().equals(internalId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid customer id provided: " + internalId);
+                }
+            } else if(userType==DbConstants.USER_TYPE_CC) {
+                // use provided merchant values
+                byCCUser = true;
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // not checking for merchant account status
+
+            // fetch merchant ops
+            String whereClause = "privateId = '"+internalId+"'";
+            if(!byCCUser) {
+                // return only 'completed' ops to merchant
+                whereClause = whereClause+" AND op_status = '"+DbConstantsBackend.USER_OP_STATUS_COMPLETE +"'";
+            }
+            mLogger.debug("where clause: "+whereClause);
+
+            List<CustomerOps> ops = BackendOps.fetchCustomerOps(whereClause);
+            if(ops==null) {
+                // not exactly a positive exception - but using it to avoid logging of this as error
+                // as it can happen frequently as valid scenario
+                positiveException = true;
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
+            }
+
+            if(!byCCUser) {
+                // remove sensitive fields - from in-memory objects
+                for (CustomerOps op: ops) {
+                    op.setTicketNum("");
+                    op.setReason("");
+                    //op.setOtp("");
+                    op.setOp_status("");
+                    op.setRemarks("");
+                }
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return ops;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

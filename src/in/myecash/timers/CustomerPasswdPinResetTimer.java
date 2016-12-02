@@ -6,7 +6,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.*;
-import in.myecash.database.CustomerOps;
+import in.myecash.common.database.CustomerOps;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;

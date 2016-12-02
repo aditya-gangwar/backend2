@@ -6,7 +6,7 @@ import com.backendless.servercode.IBackendlessService;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.database.AllOtp;
-import in.myecash.database.CustomerOps;
+import in.myecash.common.database.CustomerOps;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
