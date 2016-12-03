@@ -69,8 +69,7 @@ public class TxnTableEventHelper {
             }
 
             // Fetch mMerchant
-            mMerchant = (Merchants) BackendUtils.fetchCurrentUser(context.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            mMerchant = (Merchants) BackendUtils.fetchUser(context.getUserId(),DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mMerchantId = mMerchant.getAuto_id();
             mLogger.setProperties(mMerchantId,DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
 
@@ -187,8 +186,7 @@ public class TxnTableEventHelper {
             mLogger.debug("In cancelTxn");
 
             // Fetch mMerchant
-            mMerchant = (Merchants) BackendUtils.fetchCurrentUser(ctxtUserId,
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            mMerchant = (Merchants) BackendUtils.fetchUser(ctxtUserId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mMerchantId = mMerchant.getAuto_id();
             mLogger.setProperties(mMerchantId,DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
 

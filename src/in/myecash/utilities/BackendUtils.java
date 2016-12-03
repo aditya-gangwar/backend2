@@ -2,7 +2,9 @@ package in.myecash.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.servercode.InvocationContext;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
@@ -43,7 +45,7 @@ public class BackendUtils {
         // 8 digit merchant id format:
         // <1-3 digit country code> + <0-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
         int serialNo = (int) (regCounter % BackendConstants.MERCHANT_ID_MAX_SNO_PER_BATCH);
-        return countryCode+batch.getRangeBatchId()+String.format("%03d",serialNo);
+        return countryCode + batch.getRangeBatchId() + String.format("%03d", serialNo);
     }
 
     public static String generateCustomerPIN() {
@@ -71,7 +73,7 @@ public class BackendUtils {
         // Txn Id : <7 chars for curr time in secs as Base35> + <6 char for merchant id as Base26> = total 13 chars
         long timeSecs = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         long mchntIdLong = Long.parseUnsignedLong(merchantId);
-        return Base35.fromBase10(timeSecs,7) + Base25.fromBase10(mchntIdLong, 6);
+        return Base35.fromBase10(timeSecs, 7) + Base25.fromBase10(mchntIdLong, 6);
     }
 
     public static String generateLogId() {
@@ -91,9 +93,25 @@ public class BackendUtils {
      * Checks for fetched user admin status
      * Set appropriate EDR values
      */
-    public static Object fetchCurrentUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+    public static BackendlessUser fetchCurrentBLUser(Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
+        fetchUser(user, allowedUserType, edr, logger, allChild);
+        return user;
+    }
 
+    public static Object fetchCurrentUser(Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+        HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+        BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
+        return fetchUser(user, allowedUserType, edr, logger, allChild);
+    }
+
+    public static Object fetchUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
         BackendlessUser user = BackendOps.fetchUserByObjectId(objectId, allChild);
+        return fetchUser(user, allowedUserType, edr, logger, allChild);
+    }
+
+    private static Object fetchUser(BackendlessUser user, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
         edr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
         int userType = (Integer)user.getProperty("user_type");
 
@@ -534,6 +552,7 @@ public class BackendUtils {
 
             if (validException) {
                 edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+                logger.debug(stackTraceStr(e));
             } else {
                 edr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
                 logger.error("Exception in " + edr[BackendConstants.EDR_API_NAME_IDX] + ": " + e.toString());
@@ -557,7 +576,7 @@ public class BackendUtils {
             long execTime = endTime - startTime;
             edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
             edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
-            logger.debug(edr[BackendConstants.EDR_USER_TYPE_IDX]);
+            //logger.debug(edr[BackendConstants.EDR_USER_TYPE_IDX]);
             logger.edr(edr);
             //logger.flush();
         } catch(Exception e) {

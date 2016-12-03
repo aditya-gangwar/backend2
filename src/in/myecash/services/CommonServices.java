@@ -162,7 +162,7 @@ public class CommonServices implements IBackendlessService {
 
             // Send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(), null, mEdr, mLogger, true);
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Merchants merchant = null;
@@ -206,7 +206,7 @@ public class CommonServices implements IBackendlessService {
 
             // Send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(), null, mEdr, mLogger, true);
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Customers customer = null;

@@ -21,7 +21,7 @@ import java.util.ArrayList;
  * the special annotation - BackendlessTimer. The annotation contains a JSON
  * object which describes all properties of the timer.
  */
-@BackendlessTimer("{'startDate':1479923220000,'frequency':{'schedule':'custom','repeat':{'every':60}},'timername':'FailedSms'}")
+@BackendlessTimer("{'startDate':1479923220000,'frequency':{'schedule':'custom','repeat':{'every':120}},'timername':'FailedSms'}")
 public class FailedSmsTimer extends com.backendless.servercode.extension.TimerExtender
 {
 
@@ -38,8 +38,8 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
 
         try {
-            mLogger.debug("In FailedSmsTimer execute");
-            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("In FailedSmsTimer execute");
+            //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all failed SMS
             ArrayList<FailedSms> smses = BackendOps.findRecentFailedSms();

@@ -49,7 +49,7 @@ public class InternalUserServices implements IBackendlessService {
             //mLogger.flush();
 
             // Fetch agent
-            InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
 
             // Fetch city
@@ -106,7 +106,7 @@ public class InternalUserServices implements IBackendlessService {
             user.setProperty("merchant", merchant);
 
             user = BackendOps.registerUser(user);
-            // register successfull - can write to edr now
+            // register successful - can write to edr now
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
             try {
@@ -127,15 +127,15 @@ public class InternalUserServices implements IBackendlessService {
                 // saving dummy files to create parent directories
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
                 // Give this merchant permissions for this directory
-                FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
-                FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
-                FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
                 mLogger.debug("Saved dummy txn csv file: " + filePath);
 
                 fileDir = CommonUtils.getTxnImgDir(merchantId);
                 filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
-                // Give read access to this merchant to this directory
+                // Give write access to this merchant to this directory
                 FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
                 mLogger.debug("Saved dummy txn image file: " + filePath);
 
@@ -175,7 +175,7 @@ public class InternalUserServices implements IBackendlessService {
 
         try {
             // Fetch customer care user
-            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -254,7 +254,7 @@ public class InternalUserServices implements IBackendlessService {
 
         try {
             // Fetch customer care user
-            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 

@@ -43,7 +43,7 @@ public class CustomerServices implements IBackendlessService {
 
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Object userObj = BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -136,7 +136,7 @@ public class CustomerServices implements IBackendlessService {
 
             // Fetch customer - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Object userObj = BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -208,7 +208,7 @@ public class CustomerServices implements IBackendlessService {
 
             // send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Object userObj = BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -289,7 +289,7 @@ public class CustomerServices implements IBackendlessService {
             mLogger.debug("In changeMobile: " + verifyParam + "," + newMobile);
 
             // Fetch merchant with all child - as the same instance is to be returned too
-            Customers customer = (Customers) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Customers customer = (Customers) CommonUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_CUSTOMER, mEdr, mLogger, true);
             String oldMobile = customer.getMobile_num();
 
@@ -383,7 +383,7 @@ public class CustomerServices implements IBackendlessService {
 
         try {
             // Fetch customer
-            Customers customer = (Customers) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Customers customer = (Customers) CommonUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_CUSTOMER, mEdr, mLogger, false);
             String mobileNum = customer.getMobile_num();
 

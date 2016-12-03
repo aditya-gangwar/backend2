@@ -108,6 +108,9 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             // check admin status
             BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
 
+            // TODO: Open Minor Issue: Check for successful login after password reset request
+            // If yes, it should ignore this request
+
             // generate password
             String passwd = BackendUtils.generateTempPassword();
 

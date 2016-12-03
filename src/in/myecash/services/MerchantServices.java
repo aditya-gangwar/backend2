@@ -2,6 +2,7 @@ package in.myecash.services;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.FilePermission;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
@@ -53,7 +54,7 @@ public class MerchantServices implements IBackendlessService {
             mLogger.debug("In changeMobile: " + verifyparam + "," + newMobile);
 
             // Fetch merchant with all child - as the same instance is to be returned too
-            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
             String oldMobile = merchant.getMobile_num();
 
@@ -153,7 +154,7 @@ public class MerchantServices implements IBackendlessService {
             mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch merchant with all child - as the same instance is to be returned too
-            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
 
             // check merchant status
@@ -184,7 +185,7 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public Merchants deleteTrustedDevice(String deviceId) {
+    public void deleteTrustedDevice(String deviceId) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -195,7 +196,7 @@ public class MerchantServices implements IBackendlessService {
             mLogger.debug("In changeMobile: " + deviceId);
 
             // Fetch merchant with all child - as the same instance is to be returned too
-            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, true);
 
             List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
@@ -222,7 +223,7 @@ public class MerchantServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            return merchant;
+            //return merchant;
 
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
@@ -247,11 +248,9 @@ public class MerchantServices implements IBackendlessService {
                     merchantCbTable+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                     customerId;
 
-            //mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    null, mEdr, mLogger, false);
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Merchants merchant = null;
@@ -268,10 +267,12 @@ public class MerchantServices implements IBackendlessService {
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // use provided merchant values
                 byCCUser = true;
+
             } else {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
+            mLogger.setProperties(InvocationContext.getUserId(), userType, debugLogs);
 
             int customerIdType = BackendUtils.getCustomerIdType(customerId);
             mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
@@ -338,18 +339,16 @@ public class MerchantServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMerchantStats";
 
         try {
-            //mLogger.debug("In getMerchantStats");
-
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    null, mEdr, mLogger, false);
+            BackendlessUser user = BackendUtils.fetchCurrentBLUser(null, mEdr, mLogger, false);
+            //Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             boolean callByCC = false;
             Merchants merchant = null;
             if(userType==DbConstants.USER_TYPE_MERCHANT) {
-                merchant = (Merchants) userObj;
+                merchant = (Merchants) user.getProperty("merchant");;
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // fetch merchant
                 merchant = BackendOps.getMerchant(mchntId, false, false);
@@ -449,7 +448,7 @@ public class MerchantServices implements IBackendlessService {
                     }
 
                     // upload data as CSV file
-                    createCsvFile(sb.toString(), merchantId);
+                    createCsvFile(sb.toString(), merchantId, user.getObjectId());
                 }
 
                 // save stats object - don't bother about return status
@@ -491,7 +490,7 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Object userObj = BackendUtils.fetchCurrentUser(
                     null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -563,7 +562,7 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.debug("In archiveTxns");
 
             // Fetch merchant
-            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             // not checking for merchant account status
 
@@ -609,8 +608,7 @@ public class MerchantServices implements IBackendlessService {
 
         try {
             // Fetch merchant
-            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(InvocationContext.getUserId(),
-                    DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerMobile;
 
             // fetch customer card object
@@ -670,6 +668,8 @@ public class MerchantServices implements IBackendlessService {
                 // This helps to avoid direct update from app by the merchant who created this customer object
                 customerUser.setProperty("customer", customer);
 
+                mLogger.debug("Context: "+InvocationContext.asString());
+                mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
                 customerUser = BackendOps.registerUser(customerUser);
                 try {
                     customer = (Customers) customerUser.getProperty("customer");
@@ -730,7 +730,7 @@ public class MerchantServices implements IBackendlessService {
 
         try {
             // Fetch merchant
-            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(
                     DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
 
             // Fetch customer user
@@ -1018,11 +1018,17 @@ public class MerchantServices implements IBackendlessService {
         }
     }*/
 
-    private void createCsvFile(String data, String merchantId) {
+    private void createCsvFile(String data, String merchantId, String userObjId) {
         try {
-            String fileUrl = Backendless.Files.saveFile(CommonUtils.getMerchantCustFilePath(merchantId),
-                    data.getBytes("UTF-8"), true);
+            String filePath = CommonUtils.getMerchantCustFilePath(merchantId);
+            String fileUrl = Backendless.Files.saveFile(filePath,data.getBytes("UTF-8"), true);
             mLogger.debug("Customer data CSV file uploaded: " + fileUrl);
+
+            // Give read access to this merchant to this file
+            // no other merchant can read it
+            FilePermission.READ.grantForUser( userObjId, filePath);
+            mLogger.debug("Gave read access to: " + filePath);
+
         } catch (UnsupportedEncodingException e) {
             mLogger.error("Customer data CSV file upload failed: "+ e.toString());
             // For multiple days, single failure will be considered failure for all days
@@ -1105,7 +1111,7 @@ public class MerchantServices implements IBackendlessService {
 
         try {
             // Fetch merchant
-            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(InvocationContext.getUserId(),
+            Merchants merchant = (Merchants) CommonUtils.fetchCurrentUser(
                     true, DbConstants.USER_TYPE_MERCHANT, mEdr);
 
             // Fetch customer
