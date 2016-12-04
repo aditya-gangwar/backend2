@@ -36,6 +36,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
         txnEventHelper.handleAfterCreate(context, transaction, result);
     }
 
+    /*
     @Override
     public void beforeUpdate( RunnerContext context, Transaction transaction ) throws Exception
     {
@@ -50,7 +51,7 @@ public class Transaction0TableEventHandler extends com.backendless.servercode.ex
                 transaction.getTrans_id();
         BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
-    }
+    }*/
     /*
     @Override
     public void beforeLast( RunnerContext context ) throws Exception

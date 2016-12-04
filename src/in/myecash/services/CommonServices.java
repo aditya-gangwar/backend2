@@ -116,7 +116,7 @@ public class CommonServices implements IBackendlessService {
 
                     } else {
                         BackendOps.loadInternalUser(user);
-                        InternalUser agent = (InternalUser)user.getProperty("agent");
+                        InternalUser agent = (InternalUser)user.getProperty("internalUser");
                         mLogger.setProperties(agent.getId(), DbConstants.USER_TYPE_AGENT, agent.getDebugLogs());
                         mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = agent.getId();
                         mobileNum = agent.getMobile_num();
@@ -243,6 +243,46 @@ public class CommonServices implements IBackendlessService {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
     }
+
+    /*public Customers getInternalUser(String userId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getInternalUser";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
+
+        boolean validException = false;
+        try {
+            mLogger.debug("In getInternalUser");
+
+            // Send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            InternalUser internalUser = null;
+            if (userType == DbConstants.USER_TYPE_CC || userType==DbConstants.USER_TYPE_AGENT || userType==DbConstants.USER_TYPE_CNT) {
+                internalUser = (Customers) userObj;
+                if (!internalUser.getMobile_num().equals(userId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
+                            "Invalid customer id provided: " + userId);
+                }
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return internalUser;
+        } catch (Exception e) {
+            BackendUtils.handleException(e, validException, mLogger, mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime, mLogger, mEdr);
+        }
+    }*/
 
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
@@ -413,7 +453,7 @@ public class CommonServices implements IBackendlessService {
                 // Verify OTP - only for second run scenarios
                 if( !opCode.equals(DbConstants.OP_CHANGE_PIN) &&
                         (opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
-                    if(!BackendOps.validateOtp(mobileNum, opCode, otp)) {
+                    if(!BackendOps.validateOtp(mobileNum, opCode, otp, mEdr, mLogger)) {
                         validException = true;
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
                     }

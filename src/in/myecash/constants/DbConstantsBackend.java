@@ -86,4 +86,7 @@ public class DbConstantsBackend {
     public static final String FAILED_SMS_STATUS_PENDING = "pending";
     public static final String FAILED_SMS_STATUS_SENT = "sent";
 
+    // Backendless Role names
+    public static final String ROLE_MERCHANT = "Merchant";
+
 }

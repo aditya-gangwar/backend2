@@ -103,7 +103,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
             // Second call - verify OTP only
 
-            if(!BackendOps.validateOtp(userId, DbConstants.OP_ENABLE_ACC, rcvdOtp)) {
+            if(!BackendOps.validateOtp(userId, DbConstants.OP_ENABLE_ACC, rcvdOtp, mEdr, mLogger)) {
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
             }
@@ -237,6 +237,13 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
                 BackendOps.saveCustomerOp(op);
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
+
+                // Send SMS to inform
+                String smsText = String.format(SmsConstants.SMS_PASSWD_RESET_SCHEDULED,
+                        CommonUtils.getPartialVisibleStr(op.getMobile_num()),
+                        MyGlobalSettings.getCustPasswdResetMins());
+                // ignore error
+                SmsHelper.sendSMS(smsText, op.getMobile_num(), mEdr, mLogger, true);
 
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");

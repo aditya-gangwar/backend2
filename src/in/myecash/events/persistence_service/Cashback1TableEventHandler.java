@@ -15,7 +15,7 @@ import in.myecash.utilities.MyLogger;
  * The methods in the class correspond to the events selected in Backendless
  * Console.
  */
-
+/*
 @Asset( "Cashback1" )
 public class Cashback1TableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Cashback>
 {
@@ -32,4 +32,4 @@ public class Cashback1TableEventHandler extends com.backendless.servercode.exten
         BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
-}
+}*/

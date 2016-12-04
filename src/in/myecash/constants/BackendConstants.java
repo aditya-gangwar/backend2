@@ -11,7 +11,7 @@ public class BackendConstants {
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = true;
-    public static final boolean TESTING_SKIP_SMS = false;
+    public static final boolean TESTING_SKIP_SMS = true;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean FORCED_DEBUG_LOGS = true;
 

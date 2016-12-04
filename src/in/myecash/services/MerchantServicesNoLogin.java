@@ -3,6 +3,9 @@ package in.myecash.services;
 import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
+import in.myecash.common.CommonUtils;
+import in.myecash.common.MyGlobalSettings;
+import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
@@ -159,6 +162,13 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
 
+                // Send SMS to inform
+                String smsText = String.format(SmsConstants.SMS_PASSWD_RESET_SCHEDULED,
+                        CommonUtils.getPartialVisibleStr(op.getMerchant_id()),
+                        MyGlobalSettings.getMchntPasswdResetMins());
+                // ignore error
+                SmsHelper.sendSMS(smsText, op.getMobile_num(), mEdr, mLogger, true);
+
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
             }
@@ -245,6 +255,6 @@ public class MerchantServicesNoLogin implements IBackendlessService {
         if( !SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, false) ){
             throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "");
         }
-        mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
+        //mLogger.debug("Sent first password reset SMS: "+merchant.getAuto_id());
     }
 }

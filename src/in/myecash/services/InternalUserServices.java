@@ -49,8 +49,7 @@ public class InternalUserServices implements IBackendlessService {
             //mLogger.flush();
 
             // Fetch agent
-            InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(
-                    DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
+            InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
 
             // Fetch city
             Cities city = BackendOps.fetchCity(merchant.getAddress().getCity());
@@ -77,6 +76,7 @@ public class InternalUserServices implements IBackendlessService {
             String newName = BackendUtils.getMchntDpFilename(merchantId);
             BackendOps.renameFile(currFilePath, newName);
             merchant.setDisplayImage(newName);
+            mLogger.debug("File rename done");
 
             // set or update other fields
             merchant.setAuto_id(merchantId);
@@ -106,6 +106,7 @@ public class InternalUserServices implements IBackendlessService {
             user.setProperty("merchant", merchant);
 
             user = BackendOps.registerUser(user);
+            mLogger.debug("Register success");
             // register successful - can write to edr now
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
@@ -127,7 +128,8 @@ public class InternalUserServices implements IBackendlessService {
                 // saving dummy files to create parent directories
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
                 // Give this merchant permissions for this directory
-                //FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.READ.denyForRole( DbConstantsBackend.ROLE_MERCHANT, fileDir);
+                FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
                 //FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
                 //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
                 mLogger.debug("Saved dummy txn csv file: " + filePath);

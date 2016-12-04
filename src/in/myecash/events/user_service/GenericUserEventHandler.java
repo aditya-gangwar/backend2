@@ -127,7 +127,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                         } else {
                             // OTP available - validate the same
-                            if(!BackendOps.validateOtp(userId, DbConstants.OP_LOGIN, rcvdOtp)) {
+                            if(!BackendOps.validateOtp(userId, DbConstants.OP_LOGIN, rcvdOtp, mEdr, mLogger)) {
+                                mLogger.error("Wrong OTP value: "+rcvdOtp);
                                 validException = true;
                                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
                             }

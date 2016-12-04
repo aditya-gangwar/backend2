@@ -80,7 +80,7 @@ public class MerchantServices implements IBackendlessService {
 
             } else {
                 // Second run, as OTP available
-                if(!BackendOps.validateOtp(merchant.getAuto_id(), DbConstants.OP_CHANGE_MOBILE, otp)) {
+                if(!BackendOps.validateOtp(merchant.getAuto_id(), DbConstants.OP_CHANGE_MOBILE, otp, mEdr, mLogger)) {
                     validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
                 }
@@ -636,7 +636,7 @@ public class MerchantServices implements IBackendlessService {
             } else {
                 // Second run, as OTP available
                 // Verify OTP
-                if(!BackendOps.validateOtp(customerMobile, DbConstants.OP_REG_CUSTOMER, otp)) {
+                if(!BackendOps.validateOtp(customerMobile, DbConstants.OP_REG_CUSTOMER, otp, mEdr, mLogger)) {
                     validException = true;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
                 }

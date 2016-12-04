@@ -6,7 +6,7 @@ package in.myecash.messaging;
 public class SmsConstants {
 
     public static String SMSGW_URL_ENCODING = "UTF-8";
-    public static String SMSGW_SENDER_ID = "MYCASH";
+    public static String SMSGW_SENDER_ID = "MyCash";
     public static String COUNTRY_CODE = "91";
 
     public static String SMSGW_TXTGURU_BASE_URL = "https://www.txtguru.in/imobile/api.php?";
@@ -43,21 +43,22 @@ public class SmsConstants {
     public static String SMS_ACCOUNT_LOCKED_VERIFY_FAILED = "Your MyeCash account '%s' is locked due to multiple wrong verifications. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_DISABLE = "Your MyeCash account number '%s' is Disabled now. You can call us for further help.";
     public static String SMS_ACCOUNT_ENABLE = "Your MyeCash account number '%s' is Enabled now. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    //public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
-    //public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
+    //public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyeCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
+    //public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyeCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";
 
     // MyeCash transaction SMS
-    public static String SMS_TXN_DEBIT_CL_CB = "Mycash: %s debited Rs %d from your Account and Rs %d from Cashback on %s. Balance- Account:Rs %d, Cashback:Rs %d.";
-    public static String SMS_TXN_CREDIT_CL_DEBIT_CB = "Mycash: %s added Rs %d to your Account and redeemed Rs %d from Cashback on %s. Balance- Account:Rs %d, Cashback:Rs %d.";
+    public static String SMS_TXN_DEBIT_CL_CB = "MyeCash: %s debited Rs %d from your Account and Rs %d from Cashback on %s. Balance- Account:Rs %d, Cashback:Rs %d.";
+    public static String SMS_TXN_CREDIT_CL_DEBIT_CB = "MyeCash: %s added Rs %d to your Account and redeemed Rs %d from Cashback on %s. Balance- Account:Rs %d, Cashback:Rs %d.";
 
-    public static String SMS_TXN_CREDIT_CL = "Mycash: %s added Rs %d to your Account on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
-    public static String SMS_TXN_DEBIT_CL = "Mycash: %s debited Rs %d from your Account on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
-    public static String SMS_TXN_DEBIT_CB = "Mycash: %s redeemed Rs %d from your Cashback on %s. Balance: Account:Rs %d, Cashback:Rs %d";
+    public static String SMS_TXN_CREDIT_CL = "MyeCash: %s added Rs %d to your Account on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
+    public static String SMS_TXN_DEBIT_CL = "MyeCash: %s debited Rs %d from your Account on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
+    public static String SMS_TXN_DEBIT_CB = "MyeCash: %s redeemed Rs %d from your Cashback on %s. Balance: Account:Rs %d, Cashback:Rs %d";
 
-    public static String SMS_TXN_CANCEL = "Mycash: %s cancelled transaction with ID %s. Balance: Account:Rs %d, Cashback:Rs %d";
+    public static String SMS_TXN_CANCEL = "MyeCash: %s cancelled transaction with ID %s. Balance: Account:Rs %d, Cashback:Rs %d";
 
     // Password/PIN messages
-    public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyCash family !! Your User ID is %s, and your password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
+    public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyeCash family !! Your User ID is '%s'. Your Password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
+    public static String SMS_PASSWD_RESET_SCHEDULED = "Password reset request for MyeCash account '%s' is accepted. New password will be sent on registered mobile number within %s minutes.";
     public static String SMS_PASSWD = "MyeCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PASSWD_CHANGED = "MyeCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
@@ -73,10 +74,10 @@ public class SmsConstants {
     public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // Registration / User ID messages
-    public static String SMS_MERCHANT_ID = "Your MyCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_MERCHANT_ID = "Your MyeCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family. Your Merchant ID for login is %s. Happy Customers to you.";
     public static String SMS_CUSTOMER_REGISTER = "Welcome to MyeCash family. Your registered name is '%s'. Your Mobile number '$s' is customer ID. To manage your account, download MyeCash Customer App from Android store.";
-    public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
+    public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyeCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
     public static String SMS_MOBILE_CHANGE = "Registered Mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
