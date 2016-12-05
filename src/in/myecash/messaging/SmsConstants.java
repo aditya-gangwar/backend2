@@ -6,7 +6,7 @@ package in.myecash.messaging;
 public class SmsConstants {
 
     public static String SMSGW_URL_ENCODING = "UTF-8";
-    public static String SMSGW_SENDER_ID = "MyCash";
+    public static String SMSGW_SENDER_ID = "MYCASH";
     public static String COUNTRY_CODE = "91";
 
     public static String SMSGW_TXTGURU_BASE_URL = "https://www.txtguru.in/imobile/api.php?";
@@ -59,8 +59,8 @@ public class SmsConstants {
     // Password/PIN messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyeCash family !! Your User ID is '%s'. Your Password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD_RESET_SCHEDULED = "Password reset request for MyeCash account '%s' is accepted. New password will be sent on registered mobile number within %s minutes.";
-    public static String SMS_PASSWD = "MyeCash new password for user %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_PASSWD_CHANGED = "MyeCash password changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
+    public static String SMS_PASSWD = "Dear User - New password for your MyeCash account %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_PASSWD_CHANGED = "Dear User - Password changed successfully for your MyeCash account %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // OTP messages
     //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
@@ -70,13 +70,13 @@ public class SmsConstants {
     public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
 
-    public static String SMS_PIN = "MyeCash transaction PIN for user %s is '%s'. KEEP YOUR PIN SECRET AND NEVER SHARE WITH ANYONE";
+    public static String SMS_PIN = "Dear User - MyeCash PIN for your account '%s' is '%s'. ALWAYS KEEP YOUR PIN SECRET. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
     public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyeCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family. Your Merchant ID for login is %s. Happy Customers to you.";
-    public static String SMS_CUSTOMER_REGISTER = "Welcome to MyeCash family. Your registered name is '%s'. Your Mobile number '$s' is customer ID. To manage your account, download MyeCash Customer App from Android store.";
+    public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. Your registered Mobile number (%s) is also your customer ID. To manage your account, download MyeCash Customer App from Android store.";
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyeCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages

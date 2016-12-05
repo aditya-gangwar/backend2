@@ -173,8 +173,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         // Thus, no two consecutive runs will pick same records and thus never clash.
 
         long now = new Date().getTime();
-        long startTime = now - MyGlobalSettings.getCustPasswdResetMins();
-        long endTime = startTime + MyGlobalSettings.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;
+        long endTime = now - (MyGlobalSettings.getCustPasswdResetMins()*CommonConstants.MILLISECS_IN_MINUTE);
+        long startTime = endTime - (MyGlobalSettings.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
 
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);

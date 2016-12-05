@@ -29,7 +29,7 @@ import java.util.Date;
  * Timer duration should be 1/6th of the configured merchant passwd reset cool off mins value
  * So, if cool off mins is 60, then timer should run every 10 mins
  */
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':600}},'timername':'MerchantPasswdReset'}")
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':300}},'timername':'MerchantPasswdReset'}")
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.MerchantPasswdResetTimer");
@@ -156,19 +156,19 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         // Records between last (cool off mins - timer duration) to (cool off mins)
         // So, if 'cool off mins = 60' and thus timer duration being 1/6th of it is 10 mins
         // and say if timer runs at 2:00 PM, then this run should process all requests
-        // created between (2:00 PM - 60) to (2:00 PM - (60+10))
-        // i.e. between 1:00 PM - 1:10 PM
-        // accordingly, next timer run at 2:10 shall pick records created between 1:10 PM and 1:20 PM
+        // created between (2:00 PM - (60+10)) to (2:00 PM - 60)
+        // i.e. between 12:50 PM - 1:00 PM
+        // accordingly, next timer run at 2:10 shall pick records created between 1:00 PM and 1:10 PM
         // Thus, no two consecutive runs will pick same records and thus never clash.
 
         long now = new Date().getTime();
-        long startTime = now - MyGlobalSettings.getMchntPasswdResetMins();
-        long endTime = startTime + MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
+        long endTime = now - (MyGlobalSettings.getMchntPasswdResetMins()*CommonConstants.MILLISECS_IN_MINUTE);
+        long startTime = endTime - (MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
 
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);
 
-        mLogger.debug("whereClasue: "+whereClause.toString());
+        mLogger.debug("whereClause: "+whereClause.toString());
         return whereClause.toString();
     }
 

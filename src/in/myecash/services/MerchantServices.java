@@ -692,7 +692,8 @@ public class MerchantServices implements IBackendlessService {
                 }
 
                 // Send welcome sms to the customer
-                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, customerMobile);
+                String name = customer.getFirstName()+" "+customer.getLastName();
+                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, name, customerMobile);
                 SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
 
                 // Send SMS containing PIN
