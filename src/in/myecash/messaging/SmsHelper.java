@@ -125,20 +125,20 @@ public class SmsHelper {
     public static String buildOtpSMS(String userId, String otp, String opCode) {
         switch(opCode) {
             case DbConstants.OP_REG_CUSTOMER:
-                return String.format(SmsConstants.SMS_REG_CUST_OTP, otp, MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_REG_CUST_OTP, otp, MyGlobalSettings.getOtpValidMins());
 
             case DbConstants.OP_LOGIN:
                 // OTP to add trusted device
-                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
 
             case DbConstants.OP_CHANGE_MOBILE:
-                return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp, MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp, MyGlobalSettings.getOtpValidMins());
 
             case DbConstants.OP_NEW_CARD:
-                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
 
             case DbConstants.OP_RESET_PIN:
-                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.OTP_VALID_MINS);
+                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
 
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Invalid OTP request: "+opCode);

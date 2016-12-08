@@ -56,9 +56,9 @@ public class AdminServices implements IBackendlessService {
     public void mchntEnableAccount(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
         execMchntManualOp(DbConstants.OP_ENABLE_ACC, merchantId, ticketNum, reason, remarks, "", adminPwd);
     }
-    public void mchntResetTrustedDevices(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
+    /*public void mchntResetTrustedDevices(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
         execMchntManualOp(DbConstants.OP_RESET_TRUSTED_DEVICES, merchantId, ticketNum, reason, remarks, "", adminPwd);
-    }
+    }*/
     public void mchntChangeMobileNum(String newMobile, String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
         execMchntManualOp(DbConstants.OP_CHANGE_MOBILE, merchantId, ticketNum, reason, remarks, newMobile, adminPwd);
     }
@@ -143,10 +143,10 @@ public class AdminServices implements IBackendlessService {
                         smsExtraParam = oldMobile;
                         break;
 
-                    case DbConstants.OP_RESET_TRUSTED_DEVICES:
+                    /*case DbConstants.OP_RESET_TRUSTED_DEVICES:
                         merchant.setTrusted_devices(null);
                         newStatus = DbConstants.USER_STATUS_ACTIVE;
-                        break;
+                        break;*/
 
                     case DbConstants.OP_ACC_CLOSURE:
                         // merchant should be in active state
@@ -236,10 +236,10 @@ public class AdminServices implements IBackendlessService {
                 status = SmsHelper.sendSMS(smsText, extraParam + "," + merchant.getMobile_num(), mEdr, mLogger, true);
                 break;
 
-            case DbConstants.OP_RESET_TRUSTED_DEVICES:
+            /*case DbConstants.OP_RESET_TRUSTED_DEVICES:
                 smsText = SmsConstants.SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES;
                 status = SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
-                break;
+                break;*/
 
             case DbConstants.OP_ACC_CLOSURE:
                 DateUtil now = new DateUtil(BackendConstants.TIMEZONE);

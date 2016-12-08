@@ -411,7 +411,7 @@ public class BackendOps {
         //Date otpTime = otp.getUpdated()==null?otp.getCreated():otp.getUpdated();
         Date currTime = new Date();
 
-        if ( ((currTime.getTime() - otp.getCreated().getTime()) < (MyGlobalSettings.OTP_VALID_MINS*60*1000)) &&
+        if ( ((currTime.getTime() - otp.getCreated().getTime()) < (MyGlobalSettings.getOtpValidMins()*60*1000)) &&
                 rcvdOtp.equals(otp.getOtp_value()) ) {
             // active otp available and matched
             // delete as can be used only once

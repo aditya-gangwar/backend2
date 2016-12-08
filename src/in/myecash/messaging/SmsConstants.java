@@ -26,7 +26,7 @@ public class SmsConstants {
     // SMS against Manual Requests by Merchant
     public static String SMS_ADMIN_MCHNT_SEND_PSWD_RESET_HINT = "Dear MyeCash Merchant - As per request, your password reset hint is '%s'. You can use the same to generate new password. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_MOBILE_CHANGE = "Dear MyeCash Merchant - As per request, registered mobile number of your account '%s' is changed successfully to '%s'. Don't forget to remove any Lost Mobile device from your Trusted Device List. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES = "Dear MyeCash Merchant - As per request, all devices are removed from your 'Trusted Device List'. You can now try login from new device. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    //public static String SMS_ADMIN_MCHNT_RESET_TRUSTED_DEVICES = "Dear MyeCash Merchant - As per request, all devices are removed from your 'Trusted Device List'. You can now try login from new device. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have put your account '%s' under %s days of Account Closure Notice period. No 'Credit' transactions are allowed now. Your account will be automatically removed on %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_CANCEL_ACC_CLOSURE = "Dear MyeCash Merchant - As per request, we have cancelled your earlier Account closure request. You can do 'Credit' transactions also now. Thanks. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_ADMIN_MCHNT_ACC_ENABLE = "Dear MyeCash Merchant - As per request, we have enabled your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
@@ -65,7 +65,7 @@ public class SmsConstants {
     // OTP messages
     //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
     public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device. PLS CALL US IF NOT REQUESTED BY YOU.";
-    public static String SMS_LOGIN_OTP = "Login attempt detected from New Device. Use OTP %s to add it as 'Trusted Device' for account %s. PLS CALL US IF NOT REQUESTED BY YOU.";
+    public static String SMS_LOGIN_OTP = "Login attempt detected from Unknown Device. Use OTP '%s' to add it as 'Trusted Device' for your account '%s'. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
