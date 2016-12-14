@@ -233,9 +233,6 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    // Taking 'merchantId' and 'merchantCbTable' values from caller is a bit of security risk
-    // as it will allow any logged-in merchant - to read (not update) cb details of other merchants too
-    // but ignoring this for now - to keep this API as fast as possible - as this will be most called API
     public Cashback getCashback(String merchantId, String merchantCbTable, String customerId, boolean debugLogs) {
 
         BackendUtils.initAll();
@@ -614,12 +611,7 @@ public class MerchantServices implements IBackendlessService {
             // fetch customer card object
             card = BackendOps.getCustomerCard(cardId);
             mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = card.getCard_id();
-            BackendUtils.checkCardForAllocation(card);
-            // TODO: enable in production
-            /*
-            if(!card.getMerchant_id().equals(merchantId)) {
-                CommonUtils.throwException(mLogger,BackendResponseCodes.BE_ERROR_CARD_WRONG_MERCHANT, "");
-            }*/
+            BackendUtils.checkCardForAllocation(card, merchant.getAuto_id(), mEdr, mLogger);
 
             if (otp == null || otp.isEmpty()) {
                 // Generate OTP and send SMS
@@ -653,8 +645,9 @@ public class MerchantServices implements IBackendlessService {
                 //customer.setName(name);
                 customer.setCardId(cardId);
                 // set membership card
-                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED);
+                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
                 card.setStatus_update_time(new Date());
+                card.setCustId(customer.getPrivate_id());
                 customer.setMembership_card(card);
 
                 // Create customer user
@@ -668,8 +661,8 @@ public class MerchantServices implements IBackendlessService {
                 // This helps to avoid direct update from app by the merchant who created this customer object
                 customerUser.setProperty("customer", customer);
 
-                mLogger.debug("Context: "+InvocationContext.asString());
-                mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
+                //mLogger.debug("Context: "+InvocationContext.asString());
+                //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
                 customerUser = BackendOps.registerUser(customerUser);
                 try {
                     customer = (Customers) customerUser.getProperty("customer");
@@ -946,7 +939,7 @@ public class MerchantServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = oldCard.getCard_id();
 
         // update 'customer' and 'CustomerCard' objects for new card
-        newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED);
+        newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
         newCard.setStatus_update_time(new Date());
         customer.setCardId(newCard.getCard_id());
         customer.setMembership_card(newCard);
@@ -956,7 +949,7 @@ public class MerchantServices implements IBackendlessService {
 
         // update old card status
         try {
-            oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_REMOVED);
+            oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_DISABLED);
             oldCard.setStatus_reason(reason);
             oldCard.setStatus_update_time(new Date());
             BackendOps.saveCustomerCard(oldCard);
@@ -1158,7 +1151,7 @@ public class MerchantServices implements IBackendlessService {
                 mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = oldCard.getCard_id();
 
                 // update 'customer' and 'CustomerCard' objects for new card
-                newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED);
+                newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
                 newCard.setStatus_update_time(new Date());
                 customer.setCardId(newCard.getCard_id());
                 customer.setMembership_card(newCard);
@@ -1168,7 +1161,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // update old card status
                 try {
-                    oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_REMOVED);
+                    oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_DISABLED);
                     oldCard.setStatus_reason(reason);
                     oldCard.setStatus_update_time(new Date());
                     BackendOps.saveCustomerCard(oldCard);

@@ -7,13 +7,16 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import in.myecash.common.CommonUtils;
+import in.myecash.common.MyCardForAction;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
@@ -31,6 +34,171 @@ public class InternalUserServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
+    public List<MyCardForAction> execActionForCards(String codes, String action, String allotToUserId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "execActionForCards";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = action;
+
+        try {
+            // Fetch user
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            // check for allowed roles and their actions
+            switch (userType) {
+                case DbConstants.USER_TYPE_CCNT:
+                    if( !action.equals(CommonConstants.CARDS_UPLOAD_TO_POOL) &&
+                            !action.equals(CommonConstants.CARDS_ALLOT_TO_AGENT) &&
+                            !action.equals(CommonConstants.CARDS_RETURN_BY_AGENT) ) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Action not allowed to this user type");
+                    }
+                    break;
+
+                case DbConstants.USER_TYPE_AGENT:
+                    if( !action.equals(CommonConstants.CARDS_ALLOT_TO_MCHNT) &&
+                            !action.equals(CommonConstants.CARDS_RETURN_BY_MCHNT) ) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Action not allowed to this user type");
+                    }
+                    break;
+
+                case DbConstants.USER_TYPE_CC:
+                case DbConstants.USER_TYPE_CUSTOMER:
+                case DbConstants.USER_TYPE_MERCHANT:
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            List<MyCardForAction> actionResults = new ArrayList<>();
+
+            // Loop on all given codes
+            String[] csvFields = codes.split(CommonConstants.CSV_DELIMETER, -1);
+            for (String code : csvFields) {
+                MyCardForAction cardForAction = new MyCardForAction(code);
+                try {
+                    // find card row against this code
+                    CustomerCards card = BackendOps.getCustomerCard(code);
+                    int curStatus = card.getStatus();
+                    cardForAction.setCardNum(card.getCard_id());
+
+                    // update card row - as per requested action
+                    boolean updateCard = false;
+                    switch (action) {
+                        case CommonConstants.CARDS_UPLOAD_TO_POOL:
+                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT) {
+                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+                                card.setCcntId(internalUser.getId());
+                                updateCard = true;
+                            } else {
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                            }
+                            break;
+
+                        case CommonConstants.CARDS_ALLOT_TO_AGENT:
+                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_NEW) {
+                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                                card.setCcntId(internalUser.getId());
+
+                                // Find agent whom to allot
+                                InternalUser iu = BackendOps.getInternalUser(allotToUserId);
+                                if(BackendUtils.getUserType(iu.getId()) != DbConstants.USER_TYPE_AGENT) {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                } else {
+                                    BackendUtils.checkInternalUserStatus(iu);
+                                    card.setAgentId(iu.getId());
+                                    updateCard = true;
+                                }
+                            } else {
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                            }
+                            break;
+
+                        case CommonConstants.CARDS_ALLOT_TO_MCHNT:
+                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
+                                card.setAgentId(internalUser.getId());
+
+                                // Find merchant whom to allot
+                                Merchants mchnt = BackendOps.getMerchant(allotToUserId,false,false);
+                                if(BackendUtils.getUserType(mchnt.getAuto_id()) != DbConstants.USER_TYPE_MERCHANT) {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                } else {
+                                    BackendUtils.checkMerchantStatus(mchnt, mEdr, mLogger);
+                                    card.setMchntId(mchnt.getAuto_id());
+                                    updateCard = true;
+                                }
+                            } else {
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                            }
+                            break;
+
+                        case CommonConstants.CARDS_RETURN_BY_MCHNT:
+                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
+                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                                card.setAgentId(internalUser.getId());
+                                updateCard = true;
+                            } else {
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                            }
+                            break;
+
+                        case CommonConstants.CARDS_RETURN_BY_AGENT:
+                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+                                card.setCcntId(internalUser.getId());
+                                updateCard = true;
+                            } else {
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                            }
+                            break;
+                    }
+
+                    if(updateCard) {
+                        card.setStatus_update_time(new Date());
+                        BackendOps.saveCustomerCard(card);
+                    }
+
+                } catch(Exception e) {
+                    // ignore error - only set action result accordingly
+                    if( e instanceof BackendlessException ) {
+                        int beCode = Integer.parseInt( ((BackendlessException) e).getCode() );
+                        switch (beCode) {
+                            case ErrorCodes.NO_SUCH_CARD:
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_NSC);
+                                break;
+                            case ErrorCodes.NO_SUCH_USER:
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                break;
+                            case ErrorCodes.USER_ACC_DISABLED:
+                            case ErrorCodes.USER_ACC_LOCKED:
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT_STATUS);
+                                break;
+                            default:
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
+                        }
+                    } else {
+                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
+                    }
+                }
+
+                // Add to result
+                actionResults.add(cardForAction);
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return actionResults;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+
     public String registerMerchant(Merchants merchant)
     {
         BackendUtils.initAll();
@@ -88,6 +256,9 @@ public class InternalUserServices implements IBackendlessService {
             merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
             merchant.setAgentId(agent.getId());
+            merchant.setCl_credit_limit_for_pin(-1);
+            merchant.setCl_debit_limit_for_pin(-1);
+            merchant.setCb_debit_limit_for_pin(-1);
             // set cashback and transaction table names
             //setCbAndTransTables(merchant, merchantCnt);
             merchant.setCashback_table(DbConstantsBackend.CASHBACK_TABLE_NAME + city.getCbTableCode());

@@ -191,7 +191,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                 } else if (userType == DbConstants.USER_TYPE_AGENT ||
                         userType == DbConstants.USER_TYPE_CC ||
-                        userType == DbConstants.USER_TYPE_CNT) {
+                        userType == DbConstants.USER_TYPE_CCNT) {
                     InternalUser internalUser = BackendOps.getInternalUser(userId);
                     mLogger.setProperties(internalUser.getId(), userType, internalUser.getDebugLogs());
                     mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
@@ -271,7 +271,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             break;
 
                         case DbConstants.USER_TYPE_CC:
-                        case DbConstants.USER_TYPE_CNT:
+                        case DbConstants.USER_TYPE_CCNT:
                         case DbConstants.USER_TYPE_AGENT:
                             // fetch agent
                             InternalUser internalUser = BackendOps.getInternalUser(login);

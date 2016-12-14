@@ -15,13 +15,6 @@ public class BackendConstants {
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean FORCED_DEBUG_LOGS = true;
 
-    /*
-     * Prefixes
-     */
-    public static final String PREFIX_AGENT_ID = "1";
-    public static final String PREFIX_CC_ID = "2";
-    public static final String PREFIX_CCNT_ID = "3";
-
     // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<internal user id>,
     // <cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars
@@ -112,5 +105,6 @@ public class BackendConstants {
 
     public static final String MY_CARD_ISSUER_ID = "51";
     public static final int CARD_ID_MAX_BATCH_ID_PER_RANGE = 999; // 3 digit batchId
-    public static final int CARD_ID_MAX_SNO_PER_BATCH = 1000; // 3 digit serialNo
+    public static final int CARD_ID_MIN_SNO_PER_BATCH = 0; // 3 digit serialNo
+    public static final int CARD_ID_MAX_SNO_PER_BATCH = 999; // 3 digit serialNo
 }

@@ -73,7 +73,7 @@ public class BackendOps {
                     }
                 case DbConstants.USER_TYPE_AGENT:
                 case DbConstants.USER_TYPE_CC:
-                case DbConstants.USER_TYPE_CNT:
+                case DbConstants.USER_TYPE_CCNT:
                     queryOptions.addRelated("internalUser");
             }
             query.setQueryOptions(queryOptions);
@@ -871,13 +871,41 @@ public class BackendOps {
         return Backendless.Persistence.save(batch);
     }
 
-    public static CardIdBatches fetchOpenCardIdBatch(String tableName) {
+    public static List<CardIdBatches> fetchOpenCardIdBatches(String tableName) {
+        Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
+
+        // fetch txns object from DB
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setWhereClause("status = '"+ DbConstantsBackend.BATCH_STATUS_OPEN+"'");
+
+        BackendlessCollection<CardIdBatches> collection = Backendless.Data.of(CardIdBatches.class).find(dataQuery);
+
+        int size = collection.getTotalObjects();
+        if(size <= 0) {
+            // no open batches
+            return null;
+        }
+
+        List<CardIdBatches> batches = collection.getData();
+        while(collection.getCurrentPage().size() > 0) {
+            collection = collection.nextPage();
+            batches.addAll(collection.getData());
+        }
+        return batches;
+    }
+
+    /*public static CardIdBatches fetchHighestOpenCardIdBatch(String tableName) {
         Backendless.Data.mapTableToClass(tableName, CardIdBatches.class);
 
         String whereClause = "status = '"+ DbConstantsBackend.BATCH_STATUS_OPEN+"'";
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        QueryOptions options = new QueryOptions();
+        options.addSortByOption("batchId DESC");
+        dataQuery.setQueryOptions(options);
+        dataQuery.setPageSize(1);
         dataQuery.setWhereClause(whereClause);
 
         BackendlessCollection<CardIdBatches> collection = Backendless.Data.of(CardIdBatches.class).find(dataQuery);
@@ -888,7 +916,7 @@ public class BackendOps {
             return collection.getData().get(0);
         }
         throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "More than 1 open Card id batches: "+size+","+tableName);
-    }
+    }*/
 
 
     public static InternalUserDevice fetchInternalUserDevice(String userId) {

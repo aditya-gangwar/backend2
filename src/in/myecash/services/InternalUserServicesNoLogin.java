@@ -86,7 +86,7 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             int userType = (Integer)user.getProperty("user_type");
             if(userType != DbConstants.USER_TYPE_AGENT &&
                     userType != DbConstants.USER_TYPE_CC &&
-                    userType != DbConstants.USER_TYPE_CNT) {
+                    userType != DbConstants.USER_TYPE_CCNT) {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),userId+" is not an internal user.");
             }

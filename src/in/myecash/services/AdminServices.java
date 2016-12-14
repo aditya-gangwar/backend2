@@ -43,7 +43,7 @@ public class AdminServices implements IBackendlessService {
     }
 
     public void registerCCntUser(String argUserId, String mobile, String name, String dob, String pwd) {
-        registerInternalUser(argUserId, DbConstants.USER_TYPE_CNT, mobile, name, dob, pwd);
+        registerInternalUser(argUserId, DbConstants.USER_TYPE_CCNT, mobile, name, dob, pwd);
     }
 
 
@@ -612,7 +612,7 @@ public class AdminServices implements IBackendlessService {
             }
 
             // add batches for this range
-            // assuming 2 digit batch ids from 00 - 99
+            // assuming 3 digit batch ids from 000 - 999
             for(int i=startIdx; i<endIdx; i++) {
                 CardIdBatches batch = new CardIdBatches();
                 batch.setStatus(DbConstantsBackend.BATCH_STATUS_AVAILABLE);
@@ -654,26 +654,27 @@ public class AdminServices implements IBackendlessService {
 
             String tableName = DbConstantsBackend.CARD_ID_BATCH_TABLE_NAME+countryCode;
 
-            // get current open batch
-            CardIdBatches openBatch = BackendOps.fetchOpenCardIdBatch(tableName);
-            if(openBatch!=null && !openBatch.getRangeId().equals(rangeId)) {
-                // If rangeId of 'current open batch' is different from the one provided
-                // first close the current open batch manually, and then try again.
-                // Check added just to be more sure - when new range is being opened
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "RangeId of 'current open batch' is different : "+countryCode+","+rangeId);
-            }
+            // Sanity checks for all open card id batches
+            // 1) All open batches should have exactly 'CARD_ID_MAX_SNO_PER_BATCH+1' card rows (ir-respective of status)
+            // 2) If the open batch has no card in 'FOR PRINT' status - then close the same.
+            List<CardIdBatches> batches = BackendOps.fetchOpenCardIdBatches(tableName);
+            if(batches!=null) {
+                // Open batches available
+                for (CardIdBatches batch : batches) {
+                    String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + batch.getRangeBatchId();
+                    int cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%'");
+                    if(cnt <= BackendConstants.CARD_ID_MAX_SNO_PER_BATCH) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "An open batch partially free : "+cardIdPrefix);
+                    }
 
-            // check if current open batch is still empty
-            if(openBatch != null) {
-                String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID+countryCode+openBatch.getRangeBatchId();
-                int cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%'");
-                if(cnt < BackendConstants.CARD_ID_MAX_SNO_PER_BATCH) {
-                    throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Current open batch still empty : "+cnt+","+countryCode+","+rangeId);
+                    // check if should be closed
+                    cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%' AND status = "+DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
+                    if(cnt==0) {
+                        // All cards in this batch are available and provisioned in DB
+                        batch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
+                        BackendOps.saveCardIdBatch(tableName, batch);
+                    }
                 }
-
-                // close current open batch
-                openBatch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
-                BackendOps.saveCardIdBatch(tableName, openBatch);
             }
 
             // find next available batch
@@ -682,6 +683,23 @@ public class AdminServices implements IBackendlessService {
                     false);
             if(lowestBatch==null) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
+            }
+
+            // create member card rows for this batch
+            String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + rangeId;
+            for(int i=BackendConstants.CARD_ID_MIN_SNO_PER_BATCH; i<=BackendConstants.CARD_ID_MAX_SNO_PER_BATCH; i++) {
+                CustomerCards card = new CustomerCards();
+                String cardId = cardIdPrefix + String.format("%03d",i);
+                card.setCard_id(cardId);
+                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
+                card.setStatus_update_time(new Date());
+                BackendOps.saveCustomerCard(card);
+            }
+
+            // Count how many rows created
+            int cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%' AND status = "+DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
+            if(cnt != (BackendConstants.CARD_ID_MAX_SNO_PER_BATCH+1)) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Not all Card rows are created : "+cnt);
             }
 
             // update status of the batch
@@ -729,7 +747,7 @@ public class AdminServices implements IBackendlessService {
                 case DbConstants.USER_TYPE_CC:
                     prefix = BackendConstants.PREFIX_CC_ID;
                     break;
-                case DbConstants.USER_TYPE_CNT:
+                case DbConstants.USER_TYPE_CCNT:
                     prefix = BackendConstants.PREFIX_CCNT_ID;
                     break;
             }
@@ -774,7 +792,7 @@ public class AdminServices implements IBackendlessService {
                 case DbConstants.USER_TYPE_CC:
                     role = BackendConstants.ROLE_CC;
                     break;
-                case DbConstants.USER_TYPE_CNT:
+                case DbConstants.USER_TYPE_CCNT:
                     role = BackendConstants.ROLE_CCNT;
                     break;
             }
@@ -801,376 +819,4 @@ public class AdminServices implements IBackendlessService {
         }
     }
 }
-
-    /*
-    public void openMerchantIdBatch(String countryCode, String rangeId, String batchId, String adminPwd) {
-        initCommon();
-        try {
-            mLogger.debug("In openMerchantIdBatch: "+countryCode+","+rangeId+","+batchId);
-            // login using 'admin' user
-            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
-
-            // make sure batch is not already open
-            String tableNameMerchantIds = "MerchantIds"+countryCode+rangeId;
-            if(BackendOps.merchantIdBatchOpen(tableNameMerchantIds, batchId)) {
-                throw CommonUtils.getException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Batch is already open: "+countryCode+","+rangeId+","+batchId);
-            }
-
-            String tableNameBatches = "MerchantIdBatches"+countryCode;
-
-            // fetch currently open batches
-            List<MerchantIdBatches> openBatches = BackendOps.fetchOpenMerchantIdBatches(tableNameBatches);
-            if(openBatches != null) {
-                // check if any batch is to be closed - if yes, do so
-                for (MerchantIdBatches openBatch:openBatches) {
-                    if(BackendOps.getAvailableMerchantIdCnt(tableNameMerchantIds, openBatch.getBatchId())==0 &&
-                            BackendOps.getTotalMerchantIdCnt(tableNameMerchantIds, openBatch.getBatchId())==BackendConstants.MERCHANT_ID_MAX_IDS_PER_BATCH) {
-                        // update batch status
-                        openBatch.setStatus(DbConstantsBackend.BATCH_STATUS_CLOSED);
-                        BackendOps.saveMerchantIdBatch(tableNameBatches, openBatch);
-                        mLogger.info("Closed batch "+openBatch.getBatchId()+" in table "+tableNameBatches);
-                    }
-                }
-            }
-
-            // fetch new batch object
-            MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(tableNameBatches, rangeId, batchId);
-            if(batch.getStatus().equals(DbConstantsBackend.BATCH_STATUS_CLOSED)) {
-                throw CommonUtils.getException(BackendResponseCodes.OPERATION_NOT_ALLOWED, "Invalid new batch status: "+countryCode+","+rangeId+","+batchId);
-            }
-
-            // add 'merchant ids' for this range
-            // Merchant id format: <1-3 digit country code> + <0-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
-            MerchantIds merchantId = new MerchantIds();
-            merchantId.setBatchId(batchId);
-            merchantId.setStatus(DbConstantsBackend.MERCHANT_ID_STATUS_AVAILABLE);
-            for(int i=0; i<=999; i++) {
-                String serialNo = String.format("%03d",i);
-                merchantId.setSerialNo(serialNo);
-                merchantId.setStatusTime(new Date());
-
-                String finalMerchantId = countryCode+rangeId+batchId+serialNo;
-                merchantId.setMerchantId(finalMerchantId);
-
-                BackendOps.createMerchantId(tableNameMerchantIds, merchantId);
-            }
-
-            // update batch status
-            if(batch.getStatus().equals(DbConstantsBackend.BATCH_STATUS_CLOSED)) {
-                batch.setStatus(DbConstantsBackend.BATCH_STATUS_OPEN);
-                BackendOps.saveMerchantIdBatch(tableNameBatches, batch);
-                mLogger.info("Opened batch "+batchId+" in table "+tableNameBatches);
-            }
-            // logout admin user
-            BackendOps.logoutUser();
-
-        } catch (Exception e) {
-            mLogger.error("Exception in openMerchantIdBatch: "+e.toString());
-            BackendOps.logoutUser();
-            Backendless.Logging.flush();
-            throw e;
-        }
-    }
-    */
-
-
-    /*
-    public void openCardIdRange(String countryCode, String rangeId, int startIdx, int endIdx, String adminPwd) {
-        initCommon();
-        try {
-            mLogger.debug("In openCardIdRange: "+countryCode+": "+rangeId);
-            // login using 'admin' user
-            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
-
-            String tableName = DbConstantsBackend.CARD_ID_BATCH_TABLE_NAME+countryCode;
-
-            // add batches for this range
-            // assuming 3 digit batch ids from 000 - 999
-            for(int i=startIdx; i<=endIdx; i++) {
-                CardBatches batch = new CardBatches();
-                batch.setStatus(DbConstantsBackend.CARD_BATCH_STATUS_AVAILABLE);
-                batch.setRangeId(rangeId);
-                String batchId = String.format("%03d",i);
-                batch.setBatchId(batchId);
-                batch.setRangeBatchId(rangeId+batchId);
-                batch.setStatusTime(new Date());
-                BackendOps.saveMerchantIdBatch(tableName, batch);
-            }
-
-            // logout admin user
-            BackendOps.logoutUser();
-
-        } catch (Exception e) {
-            mLogger.error("Exception in openMerchantIdRange: "+e.toString());
-            BackendOps.logoutUser();
-            Backendless.Logging.flush();
-            throw e;
-        }
-    }*/
-
-    /*private String resetMchntPassword(Merchants merchant) {
-
-        // check if any request already pending
-        if( BackendOps.findActiveMchntPwdResetReqs(merchant.getAuto_id()) != null) {
-            throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
-        }
-
-        // fetch user with the given id with related merchant object
-        BackendlessUser user = BackendOps.fetchUser(merchant.getAuto_id(), DbConstants.USER_TYPE_MERCHANT, false);
-        int userType = (Integer)user.getProperty("user_type");
-        if(userType != DbConstants.USER_TYPE_MERCHANT) {
-            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-            throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED),merchant.getAuto_id()+" is not a merchant.");
-        }
-
-        // reset password immediatly
-        // generate password
-        String passwd = BackendUtils.generateTempPassword();
-        // update user account for the password
-        user.setPassword(passwd);
-        BackendOps.updateUser(user);
-
-        return passwd;
-    }*/
-
-    /*
-     * Performs either of below two operations
-     *
-     * 1) only reset login data i.e.
-     * Delete all trusted devices, and set status to indicate that 'forget password' is allowed from
-     * non-trusted devices also - first time only - just like in case of first login.
-     *
-     * 2) Change mobile number
-     * This involves above 'reset login data' operation also.
-     *
-     * These ops are always done - upon manual submission of application and documents.
-     */
-    /*public void resetMchntLoginOrChangeMob(String merchantId, String ticketNum, String reason, String remarks,
-                                           String newMobileNum, String adminPwd) {
-        long startTime = System.currentTimeMillis();
-        try {
-            BackendUtils.initAll();
-            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-            mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetMchntLoginOrChangeMob";
-            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                    ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                    reason+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                    newMobileNum;
-            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
-            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
-            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
-
-            // just for easier comparisons later on - change empty string to null
-            if(newMobileNum!=null && newMobileNum.isEmpty()) {
-                newMobileNum = null;
-            }
-
-            // login using 'admin' user
-            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
-
-            // fetch user with the given id with related merchant object
-            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
-            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-
-            // merchant should be in disabled state
-            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_DISABLED) {
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not disabled yet");
-            }
-
-            int oldStatus = merchant.getAdmin_status();
-            Date oldUpdateTime = merchant.getStatus_update_time();
-            String oldMobile = merchant.getMobile_num();
-            String oldReason = merchant.getStatus_reason();
-            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
-
-            // Add merchant op first - then update status
-            MerchantOps op = new MerchantOps();
-            op.setCreateTime(new Date());
-            op.setMerchant_id(merchant.getAuto_id());
-            op.setMobile_num(merchant.getMobile_num());
-            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
-            op.setTicketNum(ticketNum);
-            op.setReason(reason);
-            op.setRemarks(remarks);
-            op.setAgentId(ADMIN_LOGINID);
-            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
-            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
-            if(newMobileNum==null) {
-                op.setOp_code(DbConstants.OP_RESET_ACC_FOR_LOGIN);
-            } else {
-                op.setOp_code(DbConstants.OP_CHANGE_MOBILE);
-                // set extra params in presentable format
-                String extraParams = "Old Mobile: "+oldMobile+", New Mobile: "+newMobileNum;
-                op.setExtra_op_params(extraParams);
-                //op.setExtra_op_params(newMobileNum);
-            }
-            op = BackendOps.saveMerchantOp(op);
-
-            // update merchant status (and mobile num, if required)
-            try {
-                if(newMobileNum!=null) {
-                    merchant.setMobile_num(newMobileNum);
-                }
-                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_READY_TO_ACTIVE, reason,
-                        mEdr, mLogger);
-
-            } catch(Exception e) {
-                mLogger.error("resetMchntLoginOrChangeMob: Exception while updating merchant status: "+merchantId);
-                // Rollback - delete merchant op added
-                try {
-                    BackendOps.deleteMerchantOp(op);
-                } catch(Exception ex) {
-                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: merchant op deletion failed: "+merchantId);
-                    // Rollback also failed
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw ex;
-                }
-                throw e;
-            }
-
-            // Delete all trusted devices
-            try {
-                List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-                int i = 0;
-                if (trustedDevices.size() > 0) {
-                    mLogger.debug("Available devices: " + trustedDevices.size());
-                    // iterate and delete one by one
-                    for (MerchantDevice device : trustedDevices) {
-                        BackendOps.deleteMchntDevice(device);
-                        i++;
-                    }
-                }
-                mLogger.debug("Deleted devices: " + i);
-            } catch(Exception e) {
-                mLogger.error("resetMchntLoginOrChangeMob: Exception while deleting trusted devices: "+merchantId);
-                // Rollback - delete merchant op added, and rollback merchant status
-                try {
-                    BackendOps.deleteMerchantOp(op);
-                    if(newMobileNum!=null) {
-                        merchant.setMobile_num(oldMobile);
-                    }
-                    BackendUtils.setMerchantStatus(merchant, oldStatus, oldReason,
-                            mEdr, mLogger);
-                } catch(Exception ex) {
-                    mLogger.fatal("resetMchntLoginOrChangeMob: Failed to rollback: "+merchantId);
-                    // Rollback also failed
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw ex;
-                }
-                throw e;
-            }
-
-            // send SMS
-            String smsText = null;
-            if(newMobileNum==null) {
-                smsText = String.format(SmsConstants.SMS_MCHNT_LOGIN_RESET, CommonUtils.getPartialVisibleStr(merchantId));
-            } else {
-                smsText = String.format(SmsConstants.SMS_MCHNT_MOBILE_CHANGE_ADMIN, CommonUtils.getPartialVisibleStr(merchantId), newMobileNum);
-            }
-
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-
-        } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
-            throw e;
-        } finally {
-            BackendOps.logoutUser();
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
-        }
-    }
-
-    public void removeMerchant(String merchantId, String ticketNum, String reason, String remarks, String adminPwd) {
-        long startTime = System.currentTimeMillis();
-        try {
-            BackendUtils.initAll();
-            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-            mEdr[BackendConstants.EDR_API_NAME_IDX] = "removeMerchant";
-            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                    ticketNum;
-            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
-            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
-            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
-
-            // login using 'admin' user
-            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
-
-            // fetch user with the given id with related merchant object
-            Merchants merchant = BackendOps.getMerchant(merchantId, true, false);
-            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-
-            // merchant should be in active state
-            if(merchant.getAdmin_status() != DbConstants.USER_STATUS_ACTIVE) {
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant account is not active");
-            }
-
-            int oldStatus = merchant.getAdmin_status();
-            Date oldUpdateTime = merchant.getStatus_update_time();
-            mLogger.debug("oldStatus: "+oldStatus+", oldTime: "+oldUpdateTime.toString());
-
-            // Add merchant op first - then update status
-            MerchantOps op = new MerchantOps();
-            op.setCreateTime(new Date());
-            op.setMerchant_id(merchant.getAuto_id());
-            op.setMobile_num(merchant.getMobile_num());
-            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
-            op.setTicketNum(ticketNum);
-            op.setReason(reason);
-            op.setRemarks(remarks);
-            op.setAgentId(ADMIN_LOGINID);
-            op.setInitiatedBy( DbConstantsBackend.USER_OP_INITBY_MCHNT);
-            op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_MANUAL);
-            op.setOp_code(DbConstants.OP_REMOVE_ACC);
-            op = BackendOps.saveMerchantOp(op);
-
-            // update merchant status (and mobile num, if required)
-            try {
-                // disable cb and cl add
-                merchant.setCb_rate("0");
-                merchant.setCl_add_enable(false);
-                // set time when request is made
-                merchant.setRemoveReqDate(new Date());
-                // update status and save merchant object
-                BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_UNDER_CLOSURE, reason,
-                        mEdr, mLogger);
-
-            } catch(Exception e) {
-                mLogger.error("removeMerchant: Exception while updating merchant status: "+merchantId);
-                // Rollback - delete merchant op added
-                try {
-                    BackendOps.deleteMerchantOp(op);
-                } catch(Exception ex) {
-                    mLogger.fatal("removeMerchant: Failed to rollback: merchant op deletion failed: "+merchantId);
-                    // Rollback also failed
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-                    throw ex;
-                }
-                throw e;
-            }
-
-            DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
-            now.addDays(MyGlobalSettings.getMchntExpiryDays());
-            SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
-
-            // send SMS
-            String smsText = String.format(SmsConstants.SMS_MERCHANT_REMOVE,
-                    merchantId,
-                    String.valueOf(MyGlobalSettings.getMchntExpiryDays()),
-                    sdf.format(now.getTime()));
-
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger);
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-
-        } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
-            throw e;
-        } finally {
-            BackendOps.logoutUser();
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
-        }
-    }*/
 

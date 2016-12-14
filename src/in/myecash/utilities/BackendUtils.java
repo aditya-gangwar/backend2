@@ -130,7 +130,7 @@ public class BackendUtils {
                 BackendUtils.checkMerchantStatus(merchant, edr, logger);
                 return merchant;
 
-            case DbConstants.USER_TYPE_CNT:
+            case DbConstants.USER_TYPE_CCNT:
             case DbConstants.USER_TYPE_CC:
             case DbConstants.USER_TYPE_AGENT:
                 InternalUser internalUser = (InternalUser) user.getProperty("internalUser");
@@ -286,20 +286,36 @@ public class BackendUtils {
      */
     public static void checkCardForUse(CustomerCards card) {
         switch(card.getStatus()) {
-            case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
-            case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
+            case DbConstants.CUSTOMER_CARD_STATUS_DISABLED:
+                throw new BackendlessException(String.valueOf(ErrorCodes.CARD_DISABLED), "");
+
+            case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
-                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card not allocated to any customer yet");
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
+
+            case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
+                throw new BackendlessException(String.valueOf(ErrorCodes.CARD_NOT_REG_WITH_CUST), "");
         }
     }
 
-    public static void checkCardForAllocation(CustomerCards card) {
+    public static void checkCardForAllocation(CustomerCards card, String merchantId, String[] edr, MyLogger logger) {
         switch(card.getStatus()) {
-            case DbConstants.CUSTOMER_CARD_STATUS_ALLOTTED:
+            case DbConstants.CUSTOMER_CARD_STATUS_ACTIVE:
                 throw new BackendlessException(String.valueOf(ErrorCodes.CARD_ALREADY_IN_USE), "");
-            case DbConstants.CUSTOMER_CARD_STATUS_REMOVED:
+
+            case DbConstants.CUSTOMER_CARD_STATUS_DISABLED:
+                throw new BackendlessException(String.valueOf(ErrorCodes.CARD_DISABLED), "");
+
+            case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
+                edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
+
+            case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
+                if(!card.getMchntId().equals(merchantId)) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
+                }
+                break;
         }
     }
 
@@ -329,7 +345,7 @@ public class BackendUtils {
                         break;
                     case DbConstants.USER_TYPE_CC:
                     case DbConstants.USER_TYPE_AGENT:
-                    case DbConstants.USER_TYPE_CNT:
+                    case DbConstants.USER_TYPE_CCNT:
                         setAgentStatus((InternalUser) userObject, DbConstants.USER_STATUS_LOCKED,
                                 DbConstantsBackend.paramTypeToAccLockedReason.get(wrongParamType), edr, logger);
                         break;
@@ -488,7 +504,7 @@ public class BackendUtils {
                 } else if(userdId.startsWith(BackendConstants.PREFIX_CC_ID)) {
                     return DbConstants.USER_TYPE_CC;
                 } else if(userdId.startsWith(BackendConstants.PREFIX_CCNT_ID)) {
-                    return DbConstants.USER_TYPE_CNT;
+                    return DbConstants.USER_TYPE_CCNT;
                 } else {
                     throw new BackendlessException(String.valueOf(ErrorCodes.USER_WRONG_ID_PASSWD),"Invalid user type for id: "+userdId);
                 }
