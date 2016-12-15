@@ -206,7 +206,7 @@ public class BackendUtils {
                 // As this fx. does not have all this info to decide - so it will not raise any exception
                 // calling fx. should check it itself for this status
                 // However, if 'restricted duration' is passed, the status will be changed to 'Enabled' here only
-                checkCustStatusExpiry(customer, MyGlobalSettings.getCustHrsAfterMobChange(), edr, logger);
+                checkCustStatusExpiry(customer, MyGlobalSettings.getCustAccLimitModeHrs(), edr, logger);
                 break;
 
             case DbConstants.USER_STATUS_LOCKED:
@@ -499,11 +499,11 @@ public class BackendUtils {
             case CommonConstants.MERCHANT_ID_LEN:
                 return DbConstants.USER_TYPE_MERCHANT;
             case CommonConstants.INTERNAL_USER_ID_LEN:
-                if(userdId.startsWith(BackendConstants.PREFIX_AGENT_ID)) {
+                if(userdId.startsWith(CommonConstants.PREFIX_AGENT_ID)) {
                     return DbConstants.USER_TYPE_AGENT;
-                } else if(userdId.startsWith(BackendConstants.PREFIX_CC_ID)) {
+                } else if(userdId.startsWith(CommonConstants.PREFIX_CC_ID)) {
                     return DbConstants.USER_TYPE_CC;
-                } else if(userdId.startsWith(BackendConstants.PREFIX_CCNT_ID)) {
+                } else if(userdId.startsWith(CommonConstants.PREFIX_CCNT_ID)) {
                     return DbConstants.USER_TYPE_CCNT;
                 } else {
                     throw new BackendlessException(String.valueOf(ErrorCodes.USER_WRONG_ID_PASSWD),"Invalid user type for id: "+userdId);

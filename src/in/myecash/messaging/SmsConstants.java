@@ -41,7 +41,8 @@ public class SmsConstants {
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyeCash account '%s' is locked due to multiple wrong password attempts. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyeCash account '%s' is locked due to multiple wrong PIN attempts. It will be unlocked automatically after %s hours.";
     public static String SMS_ACCOUNT_LOCKED_VERIFY_FAILED = "Your MyeCash account '%s' is locked due to multiple wrong verifications. It will be unlocked automatically after %s hours.";
-    public static String SMS_ACCOUNT_DISABLE = "Your MyeCash account number '%s' is Disabled now. You can call us for further help.";
+    public static String SMS_ACCOUNT_DISABLE = "Your MyeCash account '%s' is Disabled now. You can reach us for further help.";
+    public static String SMS_ACCOUNT_LIMITED_MODE = "Your MyeCash account '%s' is in Limited Mode now. Only Credit transactions are allowed.";
     public static String SMS_ACCOUNT_ENABLE = "Your MyeCash account number '%s' is Enabled now. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     //public static String SMS_ACCOUNT_LOCKED_FORGOT_USERID = "Your MyeCash account '%s' is locked for next %d hours, due to more than allowed wrong 'forgot userId' attempts.";
     //public static String SMS_ACCOUNT_LOCKED_PASSWD_RESET_AGENT = "Your MyeCash agent account '%s' is locked, due to more than allowed wrong 'password reset' attempts.";

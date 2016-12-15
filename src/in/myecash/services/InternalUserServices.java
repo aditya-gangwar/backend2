@@ -416,19 +416,19 @@ public class InternalUserServices implements IBackendlessService {
         }
     }
 
-    public void disableCustomer(String privateId, String ticketNum, String reason, String remarks) {
+    public void disableCustomer(boolean ltdModeCase, String privateId, String ticketNum, String reason, String remarks) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "disableCustomer";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = privateId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = ltdModeCase+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                privateId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 reason;
 
         try {
             // Fetch customer care user
-            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(
-                    null, mEdr, mLogger, false);
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_ADMIN) {
@@ -444,7 +444,11 @@ public class InternalUserServices implements IBackendlessService {
             op.setCreateTime(new Date());
             op.setPrivateId(privateId);
             op.setMobile_num(customer.getMobile_num());
-            op.setOp_code(DbConstants.OP_DISABLE_ACC);
+            if(ltdModeCase) {
+                op.setOp_code(DbConstants.OP_LIMITED_MODE_ACC);
+            } else {
+                op.setOp_code(DbConstants.OP_DISABLE_ACC);
+            }
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             op.setTicketNum(ticketNum);
             op.setReason(reason);
@@ -460,8 +464,11 @@ public class InternalUserServices implements IBackendlessService {
 
             // Update status
             try {
-                BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_DISABLED, reason,
-                        mEdr, mLogger);
+                if(ltdModeCase) {
+                    BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY, reason, mEdr, mLogger);
+                } else {
+                    BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_DISABLED, reason, mEdr, mLogger);
+                }
             } catch(Exception e) {
                 mLogger.error("disableMerchant: Exception while updating merchant status: "+privateId);
                 // Rollback - delete merchant op added
@@ -477,7 +484,12 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // send SMS
-            String smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+            String smsText = null;
+            if(ltdModeCase) {
+                smsText = String.format(SmsConstants.SMS_ACCOUNT_LIMITED_MODE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+            } else {
+                smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
+            }
             SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
 
             // no exception - means function execution success

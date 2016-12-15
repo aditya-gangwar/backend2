@@ -417,7 +417,7 @@ public class AdminServices implements IBackendlessService {
         // update status to 'restricted access'
         // not using setCustomerStatus() fx. - to avoid two DB operations
         customer.setAdmin_status(DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY);
-        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustHrsAfterMobChange()+" hours");
+        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustAccLimitModeHrs()+" hours");
         customer.setStatus_reason("Mobile Number changed recently");
         customer.setStatus_update_time(new Date());
 
@@ -618,8 +618,8 @@ public class AdminServices implements IBackendlessService {
                 batch.setStatus(DbConstantsBackend.BATCH_STATUS_AVAILABLE);
                 batch.setRangeId(rangeId);
                 batch.setBatchId(i);
-                String batchId = String.format("%03d",i);
-                batch.setRangeBatchId(rangeId+batchId);
+                String rangeBatchId = rangeId+String.format("%03d",i);
+                batch.setRangeBatchId(rangeBatchId);
                 batch.setStatusTime(new Date());
                 BackendOps.saveCardIdBatch(tableName, batch);
             }
@@ -686,7 +686,7 @@ public class AdminServices implements IBackendlessService {
             }
 
             // create member card rows for this batch
-            String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + rangeId;
+            String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + lowestBatch.getRangeBatchId();
             for(int i=BackendConstants.CARD_ID_MIN_SNO_PER_BATCH; i<=BackendConstants.CARD_ID_MAX_SNO_PER_BATCH; i++) {
                 CustomerCards card = new CustomerCards();
                 String cardId = cardIdPrefix + String.format("%03d",i);
@@ -742,13 +742,13 @@ public class AdminServices implements IBackendlessService {
             String prefix = null;
             switch (userType) {
                 case DbConstants.USER_TYPE_AGENT:
-                    prefix = BackendConstants.PREFIX_AGENT_ID;
+                    prefix = CommonConstants.PREFIX_AGENT_ID;
                     break;
                 case DbConstants.USER_TYPE_CC:
-                    prefix = BackendConstants.PREFIX_CC_ID;
+                    prefix = CommonConstants.PREFIX_CC_ID;
                     break;
                 case DbConstants.USER_TYPE_CCNT:
-                    prefix = BackendConstants.PREFIX_CCNT_ID;
+                    prefix = CommonConstants.PREFIX_CCNT_ID;
                     break;
             }
             String userId = prefix+argUserId;

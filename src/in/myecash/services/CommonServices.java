@@ -651,7 +651,7 @@ public class CommonServices implements IBackendlessService {
         // update status to 'restricted access'
         // not using setCustomerStatus() fx. - to avoid two DB operations
         customer.setAdmin_status(DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY);
-        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustHrsAfterMobChange()+" hours");
+        //customer.setStatus_reason("Mobile Number changed in last "+MyGlobalSettings.getCustAccLimitModeHrs()+" hours");
         customer.setStatus_reason("Mobile Number changed recently");
         customer.setStatus_update_time(new Date());
 
