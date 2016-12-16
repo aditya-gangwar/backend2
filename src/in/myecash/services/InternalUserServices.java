@@ -39,7 +39,7 @@ public class InternalUserServices implements IBackendlessService {
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "execActionForCards";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = action;
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = action+BackendConstants.BACKEND_EDR_SUB_DELIMETER+allotToUserId;
 
         try {
             // Fetch user
@@ -70,12 +70,20 @@ public class InternalUserServices implements IBackendlessService {
                     throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
-            List<MyCardForAction> actionResults = new ArrayList<>();
+            List<MyCardForAction> actionResults = null;
 
             // Loop on all given codes
             String[] csvFields = codes.split(CommonConstants.CSV_DELIMETER, -1);
             for (String code : csvFields) {
-                MyCardForAction cardForAction = new MyCardForAction(code);
+                if(code==null || code.isEmpty()) {
+                    continue;
+                }
+                if(actionResults==null) {
+                    actionResults = new ArrayList<>(csvFields.length);
+                }
+
+                MyCardForAction cardForAction = new MyCardForAction();
+                cardForAction.setScannedCode(code);
                 try {
                     // find card row against this code
                     CustomerCards card = BackendOps.getCustomerCard(code);
@@ -97,15 +105,15 @@ public class InternalUserServices implements IBackendlessService {
 
                         case CommonConstants.CARDS_ALLOT_TO_AGENT:
                             if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_NEW) {
-                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
-                                card.setCcntId(internalUser.getId());
-
                                 // Find agent whom to allot
                                 InternalUser iu = BackendOps.getInternalUser(allotToUserId);
                                 if(BackendUtils.getUserType(iu.getId()) != DbConstants.USER_TYPE_AGENT) {
                                     cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
                                 } else {
                                     BackendUtils.checkInternalUserStatus(iu);
+
+                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                                    card.setCcntId(internalUser.getId());
                                     card.setAgentId(iu.getId());
                                     updateCard = true;
                                 }
@@ -116,15 +124,14 @@ public class InternalUserServices implements IBackendlessService {
 
                         case CommonConstants.CARDS_ALLOT_TO_MCHNT:
                             if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
-                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
-                                card.setAgentId(internalUser.getId());
-
                                 // Find merchant whom to allot
                                 Merchants mchnt = BackendOps.getMerchant(allotToUserId,false,false);
                                 if(BackendUtils.getUserType(mchnt.getAuto_id()) != DbConstants.USER_TYPE_MERCHANT) {
                                     cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
                                 } else {
                                     BackendUtils.checkMerchantStatus(mchnt, mEdr, mLogger);
+                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
+                                    card.setAgentId(internalUser.getId());
                                     card.setMchntId(mchnt.getAuto_id());
                                     updateCard = true;
                                 }
@@ -155,6 +162,7 @@ public class InternalUserServices implements IBackendlessService {
                     }
 
                     if(updateCard) {
+                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_OK);
                         card.setStatus_update_time(new Date());
                         BackendOps.saveCustomerCard(card);
                     }
@@ -168,16 +176,18 @@ public class InternalUserServices implements IBackendlessService {
                                 cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_NSC);
                                 break;
                             case ErrorCodes.NO_SUCH_USER:
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_NSA);
                                 break;
                             case ErrorCodes.USER_ACC_DISABLED:
                             case ErrorCodes.USER_ACC_LOCKED:
                                 cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT_STATUS);
                                 break;
                             default:
+                                mLogger.error("execActionForCards: BE exception",e);
                                 cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
                         }
                     } else {
+                        mLogger.error("execActionForCards: Exception",e);
                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
                     }
                 }
@@ -188,6 +198,13 @@ public class InternalUserServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+            /*if(actionResults!=null) {
+                for (MyCardForAction card :
+                        actionResults) {
+                    mLogger.debug(card.getActionStatus() + "," + card.getScannedCode() + "," + card.getCardNum());
+                }
+            }*/
             return actionResults;
 
         } catch(Exception e) {
