@@ -46,8 +46,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_CUSTOMER);
 
         try {
-            mLogger.debug("In CustomerPasswdPinResetTimer execute");
-            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("In CustomerPasswdPinResetTimer execute");
+            //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all 'pending' merchant password reset operations
             ArrayList<CustomerOps> ops = BackendOps.fetchCustomerOps(custPwdResetWhereClause());
@@ -179,7 +179,7 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);
 
-        mLogger.debug("whereClause: "+whereClause.toString());
+        //mLogger.debug("whereClause: "+whereClause.toString());
         return whereClause.toString();
     }
 }

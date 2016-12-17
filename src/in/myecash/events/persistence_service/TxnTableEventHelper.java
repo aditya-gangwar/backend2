@@ -243,7 +243,12 @@ public class TxnTableEventHelper {
                 BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
 
                 // Build SMS
-                String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,mTransaction.getTrans_id(),cl_balance,cb_balance);
+                merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
+                cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
+                cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
+
+                String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,
+                        mTransaction.getTrans_id(),cl_balance,cb_balance);
                 if(smsText!=null) {
                     // Send SMS through HTTP
                     SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger, true);

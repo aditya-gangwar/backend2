@@ -71,6 +71,7 @@ public class SmsConstants {
     public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
 
+    public static String SMS_PIN_INIT = "Dear User - %s have initiated 'PIN Reset' for your MyeCash account '%s'. New PIN will be sent to your registered mobile number after %s minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN = "Dear User - MyeCash PIN for your account '%s' is '%s'. ALWAYS KEEP YOUR PIN SECRET. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
     public static String SMS_PIN_CHANGED = "MyeCash PIN changed successfully for user %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 

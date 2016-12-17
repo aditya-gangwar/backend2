@@ -10,8 +10,8 @@ public class BackendConstants {
 
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
-    public static final boolean DEBUG_MODE = true;
-    public static final boolean TESTING_SKIP_SMS = true;
+    public static final boolean DEBUG_MODE = false;
+    public static final boolean TESTING_SKIP_SMS = false;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean FORCED_DEBUG_LOGS = true;
 
@@ -77,8 +77,8 @@ public class BackendConstants {
     public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
 
-    public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 10;
-    public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 50;
+    public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 1000;
+    public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 5000;
 
     public static final int LOG_POLICY_NUM_MSGS = 1;
     public static final int LOG_POLICY_FREQ_SECS = 0;

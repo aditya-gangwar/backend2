@@ -35,7 +35,7 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "FailedSmsTimer";
-        mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+        //mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
 
         try {
             //mLogger.debug("In FailedSmsTimer execute");

@@ -4,11 +4,14 @@ import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
+import in.myecash.common.CommonUtils;
+import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.BackendConstants;
 import in.myecash.constants.DbConstantsBackend;
 import in.myecash.database.AllOtp;
 import in.myecash.common.database.CustomerOps;
 import in.myecash.database.InternalUser;
+import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
@@ -359,6 +362,7 @@ public class CommonServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);
 
             String merchantId = null;
+            String merchantName = null;
             Customers customer = null;
             BackendlessUser custUser = null;
             CustomerOps customerOp = null;
@@ -371,6 +375,7 @@ public class CommonServices implements IBackendlessService {
                     }
                     Merchants merchant = (Merchants) user.getProperty("merchant");
                     merchantId = merchant.getAuto_id();
+                    merchantName = merchant.getName();
                     mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
                     mLogger.setProperties(mEdr[BackendConstants.EDR_USER_ID_IDX], userType, merchant.getDebugLogs());
                     // check if merchant is enabled
@@ -558,7 +563,7 @@ public class CommonServices implements IBackendlessService {
                             break;
 
                         case DbConstants.OP_RESET_PIN:
-                            //resetCustomerPin(customer);
+                            resetCustomerPin(customer, merchantName);
                             validException = true;
                             // send imageFilename as part of exception - hack as no value can be returned in this case
                             throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), customerOp.getImgFilename());
@@ -663,7 +668,7 @@ public class CommonServices implements IBackendlessService {
         SmsHelper.sendSMS(smsText, oldMobile+","+newMobile, mEdr, mLogger, true);
     }
 
-    /*private void resetCustomerPin(Customers customer) {
+    private void resetCustomerPin(Customers customer, String merchantName) {
         // generate pin
         String newPin = BackendUtils.generateCustomerPIN();
 
@@ -673,9 +678,11 @@ public class CommonServices implements IBackendlessService {
         BackendOps.updateCustomer(customer);
 
         // Send SMS through HTTP
-        String smsText = SmsHelper.buildCustPinResetSMS(customer.getMobile_num(), newPin);
-        SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger);
-    }*/
+        String smsText = String.format(SmsConstants.SMS_PIN_INIT,
+                merchantName, CommonUtils.getPartialVisibleStr(customer.getMobile_num()),
+                MyGlobalSettings.getCustPasswdResetMins().toString());
+        SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
+    }
 
     private void changeCustomerPin(Customers customer, String newPin) {
         // update user account for the PIN

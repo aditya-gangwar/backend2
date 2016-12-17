@@ -45,8 +45,8 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_MERCHANT);
 
         try {
-            mLogger.debug("In MerchantPasswdResetTimer execute");
-            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("In MerchantPasswdResetTimer execute");
+            //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all 'pending' merchant password reset operations
             ArrayList<MerchantOps> ops = BackendOps.fetchMerchantOps(mchntPwdResetWhereClause());
@@ -168,7 +168,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);
 
-        mLogger.debug("whereClause: "+whereClause.toString());
+        //mLogger.debug("whereClause: "+whereClause.toString());
         return whereClause.toString();
     }
 
