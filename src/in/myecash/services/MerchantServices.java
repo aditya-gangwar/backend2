@@ -61,6 +61,15 @@ public class MerchantServices implements IBackendlessService {
             if (otp == null || otp.isEmpty()) {
                 // First run, generate OTP if all fine
 
+                // New mobile number should not be registered with other merchant
+                try {
+                Merchants mchnt = BackendOps.getMerchant(newMobile, false, false);
+                    // If here - means merchant exist - return error
+                    throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
+                } catch (BackendlessException be) {
+                    // No such merchant exist - we can proceed
+                }
+
                 // Validate based on given current number
                 if (!merchant.getDob().equals(verifyparam)) {
                     validException = true;
@@ -607,6 +616,15 @@ public class MerchantServices implements IBackendlessService {
             // Fetch merchant
             Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerMobile;
+
+            // customer should not exist
+            try {
+                customer = BackendOps.getCustomer(customerMobile, BackendConstants.ID_TYPE_MOBILE, false);
+                // If here - means customer exist - return error
+                throw new BackendlessException(String.valueOf(ErrorCodes.USER_ALREADY_REGISTERED), customerMobile+" is already registered as customer");
+            } catch (BackendlessException be) {
+                // No such customer exist - we can proceed
+            }
 
             // fetch customer card object
             card = BackendOps.getCustomerCard(cardId);

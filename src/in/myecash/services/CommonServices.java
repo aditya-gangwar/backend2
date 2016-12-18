@@ -427,6 +427,24 @@ public class CommonServices implements IBackendlessService {
                     !opCode.equals(DbConstants.OP_CHANGE_PIN) &&
                     !(opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
 
+                // Verifications to check if new data (card / mobile) already exist
+                if (opCode.equals(DbConstants.OP_NEW_CARD)) {
+                    // check new card exists and is in correct state
+                    CustomerCards newCard = BackendOps.getCustomerCard(cardId);
+                    BackendUtils.checkCardForAllocation(newCard, merchantId, mEdr, mLogger);
+
+                } else if (opCode.equals(DbConstants.OP_CHANGE_MOBILE)) {
+                    // check that new mobile is not already registered for some other customer
+                    // customer should not exist
+                    try {
+                        customer = BackendOps.getCustomer(opParam, BackendConstants.ID_TYPE_MOBILE, false);
+                        // If here - means customer exist - return error
+                        throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
+                    } catch (BackendlessException be) {
+                        // No such customer exist - we can proceed
+                    }
+                }
+
                 // Don't verify QR card# for 'new card' operation
                 if (!opCode.equals(DbConstants.OP_NEW_CARD) &&
                         !cardIdDb.equals(cardId)) {
