@@ -163,7 +163,7 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
 
         long now = new Date().getTime();
         long endTime = now - (MyGlobalSettings.getMchntPasswdResetMins()*CommonConstants.MILLISECS_IN_MINUTE);
-        long startTime = endTime - (MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
+        long startTime = endTime - (GlobalSettingConstants.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
 
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);

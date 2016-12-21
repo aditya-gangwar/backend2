@@ -327,7 +327,7 @@ public class BackendUtils {
                                           String wrongParamType, String opCode, String[] edr, MyLogger logger) {
         // check similar wrong attempts today
         int cnt = BackendOps.getWrongAttemptCnt(userId, wrongParamType);
-        int confMaxAttempts = MyGlobalSettings.userTypeToWrongLimit.get(userType);
+        int confMaxAttempts = MyGlobalSettings.getWrongAttemptLimit(userType);
 
         logger.debug("In handleWrongAttempt: "+cnt+", "+confMaxAttempts);
 

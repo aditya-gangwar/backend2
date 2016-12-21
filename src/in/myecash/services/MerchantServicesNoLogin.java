@@ -163,7 +163,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
 
                 // Send SMS to inform
-                Integer mins = MyGlobalSettings.getMchntPasswdResetMins() + MyGlobalSettings.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
+                Integer mins = MyGlobalSettings.getMchntPasswdResetMins() + GlobalSettingConstants.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
                 String smsText = String.format(SmsConstants.SMS_PASSWD_RESET_SCHEDULED,
                         CommonUtils.getPartialVisibleStr(op.getMerchant_id()), mins);
                 // ignore error

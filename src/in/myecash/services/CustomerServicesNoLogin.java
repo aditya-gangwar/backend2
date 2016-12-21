@@ -239,7 +239,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
 
                 // Send SMS to inform
-                Integer mins = MyGlobalSettings.getCustPasswdResetMins() + MyGlobalSettings.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;
+                Integer mins = MyGlobalSettings.getCustPasswdResetMins() + GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;
                 String smsText = String.format(SmsConstants.SMS_PASSWD_RESET_SCHEDULED,
                         CommonUtils.getPartialVisibleStr(op.getMobile_num()), mins);
                 // ignore error

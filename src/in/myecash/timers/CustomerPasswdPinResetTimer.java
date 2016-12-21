@@ -174,7 +174,7 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
 
         long now = new Date().getTime();
         long endTime = now - (MyGlobalSettings.getCustPasswdResetMins()*CommonConstants.MILLISECS_IN_MINUTE);
-        long startTime = endTime - (MyGlobalSettings.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
+        long startTime = endTime - (GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL*CommonConstants.MILLISECS_IN_MINUTE);
 
         whereClause.append(" AND createTime >= ").append(startTime);
         whereClause.append(" AND createTime < ").append(endTime);

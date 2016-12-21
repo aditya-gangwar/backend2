@@ -20,6 +20,7 @@ import in.myecash.common.constants.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -705,6 +706,78 @@ public class AdminServices implements IBackendlessService {
             // update status of the batch
             lowestBatch.setStatus(DbConstantsBackend.BATCH_STATUS_OPEN);
             BackendOps.saveCardIdBatch(tableName, lowestBatch);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void uploadGlobalSettings(String adminId, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            BackendUtils.initAll();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "uploadGlobalSettings";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = "";
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // Global Settings table should be empty - check for the same
+            if(BackendOps.getGlobalSettingCnt() > 0) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "GlobalSettings Table is not empty");
+            }
+
+            // Loop on Values Map and save all
+            for (Map.Entry<String, String> pair : GlobalSettingConstants.valuesGlobalSettings.entrySet()) {
+                String key = pair.getKey();
+
+                GlobalSettings setting = new GlobalSettings();
+                setting.setName(key);
+                setting.setDescription(GlobalSettingConstants.descGlobalSettings.get(key));
+                Integer valueType = GlobalSettingConstants.valueTypesGlobalSettings.get(key);
+                setting.setValue_datatype(valueType);
+
+                String value = GlobalSettingConstants.valuesGlobalSettings.get(key);
+                if(value!=null) {
+                    switch (valueType) {
+                        case GlobalSettingConstants.DATATYPE_INT:
+                            setting.setValue_int(Integer.parseInt(value));
+                            break;
+                        case GlobalSettingConstants.DATATYPE_BOOLEAN:
+                            boolean val = Boolean.parseBoolean(value);
+                            setting.setValue_int(val ? 1 : 0);
+                            break;
+                        case GlobalSettingConstants.DATATYPE_STRING:
+                            setting.setValue_string(value);
+                            break;
+                        case GlobalSettingConstants.DATATYPE_DATE:
+                            long epochTime = Long.parseLong(value);
+                            setting.setValue_date(new Date(epochTime));
+                            break;
+                        default:
+                            throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Invalid Datatype: " + key);
+                    }
+                }
+
+                if(setting.getDescription()==null || setting.getDescription().isEmpty()) {
+                    setting.setUser_visible(false);
+                } else {
+                    setting.setUser_visible(true);
+                }
+
+                BackendOps.saveGlobalSetting(setting);
+            }
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
