@@ -94,6 +94,10 @@ public class BackendUtils {
      * Set appropriate EDR values
      */
     public static BackendlessUser fetchCurrentBLUser(Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+        if( InvocationContext.getUserToken()==null || InvocationContext.getUserToken().isEmpty() ||
+                InvocationContext.getUserId()==null||InvocationContext.getUserId().isEmpty() ) {
+            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_LOGGED_IN), "");
+        }
         HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
         BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
         fetchUser(user, allowedUserType, edr, logger, allChild);
@@ -101,6 +105,11 @@ public class BackendUtils {
     }
 
     public static Object fetchCurrentUser(Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+        //logger.debug("In fetchCurrentUser: "+InvocationContext.getUserToken()+", "+InvocationContext.getUserId());
+        if( InvocationContext.getUserToken()==null || InvocationContext.getUserToken().isEmpty() ||
+                InvocationContext.getUserId()==null||InvocationContext.getUserId().isEmpty() ) {
+            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_LOGGED_IN), "");
+        }
         HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
         BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
         return fetchUser(user, allowedUserType, edr, logger, allChild);
@@ -313,7 +322,7 @@ public class BackendUtils {
 
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
                 if(!card.getMchntId().equals(merchantId)) {
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.CARD_WRONG_OWNER_MCHNT), "");
                 }
                 break;
         }

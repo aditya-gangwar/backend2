@@ -139,7 +139,7 @@ public class BackendOps {
         Backendless.Data.of( BackendlessUser.class ).loadRelations(user, relationProps);
     }
 
-    public static Merchants getMerchant(String userId, boolean onlyTrustedDevicesChild, boolean allChild) {
+    public static Merchants getMerchant(String userId, boolean trustedDevicesChild, boolean addressChild) {
         BackendlessDataQuery query = new BackendlessDataQuery();
 
         if(getMerchantIdType(userId)== BackendConstants.ID_TYPE_AUTO) {
@@ -148,17 +148,14 @@ public class BackendOps {
             query.setWhereClause("mobile_num = '"+userId+"'");
         }
 
-        if(allChild) {
+        if(addressChild || trustedDevicesChild) {
             QueryOptions queryOptions = new QueryOptions();
-            queryOptions.addRelated("trusted_devices");
-            queryOptions.addRelated("address");
-            //queryOptions.addRelated("address.city");
-            //queryOptions.addRelated("buss_category");
-            query.setQueryOptions(queryOptions);
-
-        } else if(onlyTrustedDevicesChild) {
-            QueryOptions queryOptions = new QueryOptions();
-            queryOptions.addRelated("trusted_devices");
+            if(addressChild) {
+                queryOptions.addRelated("address");
+            }
+            if(trustedDevicesChild) {
+                queryOptions.addRelated("trusted_devices");
+            }
             query.setQueryOptions(queryOptions);
         }
 
@@ -304,7 +301,7 @@ public class BackendOps {
      * Cashback operations
      */
     public static ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable,
-                                                    boolean customerData, boolean mchntData) {
+                                                    boolean customerData) {
 
         Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
@@ -314,17 +311,17 @@ public class BackendOps {
         //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
         dataQuery.setWhereClause(whereClause);
 
-        QueryOptions queryOptions = new QueryOptions();
         if(customerData) {
+            QueryOptions queryOptions = new QueryOptions();
             queryOptions.addRelated("customer");
             queryOptions.addRelated("customer.membership_card");
+            dataQuery.setQueryOptions(queryOptions);
         }
-        if(mchntData) {
+        /*if(mchntData) {
             queryOptions.addRelated("merchant");
             //queryOptions.addRelated("merchant.buss_category");
             queryOptions.addRelated("merchant.address");
-        }
-        dataQuery.setQueryOptions(queryOptions);
+        }*/
 
         BackendlessCollection<Cashback> collection = Backendless.Data.of(Cashback.class).find(dataQuery);
 

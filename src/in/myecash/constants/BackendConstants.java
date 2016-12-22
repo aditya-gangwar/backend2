@@ -11,7 +11,7 @@ public class BackendConstants {
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = false;
-    public static final boolean TESTING_SKIP_SMS = false;
+    public static final boolean TESTING_SKIP_SMS = true;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean FORCED_DEBUG_LOGS = true;
 
@@ -30,7 +30,7 @@ public class BackendConstants {
     public static final String BACKEND_EDR_SECURITY_BREACH = "SecurityBreach";
     public static final String BACKEND_EDR_OLD_STATS_RETURNED = "OldStatsReturned";
     // ignored error scenarios
-    public static final String IGNORED_ERROR_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
+    //public static final String IGNORED_ERROR_OLDCARD_SAVE_FAILED = "OldCardSaveFailed";
     public static final String IGNORED_ERROR_MOBILE_NUM_NA = "MobileNumNotAvailable";
     public static final String IGNORED_ERROR_ACC_STATUS_CHANGE_FAILED = "AccStatusChangeFailed";
     public static final String IGNORED_ERROR_WRONG_ATTEMPT_SAVE_FAILED = "WrongAttemptSaveFailed";
@@ -40,6 +40,7 @@ public class BackendConstants {
     public static final String IGNORED_ERROR_CUST_PIN_RESET_FAILED = "custPinResetFailed";
     public static final String IGNORED_ERROR_CUST_WITH_NO_CB_RECORD = "custWithNoCbRecord";
     public static final String IGNORED_ERROR_CB_WITH_NO_CUST = "cbWithNoLinkedCust";
+    public static final String IGNORED_ERROR_CB_WITH_NO_MCHNT = "cbWithNoValidMchnt";
 
     // array indexes giving position of EDR fields
     public static final int EDR_API_NAME_IDX = 0;

@@ -83,7 +83,7 @@ public class CustomerServices implements IBackendlessService {
                 String whereClause = "cust_private_id = '" + custPrivateId + "' AND updated > "+updatedSince;
                 mLogger.debug("whereClause: "+whereClause);
 
-                ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause,csvFields[i], false, true);
+                ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause,csvFields[i], false);
                 if (data != null) {
                     if(cbs==null) {
                         cbs= new ArrayList<>();
@@ -91,9 +91,17 @@ public class CustomerServices implements IBackendlessService {
                     // dont want to send complete merchant objects
                     // convert the required info into a CSV string
                     // and send as other_details column of the cashback object
-                    for (Cashback cb :
-                            data) {
-                        cb.setOther_details(MyMerchant.toCsvString(cb.getMerchant()));
+                    for (Cashback cb : data) {
+                        try {
+                            Merchants merchant = BackendOps.getMerchant(cb.getMerchant_id(), false, true);
+                            cb.setOther_details(MyMerchant.toCsvString(merchant));
+                        } catch (Exception e) {
+                            // I shouldn't be here
+                            // ignore and try for next merchant - but log as alarm
+                            mLogger.error("CustomerServices.getCashbacks: Exception while fetching Merchant: "+
+                                    cb.getMerchant_id()+", "+custPrivateId,e);
+                            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CB_WITH_NO_MCHNT;
+                        }
                     }
 
                     // add all fetched records from this table to final set

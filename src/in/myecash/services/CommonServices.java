@@ -213,16 +213,25 @@ public class CommonServices implements IBackendlessService {
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Customers customer = null;
+            CustomerCards card = null;
             if (userType == DbConstants.USER_TYPE_CUSTOMER) {
                 customer = (Customers) userObj;
+                card = customer.getMembership_card();
                 if (!customer.getMobile_num().equals(custId)) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
                             "Invalid customer id provided: " + custId);
                 }
+
+                // Mask info not valid for customer user
+                card.setCcntId("");
+                card.setAgentId("");
+                card.setMchntId("");
+                card.setCustId("");
             } else if (userType == DbConstants.USER_TYPE_CC) {
                 try {
                     customer = BackendOps.getCustomer(custId, BackendUtils.getCustomerIdType(custId), true);
+                    card = customer.getMembership_card();
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
                         // CC agent may enter wrong customer id by mistake
@@ -231,10 +240,14 @@ public class CommonServices implements IBackendlessService {
                     throw e;
                 }
                 mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
+
             } else {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
+
+            // remove common senstive info from the object
+            customer.setTxn_pin("");
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -289,46 +302,6 @@ public class CommonServices implements IBackendlessService {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
     }
-
-    /*public Customers getInternalUser(String userId) {
-        BackendUtils.initAll();
-        long startTime = System.currentTimeMillis();
-        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getInternalUser";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
-
-        boolean validException = false;
-        try {
-            mLogger.debug("In getInternalUser");
-
-            // Send userType param as null to avoid checking within fetchCurrentUser fx.
-            // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
-            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
-
-            InternalUser internalUser = null;
-            if (userType == DbConstants.USER_TYPE_CC || userType==DbConstants.USER_TYPE_AGENT || userType==DbConstants.USER_TYPE_CNT) {
-                internalUser = (Customers) userObj;
-                if (!internalUser.getMobile_num().equals(userId)) {
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
-                            "Invalid customer id provided: " + userId);
-                }
-            } else {
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
-            }
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            return internalUser;
-        } catch (Exception e) {
-            BackendUtils.handleException(e, validException, mLogger, mEdr);
-            throw e;
-        } finally {
-            BackendUtils.finalHandling(startTime, mLogger, mEdr);
-        }
-    }*/
 
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
@@ -624,6 +597,63 @@ public class CommonServices implements IBackendlessService {
         }
     }
 
+    /*public void resetFileRefreshFlag(String userId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "setFileRefreshFlag";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
+
+        try {
+            // Send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            Merchants merchant = null;
+            Customers customer = null;
+            if (userType == DbConstants.USER_TYPE_MERCHANT) {
+                merchant = (Merchants) userObj;
+                if (!merchant.getAuto_id().equals(userId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
+                            "Provided Merchant Id dont match: " + userId);
+                }
+                mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+                if(merchant.isRefreshFilesOnce()) {
+                    merchant.setRefreshFilesOnce(false);
+                    BackendOps.updateMerchant(merchant);
+                }
+
+            } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {
+                customer = (Customers) userObj;
+                if (!customer.getPrivate_id().equals(userId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
+                            "Provided Customer Id dont match: " + userId);
+                }
+                mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
+                if(customer.isRefreshFilesOnce()) {
+                    customer.setRefreshFilesOnce(false);
+                    BackendOps.updateCustomer(customer);
+                }
+
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }*/
+
     /*
      * Private helper methods
      */
@@ -638,6 +668,7 @@ public class CommonServices implements IBackendlessService {
         // update 'customer' and 'CustomerCard' objects for new card
         newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
         newCard.setStatus_update_time(new Date());
+        newCard.setCustId(customer.getPrivate_id());
         customer.setCardId(newCard.getCard_id());
         customer.setMembership_card(newCard);
 
@@ -656,7 +687,7 @@ public class CommonServices implements IBackendlessService {
             // but log as alarm for manual correction
             mLogger.error("Exception while updating old card status: "+e.toString());
             mLogger.error(BackendUtils.stackTraceStr(e));
-            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX]=BackendConstants.IGNORED_ERROR_OLDCARD_SAVE_FAILED;
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX]=BackendConstants.BACKEND_EDR_MANUAL_CHECK;
         }
 
         // Send message to customer informing the same - ignore sent status
@@ -713,6 +744,8 @@ public class CommonServices implements IBackendlessService {
         SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
     }
 
+}
+
     /*private String custPinResetWhereClause(String customerMobileNum) {
         StringBuilder whereClause = new StringBuilder();
 
@@ -726,5 +759,43 @@ public class CommonServices implements IBackendlessService {
         return whereClause.toString();
     }*/
 
+    /*public Customers getInternalUser(String userId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getInternalUser";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
 
-}
+        boolean validException = false;
+        try {
+            mLogger.debug("In getInternalUser");
+
+            // Send userType param as null to avoid checking within fetchCurrentUser fx.
+            // But check immediatly after
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            InternalUser internalUser = null;
+            if (userType == DbConstants.USER_TYPE_CC || userType==DbConstants.USER_TYPE_AGENT || userType==DbConstants.USER_TYPE_CNT) {
+                internalUser = (Customers) userObj;
+                if (!internalUser.getMobile_num().equals(userId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
+                            "Invalid customer id provided: " + userId);
+                }
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return internalUser;
+        } catch (Exception e) {
+            BackendUtils.handleException(e, validException, mLogger, mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime, mLogger, mEdr);
+        }
+    }*/
+

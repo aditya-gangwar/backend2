@@ -82,7 +82,7 @@ public class TxnTableEventHelper {
             // Fetch cashback record
             String whereClause = "rowid = '" + mCustomer.getPrivate_id() + mMerchantId + "'";
             Cashback cashback = null;
-            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, mMerchant.getCashback_table(), false, false);
+            ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, mMerchant.getCashback_table(), false);
             if (data != null) {
                 cashback = data.get(0);
 
@@ -100,6 +100,7 @@ public class TxnTableEventHelper {
                 cashback.setCb_billed(cashback.getCb_billed() + mTransaction.getCb_billed());
 
                 // add/update transaction fields
+                mTransaction.setCustomer_id(mCustomer.getMobile_num());
                 mTransaction.setCust_private_id(mCustomer.getPrivate_id());
                 mTransaction.setMerchant_id(mMerchantId);
                 mTransaction.setMerchant_name(mMerchant.getName());
@@ -281,7 +282,7 @@ public class TxnTableEventHelper {
     private void commonTxnProcessing() {
 
         // Fetch mCustomer
-        mCustomer = BackendOps.getCustomer(mTransaction.getCustomer_id(), BackendConstants.ID_TYPE_MOBILE, true);
+        mCustomer = BackendOps.getCustomer(mTransaction.getCust_private_id(), BackendConstants.ID_TYPE_AUTO, true);
         mCustomerId = mCustomer.getMobile_num();
         mEdr[BackendConstants.EDR_CUST_ID_IDX] = mCustomerId;
 

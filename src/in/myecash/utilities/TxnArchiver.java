@@ -270,7 +270,6 @@ public class TxnArchiver
                 sb.append(CommonConstants.CSV_NEWLINE);
                 mCsvDataMap.put(filename,sb);
             }
-
             sb.append(CsvConverter.csvStrFromTxn(txn));
             sb.append(CommonConstants.CSV_NEWLINE);
         }

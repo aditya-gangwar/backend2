@@ -164,6 +164,7 @@ public class InternalUserServices implements IBackendlessService {
                     if(updateCard) {
                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_OK);
                         card.setStatus_update_time(new Date());
+                        card.setStatus_reason("");
                         BackendOps.saveCustomerCard(card);
                     }
 
@@ -214,7 +215,6 @@ public class InternalUserServices implements IBackendlessService {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
-
 
     public String registerMerchant(Merchants merchant)
     {
@@ -377,6 +377,10 @@ public class InternalUserServices implements IBackendlessService {
             // Fetch merchant
             Merchants merchant = BackendOps.getMerchant(merchantId, false, false);
 
+            if(merchant.getAdmin_status()!=DbConstants.USER_STATUS_ACTIVE) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant is not Active.");
+            }
+
             // Add merchant op first - then update status
             MerchantOps op = new MerchantOps();
             op.setCreateTime(new Date());
@@ -456,6 +460,10 @@ public class InternalUserServices implements IBackendlessService {
             // Fetch customer
             Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, false);
 
+            if(customer.getAdmin_status()!=DbConstants.USER_STATUS_ACTIVE) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Customer is not Active.");
+            }
+
             // Add customer op first - then update status
             CustomerOps op = new CustomerOps();
             op.setCreateTime(new Date());
@@ -507,6 +515,95 @@ public class InternalUserServices implements IBackendlessService {
             } else {
                 smsText = String.format(SmsConstants.SMS_ACCOUNT_DISABLE, CommonUtils.getPartialVisibleStr(customer.getMobile_num()));
             }
+            SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void disableCustCard(String privateId, String cardNum, String ticketNum, String reason, String remarks) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "disableCustCard";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cardNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                privateId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                ticketNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                reason;
+
+        try {
+            // Fetch customer care user
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            if( userType!=DbConstants.USER_TYPE_CC && userType!=DbConstants.USER_TYPE_ADMIN) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // Fetch customer
+            Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, true);
+            CustomerCards card = customer.getMembership_card();
+
+            if(!card.getCard_id().equals(cardNum)) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Card Number");
+            }
+            if(card.getStatus()!=DbConstants.CUSTOMER_CARD_STATUS_ACTIVE) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Customer Card is not Active");
+            }
+
+            // Add customer op first - then update status
+            CustomerOps op = new CustomerOps();
+            op.setCreateTime(new Date());
+            op.setPrivateId(privateId);
+            op.setMobile_num(customer.getMobile_num());
+            op.setOp_code(DbConstants.OP_DISABLE_CARD);
+            op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
+            op.setTicketNum(ticketNum);
+            op.setReason(reason);
+            op.setRemarks(remarks);
+            op.setRequestor_id(internalUser.getId());
+            op.setInitiatedBy( (userType==DbConstants.USER_TYPE_CC)?
+                    DbConstantsBackend.USER_OP_INITBY_MCHNT :
+                    DbConstantsBackend.USER_OP_INITBY_ADMIN);
+            if(userType==DbConstants.USER_TYPE_CC) {
+                op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_CC);
+            }
+            String extra = "Card Num: "+card.getCard_id();
+            op.setExtra_op_params(extra);
+            op = BackendOps.saveCustomerOp(op);
+
+            // Update Card Object
+            try {
+                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_DISABLED);
+                card.setStatus_update_time(new Date());
+                card.setStatus_reason(reason);
+                BackendOps.saveCustomerCard(card);
+
+            } catch(Exception e) {
+                mLogger.error("disableCustCard: Exception while updating card status: "+privateId);
+                // Rollback - delete merchant op added
+                try {
+                    BackendOps.deleteCustomerOp(op);
+                } catch(Exception ex) {
+                    mLogger.fatal("disableCustCard: Failed to rollback: merchant op deletion failed: "+privateId);
+                    // Rollback also failed
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw ex;
+                }
+                throw e;
+            }
+
+            // send SMS
+            String smsText = String.format(SmsConstants.SMS_DISABLE_CARD, customer.getFirstName(),
+                    CommonUtils.getPartialVisibleStr(card.getCard_id()));
             SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
 
             // no exception - means function execution success

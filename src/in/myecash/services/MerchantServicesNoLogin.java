@@ -45,7 +45,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "");
             }
 
-            mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceInfo);
+            //mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceInfo);
             //mLogger.debug(InvocationContext.asString());
             //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
@@ -63,7 +63,7 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             } else {
                 deviceInfo = deviceInfo+","+String.valueOf(System.currentTimeMillis())+","+rcvdOtp;
             }
-            mLogger.debug("Updated DeviceInfo: "+deviceInfo);
+            //mLogger.debug("Updated DeviceInfo: "+deviceInfo);
 
             //TODO: encrypt 'deviceInfo' - as its not reset to NULL after login and hence will reach to the app
 

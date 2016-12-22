@@ -84,5 +84,6 @@ public class SmsConstants {
     // Mobile/Card change messages
     public static String SMS_MOBILE_CHANGE = "Registered Mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_DISABLE_CARD = "Dear %s - Your MyeCash Customer Card bearing number '%s' is Disabled now. Please get new Card from any MyeCash Merchant.";
 
 }
