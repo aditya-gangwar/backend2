@@ -627,8 +627,8 @@ public class MerchantServices implements IBackendlessService {
             }
 
             // fetch customer card object
-            card = BackendOps.getCustomerCard(cardId);
-            mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = card.getCard_id();
+            card = BackendOps.getCustomerCard(cardId, true);
+            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = card.getCard_id();
             BackendUtils.checkCardForAllocation(card, merchant.getAuto_id(), mEdr, mLogger);
 
             if (otp == null || otp.isEmpty()) {
@@ -661,7 +661,7 @@ public class MerchantServices implements IBackendlessService {
                 customer.setFirstName(firstName);
                 customer.setLastName(lastName);
                 //customer.setName(name);
-                customer.setCardId(cardId);
+                customer.setCardId(card.getCardNum());
                 // set membership card
                 card.setCustId(customer.getPrivate_id());
                 card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
@@ -745,6 +745,8 @@ public class MerchantServices implements IBackendlessService {
         // generate and set PIN
         String pin = BackendUtils.generateCustomerPIN();
         mLogger.debug("Generated PIN: "+pin);
+        // get salted hash for the PIN
+
         customer.setTxn_pin(pin);
 
         return customer;

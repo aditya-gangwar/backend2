@@ -212,8 +212,8 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 
             // check for 'extra verification'
-            String cardId = customer.getCardId();
-            if (cardId == null || !cardId.equalsIgnoreCase(secret)) {
+            String cardNum = customer.getMembership_card().getCardNum();
+            if (cardNum == null || !cardNum.equalsIgnoreCase(secret)) {
                 BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;

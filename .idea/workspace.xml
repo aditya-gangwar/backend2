@@ -9,7 +9,6 @@
     <list default="true" id="2787f8a4-2254-4a73-9b45-f8008f85f2a3" name="Default" comment="">
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/in/myecash/database/MycKeys.java" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/in/myecash/utilities/SecurityHelper.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/libs.xml" afterPath="$PROJECT_DIR$/.idea/libraries/libs.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" afterPath="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnTableEventHelper.java" afterPath="$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnTableEventHelper.java" />
@@ -774,13 +773,6 @@
       <option name="presentableId" value="Default" />
       <updated>1461006506427</updated>
     </task>
-    <task id="LOCAL-00053" summary="13 Sep">
-      <created>1473711934958</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1473711934958</updated>
-    </task>
     <task id="LOCAL-00054" summary="13 Sep">
       <created>1473805197133</created>
       <option name="number" value="00054" />
@@ -1117,7 +1109,14 @@
       <option name="project" value="LOCAL" />
       <updated>1482444900114</updated>
     </task>
-    <option name="localTasksCounter" value="102" />
+    <task id="LOCAL-00102" summary="21 Dec">
+      <created>1482537865379</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1482537865379</updated>
+    </task>
+    <option name="localTasksCounter" value="103" />
     <servers />
   </component>
   <component name="ToolWindowManager">

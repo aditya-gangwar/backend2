@@ -331,7 +331,7 @@ public class TxnTableEventHelper {
         // check if card required and provided and matches
         if(BackendUtils.customerCardRequired(mTransaction)) {
             if(mTransaction.getUsedCardId()!=null) {
-                if(!mTransaction.getUsedCardId().equals(mCustomer.getCardId())) {
+                if(!mTransaction.getUsedCardId().equals(mCustomer.getMembership_card().getCard_id())) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
                 }
@@ -341,11 +341,9 @@ public class TxnTableEventHelper {
             }
         }
 
-        // check that card is not blocked
-        // TODO: check this if this is really required - if not, avoid fetching card object also
-        mEdr[BackendConstants.EDR_CUST_CARD_ID_IDX] = mCustomer.getCardId();
+        // check that card is not disabled
+        mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
         BackendUtils.checkCardForUse(mCustomer.getMembership_card());
-
     }
 
     private Customers updateTxnTables(Customers customer, String mchntTable) {

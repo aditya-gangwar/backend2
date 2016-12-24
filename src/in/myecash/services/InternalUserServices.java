@@ -86,7 +86,7 @@ public class InternalUserServices implements IBackendlessService {
                 cardForAction.setScannedCode(code);
                 try {
                     // find card row against this code
-                    CustomerCards card = BackendOps.getCustomerCard(code);
+                    CustomerCards card = BackendOps.getCustomerCard(code,true);
                     int curStatus = card.getStatus();
                     cardForAction.setCardNum(card.getCard_id());
 

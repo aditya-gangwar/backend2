@@ -16,6 +16,7 @@ import in.myecash.constants.*;
 import in.myecash.database.*;
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
+import in.myecash.utilities.SecurityHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,7 +29,7 @@ import java.util.Map;
 public class AdminServices implements IBackendlessService {
 
     private static final String ADMIN_LOGINID = "admin";
-    
+
     private MyLogger mLogger = new MyLogger("services.AdminServices");
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];
 
@@ -637,7 +638,7 @@ public class AdminServices implements IBackendlessService {
         }
     }
 
-    public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd) {
+    public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd, String keyadminPwd) {
         long startTime = System.currentTimeMillis();
         try {
             BackendUtils.initAll();
@@ -650,6 +651,10 @@ public class AdminServices implements IBackendlessService {
             mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
 
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
+
+            // Get key - before logging as Admin - as getting key will need to login as keyadmin
+            String key = SecurityHelper.getMemberCardKey(keyadminPwd, mLogger);
+
             // login using 'admin' user
             BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
@@ -690,15 +695,17 @@ public class AdminServices implements IBackendlessService {
             String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + lowestBatch.getRangeBatchId();
             for(int i=BackendConstants.CARD_ID_MIN_SNO_PER_BATCH; i<=BackendConstants.CARD_ID_MAX_SNO_PER_BATCH; i++) {
                 CustomerCards card = new CustomerCards();
-                String cardId = cardIdPrefix + String.format("%03d",i);
-                card.setCard_id(cardId);
+                String cardNum = cardIdPrefix + String.format("%03d",i);
+                card.setCardNum(cardNum);
+                card.setCard_id(SecurityHelper.getCardIdFromNum(cardNum, key, mLogger));
+                //String cardNum = SecurityHelper.getCardNumFromId(card.getCard_id(), key, mLogger);
                 card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
                 card.setStatus_update_time(new Date());
                 BackendOps.saveCustomerCard(card);
             }
 
             // Count how many rows created
-            int cnt = BackendOps.getCardCnt("card_id like '"+cardIdPrefix+"%' AND status = "+DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
+            int cnt = BackendOps.getCardCnt("cardNum like '"+cardIdPrefix+"%' AND status = "+DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
             if(cnt != (BackendConstants.CARD_ID_MAX_SNO_PER_BATCH+1)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Not all Card rows are created : "+cnt);
             }

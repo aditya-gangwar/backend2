@@ -272,13 +272,17 @@ public class BackendOps {
     /*
      * Customer card operations
      */
-    public static CustomerCards getCustomerCard(String cardId) {
+    public static CustomerCards getCustomerCard(String key, boolean isID) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setWhereClause("card_id = '" + cardId + "'");
+        if(isID) {
+            dataQuery.setWhereClause("card_id = '" + key + "'");
+        } else {
+            dataQuery.setWhereClause("cardNum = '" + key + "'");
+        }
 
         BackendlessCollection<CustomerCards> collection = Backendless.Data.of(CustomerCards.class).find(dataQuery);
         if( collection.getTotalObjects() == 0) {
-            String errorMsg = "No membership card found: "+cardId;
+            String errorMsg = "No membership card found: "+key;
             throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
         } else {
             return collection.getData().get(0);

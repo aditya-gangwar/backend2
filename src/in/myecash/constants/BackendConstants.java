@@ -52,7 +52,7 @@ public class BackendConstants {
     public static final int EDR_MCHNT_ID_IDX = 6;
     public static final int EDR_INTERNAL_USER_ID_IDX = 7;
     public static final int EDR_CUST_ID_IDX = 8;
-    public static final int EDR_CUST_CARD_ID_IDX = 9;
+    public static final int EDR_CUST_CARD_NUM_IDX = 9;
     public static final int EDR_RESULT_IDX = 10;
     public static final int EDR_EXP_EXPECTED = 11;
     public static final int EDR_EXP_CODE_IDX = 12;
