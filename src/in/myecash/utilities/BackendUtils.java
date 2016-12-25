@@ -48,16 +48,6 @@ public class BackendUtils {
         return countryCode + batch.getRangeBatchId() + String.format("%03d", serialNo);
     }
 
-    public static String generateCustomerPIN() {
-        // random numeric string
-        Random random = new Random();
-        char[] id = new char[CommonConstants.PIN_LEN];
-        for (int i = 0; i < CommonConstants.PIN_LEN; i++) {
-            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
-        }
-        return new String(id);
-    }
-
     public static String generateOTP() {
         // TODO: encrypt OTP
         // random numeric string
@@ -485,6 +475,9 @@ public class BackendUtils {
             case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
                 return BackendConstants.ID_TYPE_AUTO;
             default:
+                if(id.startsWith(CommonConstants.MEMBER_CARD_ID_PREFIX)) {
+                    return BackendConstants.ID_TYPE_CARD;
+                }
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid customer ID: "+id);
         }
     }

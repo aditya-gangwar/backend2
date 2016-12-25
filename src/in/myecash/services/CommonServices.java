@@ -18,6 +18,7 @@ import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
+import in.myecash.utilities.SecurityHelper;
 
 import java.util.Date;
 
@@ -248,6 +249,7 @@ public class CommonServices implements IBackendlessService {
 
             // remove common senstive info from the object
             customer.setTxn_pin("");
+            customer.setNamak("");
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -309,7 +311,7 @@ public class CommonServices implements IBackendlessService {
      * OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
      * OP_CHANGE_PIN - Need PIN(existing) - only from customer app
      */
-    public String execCustomerOp(String opCode, String mobileNum, String argCardId, String otp, String pin, String opParam) {
+    public String execCustomerOp(String opCode, String mobileNum, String argCardId, String otp, String argPin, String opParam) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -319,7 +321,7 @@ public class CommonServices implements IBackendlessService {
                 mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 argCardId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 otp+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                pin+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                argPin+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 opParam;
 
         boolean validException = false;
@@ -434,7 +436,7 @@ public class CommonServices implements IBackendlessService {
 
                 // Don't verify PIN for 'reset PIN' operation
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
-                        !customer.getTxn_pin().equals(pin)) {
+                        !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
@@ -478,7 +480,7 @@ public class CommonServices implements IBackendlessService {
                 }
                 // Don't verify PIN for 'reset PIN' operation
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
-                        !customer.getTxn_pin().equals(pin)) {
+                        !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
@@ -671,7 +673,7 @@ public class CommonServices implements IBackendlessService {
         newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
         newCard.setStatus_update_time(new Date());
         newCard.setCustId(customer.getPrivate_id());
-        customer.setCardId(newCard.getCardNum());
+        customer.setCardId(newCard.getCard_id());
         customer.setMembership_card(newCard);
 
         // save updated customer object
@@ -720,12 +722,10 @@ public class CommonServices implements IBackendlessService {
     }
 
     private void resetCustomerPin(Customers customer, String merchantName) {
-        // generate pin
-        String newPin = BackendUtils.generateCustomerPIN();
-
+        // This is just to make existing PIN un-usable
+        // Else new PIn will be generated on Customer Reset PIN timer expiry
+        SecurityHelper.generateCustPin(customer, mLogger);
         // update user account for the PIN
-        //TODO: encode PIN
-        customer.setTxn_pin(newPin);
         BackendOps.updateCustomer(customer);
 
         // Send SMS through HTTP
@@ -737,8 +737,8 @@ public class CommonServices implements IBackendlessService {
 
     private void changeCustomerPin(Customers customer, String newPin) {
         // update user account for the PIN
-        //TODO: encode PIN
-        customer.setTxn_pin(newPin);
+        //customer.setTxn_pin(newPin);
+        SecurityHelper.setCustPin(customer, newPin, mLogger);
         BackendOps.updateCustomer(customer);
 
         // Send SMS through HTTP

@@ -69,6 +69,7 @@ public class MyLogger {
     public void error(String msg, Exception e) {
         msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.error(msg);
+        mLogger.error(e.getMessage());
         mLogger.error(BackendUtils.stackTraceStr(e));
         if(BackendConstants.DEBUG_MODE) {
             msg = "Error | "+msg;

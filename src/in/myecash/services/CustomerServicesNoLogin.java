@@ -16,6 +16,7 @@ import in.myecash.utilities.MyLogger;
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.constants.*;
+import in.myecash.utilities.SecurityHelper;
 
 import java.util.Date;
 
@@ -30,7 +31,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
-    public void enableCustAccount(String userId, String passwd, String rcvdOtp, String cardNum, String pin) {
+    public void enableCustAccount(String userId, String passwd, String rcvdOtp, String cardNum, String argPin) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -50,7 +51,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
             // Fetch customer
             Customers customer = BackendOps.getCustomer(userId, BackendConstants.ID_TYPE_MOBILE, true);
-            String cardIdDb = customer.getMembership_card().getCard_id();
+            String cardNumDb = customer.getMembership_card().getCardNum();
             String mobileNum = customer.getMobile_num();
             mLogger.setProperties(customer.getPrivate_id(), DbConstants.USER_TYPE_CUSTOMER, customer.getDebugLogs());
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
@@ -64,14 +65,14 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 // first call - verify and generate OTP
 
                 // Atleast one of 'cardNum' or 'PIN' is required
-                if( (cardNum==null || cardNum.isEmpty()) && (pin==null || pin.isEmpty()) ) {
+                if( (cardNum==null || cardNum.isEmpty()) && (argPin==null || argPin.isEmpty()) ) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Either of Card Number or PIN is required");
                 }
 
                 // Verify PIN - if provided
-                if ( pin!=null && !pin.isEmpty() &&
-                        !customer.getTxn_pin().equals(pin)) {
+                if ( argPin!=null && !argPin.isEmpty() &&
+                        !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
@@ -81,7 +82,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
                 // verify PIN - if provided
                 if ( cardNum!=null && !cardNum.isEmpty() &&
-                        !cardIdDb.equals(cardNum)) {
+                        !cardNumDb.equals(cardNum)) {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
@@ -212,8 +213,8 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 
             // check for 'extra verification'
-            String cardNum = customer.getMembership_card().getCardNum();
-            if (cardNum == null || !cardNum.equalsIgnoreCase(secret)) {
+            String cardNumDb = customer.getMembership_card().getCardNum();
+            if (cardNumDb == null || !cardNumDb.equalsIgnoreCase(secret)) {
                 BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;

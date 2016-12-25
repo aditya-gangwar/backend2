@@ -17,6 +17,7 @@ import java.util.Date;
 
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
+import in.myecash.utilities.SecurityHelper;
 
 /**
  * CustomerPasswdPinResetTimer is a timer.
@@ -82,11 +83,9 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
     private void handlePinReset(CustomerOps op, Customers customer) {
         try {
             // generate pin
-            String newPin = BackendUtils.generateCustomerPIN();
+            String newPin = SecurityHelper.generateCustPin(customer, mLogger);
 
             // update user account for the PIN
-            //TODO: encode PIN
-            customer.setTxn_pin(newPin);
             BackendOps.updateCustomer(customer);
 
             // Change customer op status

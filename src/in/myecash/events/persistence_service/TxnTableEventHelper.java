@@ -21,6 +21,7 @@ import java.util.TimeZone;
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.constants.*;
+import in.myecash.utilities.SecurityHelper;
 
 /**
  * Created by adgangwa on 13-05-2016.
@@ -101,6 +102,8 @@ public class TxnTableEventHelper {
 
                 // add/update transaction fields
                 mTransaction.setCustomer_id(mCustomer.getMobile_num());
+                // update cardId with cardNum
+                mTransaction.setUsedCardId(mCustomer.getMembership_card().getCardNum());
                 mTransaction.setCust_private_id(mCustomer.getPrivate_id());
                 mTransaction.setMerchant_id(mMerchantId);
                 mTransaction.setMerchant_name(mMerchant.getName());
@@ -311,8 +314,9 @@ public class TxnTableEventHelper {
 
         // verify PIN
         if(CommonUtils.customerPinRequired(mMerchant, mTransaction)) {
+            //mLogger.debug("Customer PIN is required");
             if (mTransaction.getCpin() != null) {
-                if (!mTransaction.getCpin().equals(mCustomer.getTxn_pin())) {
+                if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
                     BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
                     mValidException = true; // to avoid logging of this exception

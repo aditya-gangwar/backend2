@@ -344,9 +344,7 @@ public class AdminServices implements IBackendlessService {
                         if( BackendOps.findActiveCustPinResetReqs(customer.getPrivate_id()) != null) {
                             throw new BackendlessException(String.valueOf(ErrorCodes.DUPLICATE_ENTRY), "");
                         }
-                        String newPin = BackendUtils.generateCustomerPIN();
-                        customer.setTxn_pin(newPin);
-                        smsExtraParam = newPin;
+                        smsExtraParam = SecurityHelper.generateCustPin(customer, mLogger);
                         newStatus = DbConstants.USER_STATUS_ACTIVE;
                         break;
 
@@ -698,7 +696,11 @@ public class AdminServices implements IBackendlessService {
                 String cardNum = cardIdPrefix + String.format("%03d",i);
                 card.setCardNum(cardNum);
                 card.setCard_id(SecurityHelper.getCardIdFromNum(cardNum, key, mLogger));
-                //String cardNum = SecurityHelper.getCardNumFromId(card.getCard_id(), key, mLogger);
+                // check if its being decoded properly
+                String decodedCardNum = SecurityHelper.getCardNumFromId(card.getCard_id(), key, mLogger);
+                if(!decodedCardNum.equals(cardNum)) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Decoded cardNum not same as encoded");
+                }
                 card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
                 card.setStatus_update_time(new Date());
                 BackendOps.saveCustomerCard(card);

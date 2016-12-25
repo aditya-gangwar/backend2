@@ -606,18 +606,15 @@ public class MerchantServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = customerMobile+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 cardId;
 
-        Customers customer = null;
-        CustomerCards card = null;
-        BackendlessUser customerUser = null;
         Cashback cashback = null;
         boolean validException = false;
-
         try {
             // Fetch merchant
             Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerMobile;
 
             // customer should not exist
+            Customers customer = null;
             try {
                 customer = BackendOps.getCustomer(customerMobile, BackendConstants.ID_TYPE_MOBILE, false);
                 // If here - means customer exist - return error
@@ -627,8 +624,8 @@ public class MerchantServices implements IBackendlessService {
             }
 
             // fetch customer card object
-            card = BackendOps.getCustomerCard(cardId, true);
-            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = card.getCard_id();
+            CustomerCards card = BackendOps.getCustomerCard(cardId, true);
+            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = card.getCardNum();
             BackendUtils.checkCardForAllocation(card, merchant.getAuto_id(), mEdr, mLogger);
 
             if (otp == null || otp.isEmpty()) {
@@ -653,6 +650,8 @@ public class MerchantServices implements IBackendlessService {
 
                 // Create customer object
                 customer = createCustomer();
+                // generate PIN
+                String pin = SecurityHelper.generateCustPin(customer, mLogger);
                 // set fields
                 // new record - so set it directly
                 customer.setCashback_table(merchant.getCashback_table());
@@ -660,17 +659,15 @@ public class MerchantServices implements IBackendlessService {
                 customer.setMobile_num(customerMobile);
                 customer.setFirstName(firstName);
                 customer.setLastName(lastName);
-                //customer.setName(name);
-                customer.setCardId(card.getCardNum());
+                customer.setCardId(card.getCard_id());
                 // set membership card
                 card.setCustId(customer.getPrivate_id());
                 card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
                 card.setStatus_update_time(new Date());
-                card.setCustId(customer.getPrivate_id());
                 customer.setMembership_card(card);
 
                 // Create customer user
-                customerUser = new BackendlessUser();
+                BackendlessUser customerUser = new BackendlessUser();
                 customerUser.setProperty("user_id", customerMobile);
                 // use generated PIN as password
                 customerUser.setPassword(BackendUtils.generateTempPassword());
@@ -709,7 +706,7 @@ public class MerchantServices implements IBackendlessService {
                 SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
 
                 // Send SMS containing PIN
-                smsText = String.format(SmsConstants.SMS_PIN, customerMobile, customer.getTxn_pin());
+                smsText = String.format(SmsConstants.SMS_PIN, customerMobile, pin);
                 SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
             }
 
@@ -742,12 +739,11 @@ public class MerchantServices implements IBackendlessService {
         mLogger.debug("Generated private id: "+private_id);
         customer.setPrivate_id(private_id);
 
-        // generate and set PIN
-        String pin = BackendUtils.generateCustomerPIN();
-        mLogger.debug("Generated PIN: "+pin);
+        //String pin = BackendUtils.generateCustomerPIN();
+        //mLogger.debug("Generated PIN: "+pin);
         // get salted hash for the PIN
 
-        customer.setTxn_pin(pin);
+        //customer.setTxn_pin(pin);
 
         return customer;
     }

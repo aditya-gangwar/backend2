@@ -88,7 +88,7 @@ public class InternalUserServices implements IBackendlessService {
                     // find card row against this code
                     CustomerCards card = BackendOps.getCustomerCard(code,true);
                     int curStatus = card.getStatus();
-                    cardForAction.setCardNum(card.getCard_id());
+                    cardForAction.setCardNum(card.getCardNum());
 
                     // update card row - as per requested action
                     boolean updateCard = false;
@@ -552,7 +552,7 @@ public class InternalUserServices implements IBackendlessService {
             Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, true);
             CustomerCards card = customer.getMembership_card();
 
-            if(!card.getCard_id().equals(cardNum)) {
+            if(!card.getCardNum().equals(cardNum)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Card Number");
             }
             if(card.getStatus()!=DbConstants.CUSTOMER_CARD_STATUS_ACTIVE) {
@@ -576,7 +576,7 @@ public class InternalUserServices implements IBackendlessService {
             if(userType==DbConstants.USER_TYPE_CC) {
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_CC);
             }
-            String extra = "Card Num: "+card.getCard_id();
+            String extra = "Card Num: "+card.getCardNum();
             op.setExtra_op_params(extra);
             op = BackendOps.saveCustomerOp(op);
 
@@ -603,7 +603,7 @@ public class InternalUserServices implements IBackendlessService {
 
             // send SMS
             String smsText = String.format(SmsConstants.SMS_DISABLE_CARD, customer.getFirstName(),
-                    CommonUtils.getPartialVisibleStr(card.getCard_id()));
+                    CommonUtils.getPartialVisibleStr(card.getCardNum()));
             SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
 
             // no exception - means function execution success

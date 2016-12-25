@@ -161,7 +161,7 @@ public class BackendOps {
 
         BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
         if( user.getTotalObjects() == 0) {
-            String errorMsg = "No Merchant found: "+userId;
+            String errorMsg = "No Merchant found: "+userId+", "+query.getWhereClause();
             throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             return user.getData().get(0);
