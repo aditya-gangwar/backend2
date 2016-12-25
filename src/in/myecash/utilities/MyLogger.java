@@ -52,7 +52,7 @@ public class MyLogger {
         if(BackendConstants.DEBUG_MODE) {
             msg = "Debug | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg).append(",").append(mDebugLogs);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg).append(",").append(mDebugLogs);
         }
     }
 
@@ -62,7 +62,7 @@ public class MyLogger {
         if(BackendConstants.DEBUG_MODE) {
             msg = "Error | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg);
         }
     }
 
@@ -74,7 +74,7 @@ public class MyLogger {
         if(BackendConstants.DEBUG_MODE) {
             msg = "Error | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg);
         }
     }
 
@@ -84,7 +84,7 @@ public class MyLogger {
         if(BackendConstants.DEBUG_MODE) {
             msg = "Fatal | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg);
         }
     }
 
@@ -94,7 +94,7 @@ public class MyLogger {
         if(BackendConstants.DEBUG_MODE) {
             msg = "Warning | "+msg;
             //System.out.println(msg);
-            mSb.append("\n").append(msg);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg);
         }
     }
 
@@ -123,7 +123,7 @@ public class MyLogger {
             mEdrLogger.info(edr);
         }
         if(BackendConstants.DEBUG_MODE) {
-            mSb.append("\n").append(edr);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(edr);
         }
     }
 

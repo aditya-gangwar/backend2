@@ -16,8 +16,9 @@ import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.*;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
@@ -412,7 +413,7 @@ public class MerchantServices implements IBackendlessService {
 
                     StringBuilder sb = new StringBuilder(CsvConverter.CB_CSV_MAX_SIZE * (data.size()+1));
                     //sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
-                    //sb.append(CommonConstants.CSV_NEWLINE);
+                    //sb.append(CommonConstants.NEWLINE_SEP);
 
                     // Add first line as header - to give the file creation time in epoch
                     sb.append(String.valueOf((new Date()).getTime())).append(CommonConstants.CSV_DELIMETER);
@@ -444,7 +445,7 @@ public class MerchantServices implements IBackendlessService {
                             // customer details as CSV - in other_details field of CB object
                             cb.setOther_details(MyCustomer.toCsvString(cb.getCustomer()));
                             // CB details as CSV
-                            sb.append(CommonConstants.CSV_NEWLINE).append(CsvConverter.csvStrFromCb(cb));
+                            sb.append(CommonConstants.NEWLINE_SEP).append(CsvConverter.csvStrFromCb(cb));
                         } else {
                             // All cb shud have linked customer
                             // ignore error - but log the same
@@ -779,10 +780,6 @@ public class MerchantServices implements IBackendlessService {
     private Cashback createCbObject(Merchants merchant, Customers customer) {
         Cashback cashback = new Cashback();
 
-        // rowid_card - "customer card id"+"merchant id"+"terminal id"
-        //String cardId = customer.getMembership_card().getCard_id();
-        //cashback.setRowid_card(cardId + merchantId);
-        // rowid - "customer mobile no"+"merchant id"+"terminal id"
         cashback.setRowid(customer.getPrivate_id() + merchant.getAuto_id());
 
         cashback.setMerchant_id(merchant.getAuto_id());
@@ -807,7 +804,6 @@ public class MerchantServices implements IBackendlessService {
         cashback.setCustomer(null);
         //cashback.setMerchant(null);
         cashback.setRowid(null);
-        //cashback.setRowid_card(null);
     }
 
     private void rollbackRegister(String custId, CustomerCards card) {
@@ -833,8 +829,7 @@ public class MerchantServices implements IBackendlessService {
             BackendOps.saveCustomerCard(card);
 
         } catch(Exception ex) {
-            mLogger.fatal("registerCustomer: Customer register Rollback failed: "+ex.toString());
-            mLogger.error(BackendUtils.stackTraceStr(ex));
+            mLogger.error("registerCustomer: Customer register Rollback failed: "+ex.toString(), ex);
             throw ex;
         }
     }
@@ -842,16 +837,22 @@ public class MerchantServices implements IBackendlessService {
     private void createCsvFile(String data, String merchantId, String userObjId) {
         try {
             String filePath = CommonUtils.getMerchantCustFilePath(merchantId);
-            String fileUrl = Backendless.Files.saveFile(filePath,data.getBytes("UTF-8"), true);
-            mLogger.debug("Customer data CSV file uploaded: " + fileUrl);
+
+            // Do Base64 encode
+            //mLogger.debug("Text bytes: "+data);
+            byte[] bytes = Base64.getEncoder().encode(data.getBytes(StandardCharsets.UTF_8));
+            //mLogger.debug("Encoded data: "+new String(bytes));
+
+            String fileUrl = Backendless.Files.saveFile(filePath,bytes, true);
+            //mLogger.debug("Customer data CSV file uploaded: " + fileUrl);
 
             // Give read access to this merchant to this file
             // no other merchant can read it
             FilePermission.READ.grantForUser( userObjId, filePath);
-            mLogger.debug("Gave read access to: " + filePath);
+            //mLogger.debug("Gave read access to: " + filePath);
 
-        } catch (UnsupportedEncodingException e) {
-            mLogger.error("Customer data CSV file upload failed: "+ e.toString());
+        } catch (Exception e) {
+            mLogger.error("Customer data CSV file upload failed: "+ e.toString(),e);
             // For multiple days, single failure will be considered failure for all days
             throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Failed to create customer data CSV file: "+e.toString());
         }

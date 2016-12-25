@@ -103,7 +103,11 @@ public class TxnTableEventHelper {
                 // add/update transaction fields
                 mTransaction.setCustomer_id(mCustomer.getMobile_num());
                 // update cardId with cardNum
-                mTransaction.setUsedCardId(mCustomer.getMembership_card().getCardNum());
+                if(txn.getUsedCardId()==null && txn.getUsedCardId().isEmpty()) {
+                    mTransaction.setUsedCardId("");
+                } else {
+                    mTransaction.setUsedCardId(mCustomer.getMembership_card().getCardNum());
+                }
                 mTransaction.setCust_private_id(mCustomer.getPrivate_id());
                 mTransaction.setMerchant_id(mMerchantId);
                 mTransaction.setMerchant_name(mMerchant.getName());
@@ -345,9 +349,11 @@ public class TxnTableEventHelper {
             }
         }
 
-        // check that card is not disabled
-        mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
-        BackendUtils.checkCardForUse(mCustomer.getMembership_card());
+        // check that card is not disabled - only if used
+        if(mTransaction.getUsedCardId()!=null && !mTransaction.getUsedCardId().isEmpty()) {
+            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
+            BackendUtils.checkCardForUse(mCustomer.getMembership_card());
+        }
     }
 
     private Customers updateTxnTables(Customers customer, String mchntTable) {

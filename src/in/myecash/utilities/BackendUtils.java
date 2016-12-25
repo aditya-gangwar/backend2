@@ -606,7 +606,7 @@ public class BackendUtils {
     public static String stackTraceStr(Exception e) {
         StringBuilder sb = new StringBuilder();
         for (StackTraceElement e1 : e.getStackTrace()) {
-            sb.append("\t at ").append(e1.toString()).append("\n");
+            sb.append("\t at ").append(e1.toString()).append(CommonConstants.NEWLINE_SEP);
         }
         return sb.toString();
     }

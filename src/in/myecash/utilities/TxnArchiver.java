@@ -11,10 +11,10 @@ import in.myecash.constants.BackendConstants;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import in.myecash.common.database.*;
@@ -103,8 +103,6 @@ public class TxnArchiver
             if(mLastFetchTransactions.size() > 0) {
                 // convert txns into csv strings
                 buildCsvString();
-
-                // TODO: encrypt CSV string sensitive params
 
                 // store CSV file in merchant directory
                 createCsvFiles(merchantId);
@@ -220,15 +218,18 @@ public class TxnArchiver
             String filename = entry.getKey();
             StringBuilder sb = entry.getValue();
 
+            // Do Base64 encode
+            byte[] data = Base64.getEncoder().encode(sb.toString().getBytes(StandardCharsets.UTF_8));
+
             // File name: txns_<merchant_id>_<ddMMMyy>.csv
             String filepath = CommonUtils.getMerchantTxnDir(merchantId) + CommonConstants.FILE_PATH_SEPERATOR + filename;
 
             try {
-                String fileUrl = Backendless.Files.saveFile(filepath, sb.toString().getBytes("UTF-8"), true);
+                String fileUrl = Backendless.Files.saveFile(filepath, data, true);
                 mLogger.debug("Txn CSV file uploaded: " + fileUrl);
                 mCsvFiles.put(filename,filepath);
-            } catch (UnsupportedEncodingException e) {
-                mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString());
+            } catch (Exception e) {
+                mLogger.error("Txn CSV file upload failed: "+ filepath + e.toString(), e);
                 // For multiple days, single failure will be considered failure for all days
                 throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Failed to create CSV file: "+e.toString());
             }
@@ -267,11 +268,11 @@ public class TxnArchiver
                 sb = new StringBuilder(CsvConverter.TXN_CSV_MAX_SIZE *size);
                 // new file - write first line as header
                 sb.append("trans_id,time,merchant_id,merchant_name,customer_id,cust_private_id,total_billed,cb_billed,cl_debit,cl_credit,cb_debit,cb_credit,cb_percent");
-                sb.append(CommonConstants.CSV_NEWLINE);
+                sb.append(CommonConstants.NEWLINE_SEP);
                 mCsvDataMap.put(filename,sb);
             }
             sb.append(CsvConverter.csvStrFromTxn(txn));
-            sb.append(CommonConstants.CSV_NEWLINE);
+            sb.append(CommonConstants.NEWLINE_SEP);
         }
     }
 
