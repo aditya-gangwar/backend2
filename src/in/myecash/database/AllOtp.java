@@ -16,6 +16,16 @@ public class AllOtp
   private String otp_value;
   private String objectId;
   private String opcode;
+  private String namak;
+
+  public String getNamak() {
+    return namak;
+  }
+
+  public void setNamak(String namak) {
+    this.namak = namak;
+  }
+
   public String getMobile_num()
   {
     return mobile_num;

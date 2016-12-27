@@ -63,9 +63,6 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             } else {
                 deviceInfo = deviceInfo+","+String.valueOf(System.currentTimeMillis())+","+rcvdOtp;
             }
-            //mLogger.debug("Updated DeviceInfo: "+deviceInfo);
-
-            //TODO: encrypt 'deviceInfo' - as its not reset to NULL after login and hence will reach to the app
 
             // Update device Info in merchant object
             merchant.setTempDevId(deviceInfo);

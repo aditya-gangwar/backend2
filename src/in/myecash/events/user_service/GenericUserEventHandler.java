@@ -13,6 +13,7 @@ import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.constants.*;
 import in.myecash.database.*;
+import in.myecash.utilities.SecurityHelper;
 
 /**
 * GenericUserEventHandler handles the User Service events.
@@ -142,12 +143,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // New device - add as trusted device
                             MerchantDevice device = new MerchantDevice();
                             device.setMerchant_id(merchant.getAuto_id());
-                            device.setDevice_id(deviceId);
                             device.setManufacturer(csvFields[1]);
                             device.setModel(csvFields[2]);
                             device.setOs_type("Android");
                             device.setOs_version(csvFields[3]);
-                            //device.setLast_login(new Date());
+                            //device.setDevice_id(deviceId);
+                            SecurityHelper.setDeviceId(device, deviceId, mLogger);
 
                             trustedDevices.add(device);
 
@@ -160,6 +161,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                 //merchant.setAdmin_remarks("Last state was new registered");
                             }
                             merchant.setTempDevId(null);
+
                             try {
                                 BackendOps.updateMerchant(merchant);
                             } catch(BackendlessException e) {

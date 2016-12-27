@@ -48,17 +48,6 @@ public class BackendUtils {
         return countryCode + batch.getRangeBatchId() + String.format("%03d", serialNo);
     }
 
-    public static String generateOTP() {
-        // TODO: encrypt OTP
-        // random numeric string
-        Random random = new Random();
-        char[] id = new char[CommonConstants.OTP_LEN];
-        for (int i = 0; i < CommonConstants.OTP_LEN; i++) {
-            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
-        }
-        return new String(id);
-    }
-
     public static String generateTxnId(String merchantId) {
         // Txn Id : <7 chars for curr time in secs as Base35> + <6 char for merchant id as Base26> = total 13 chars
         long timeSecs = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
@@ -630,7 +619,8 @@ public class BackendUtils {
         if (trustedDevices != null &&
                 (deviceId != null && !deviceId.isEmpty())) {
             for (MerchantDevice device : trustedDevices) {
-                if (device.getDevice_id().equals(deviceId)) {
+                //if (device.getDevice_id().equals(deviceId)) {
+                if (SecurityHelper.verifyDeviceId(device, deviceId)) {
                     return true;
                 }
             }

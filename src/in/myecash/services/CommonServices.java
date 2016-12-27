@@ -1,6 +1,8 @@
 package in.myecash.services;
 
+import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
@@ -21,6 +23,7 @@ import in.myecash.common.constants.*;
 import in.myecash.utilities.SecurityHelper;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -165,7 +168,7 @@ public class CommonServices implements IBackendlessService {
             mLogger.debug("In getMerchant");
 
             // Send userType param as null to avoid checking within fetchCurrentUser fx.
-            // But check immediatly after
+            // But check immediately after
             Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
@@ -175,7 +178,7 @@ public class CommonServices implements IBackendlessService {
                 if (!merchant.getAuto_id().equals(merchantId)) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
-                            "Provided Merchant Id dont match: " + merchantId);
+                            "Provided Merchant Id don't match: " + merchantId);
                 }
             } else if (userType == DbConstants.USER_TYPE_CC ||
                     userType == DbConstants.USER_TYPE_AGENT) {
@@ -184,6 +187,16 @@ public class CommonServices implements IBackendlessService {
             } else {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // remove sensitive info
+            merchant.setCashback_table("");
+            merchant.setTxn_table("");
+            merchant.setTempDevId("");
+            List<MerchantDevice> devices = merchant.getTrusted_devices();
+            for (MerchantDevice device : devices) {
+                device.setDevice_id("");
+                device.setNamak("");
             }
 
             // no exception - means function execution success

@@ -651,7 +651,7 @@ public class AdminServices implements IBackendlessService {
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
 
             // Get key - before logging as Admin - as getting key will need to login as keyadmin
-            String key = SecurityHelper.getMemberCardKey(keyadminPwd, mLogger);
+            String key = SecurityHelper.getKey(SecurityHelper.MEMBERCARD_KEY_COL_NAME, keyadminPwd, mLogger);
 
             // login using 'admin' user
             BackendOps.loginUser(ADMIN_LOGINID,adminPwd);

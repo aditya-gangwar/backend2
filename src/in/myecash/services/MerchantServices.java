@@ -147,7 +147,7 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public Merchants updateSettings(String cbRate, boolean addClEnabled, String email,
+    public Merchants updateSettings(String cbRate, boolean addClEnabled, String email, String contactPhone,
                                     boolean askLinkedInvNum, boolean linkedInvNumOptional, boolean invNumOnlyNmbrs) {
 
         BackendUtils.initAll();
@@ -178,9 +178,11 @@ public class MerchantServices implements IBackendlessService {
             merchant.setCb_rate(cbRate);
             merchant.setCl_add_enable(addClEnabled);
             merchant.setEmail(email);
+            merchant.setContactPhone(contactPhone);
             merchant.setInvoiceNumAsk(askLinkedInvNum);
             merchant.setInvoiceNumOptional(linkedInvNumOptional);
             merchant.setInvoiceNumOnlyNumbers(invNumOnlyNmbrs);
+            // update object in DB
             merchant = BackendOps.updateMerchant(merchant);
 
             // no exception - means function execution success

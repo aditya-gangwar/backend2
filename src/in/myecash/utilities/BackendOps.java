@@ -68,8 +68,6 @@ public class BackendOps {
                     queryOptions.addRelated("merchant.trusted_devices");
                     if (allChilds) {
                         queryOptions.addRelated("merchant.address");
-                        //queryOptions.addRelated("merchant.address.city");
-                        //queryOptions.addRelated("merchant.buss_category");
                     }
                 case DbConstants.USER_TYPE_AGENT:
                 case DbConstants.USER_TYPE_CC:
@@ -100,34 +98,9 @@ public class BackendOps {
         if(allMchntChilds) {
             relationProps.add("merchant.trusted_devices");
             relationProps.add("merchant.address");
-            //relationProps.add("merchant.address.city");
-            //relationProps.add("merchant.buss_category");
         }
 
         return Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
-        //BackendlessUser user = Backendless.Data.of(BackendlessUser.class).findById(objectId, relationProps);
-
-        /*
-        Merchants merchant = (Merchants) user.getProperty("merchant");
-        if (merchant == null) {
-            //mLogger.error("Merchant object in null");
-            String errorMsg = "Merchant object in null";
-            throw new BackendlessException(BackendResponseCodes.NO_SUCH_USER, errorMsg);
-        }
-        return user;*/
-
-        /*
-        if(userType == DbConstants.USER_TYPE_MERCHANT) {
-            Merchants merchant = (Merchants) user.getProperty("merchant");
-            if (merchant == null) {
-                // load merchant object
-                ArrayList<String> relationProps = new ArrayList<>();
-                relationProps.add("merchant");
-                Backendless.Data.of(BackendlessUser.class).loadRelations(user, relationProps);
-
-                return user;
-            }
-        }*/
     }
 
     /*
@@ -167,20 +140,6 @@ public class BackendOps {
             return user.getData().get(0);
         }
     }
-
-    /*
-    public static Merchants getMerchantByMobile(String mobileNum) {
-        BackendlessDataQuery query = new BackendlessDataQuery();
-        query.setWhereClause("mobile_num = '"+mobileNum+"'");
-
-        BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
-        if( user.getTotalObjects() == 0) {
-            String errorMsg = "No Merchant found: "+mobileNum;
-            throw new BackendlessException(BackendResponseCodes.NO_SUCH_USER, errorMsg);
-        } else {
-            return user.getData().get(0);
-        }
-    }*/
 
     public static ArrayList<Merchants> fetchMerchants(String whereClause) {
         BackendlessDataQuery query = new BackendlessDataQuery();
@@ -375,11 +334,12 @@ public class BackendOps {
                 }
             }
             // create new OTP object
-            otp.setOtp_value(BackendUtils.generateOTP());
+            //otp.setOtp_value(BackendUtils.generateOTP());
+            String otpStr = SecurityHelper.generateOtp(otp, logger);
             newOtp = Backendless.Persistence.save(otp);
 
             // Send SMS through HTTP
-            String smsText = SmsHelper.buildOtpSMS(newOtp.getUser_id(), newOtp.getOtp_value(), newOtp.getOpcode());
+            String smsText = SmsHelper.buildOtpSMS(newOtp.getUser_id(), otpStr, newOtp.getOpcode());
             // dont retry and raise exception immediately
             if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), edr, logger, false)){
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "Failed to send OTP SMS");
@@ -413,7 +373,7 @@ public class BackendOps {
         Date currTime = new Date();
 
         if ( ((currTime.getTime() - otp.getCreated().getTime()) < (MyGlobalSettings.getOtpValidMins()*60*1000)) &&
-                rcvdOtp.equals(otp.getOtp_value()) ) {
+                SecurityHelper.verifyOtp(otp, rcvdOtp, logger) ) {
             // active otp available and matched
             // delete as can be used only once
             try {
