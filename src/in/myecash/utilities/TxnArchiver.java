@@ -282,11 +282,6 @@ public class TxnArchiver
         // for particular merchant
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
-        /*DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
-        //todayMidnight.toTZ(BackendConstants.TIMEZONE);
-        todayMidnight.toMidnight();
-        whereClause.append(" AND create_time < '").append(todayMidnight.getTime().getTime()).append("'");*/
-
         // time after which txns should be in DB
         DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
         // -1 as 'today' is inclusive

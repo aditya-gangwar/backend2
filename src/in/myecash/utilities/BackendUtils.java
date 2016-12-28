@@ -79,7 +79,7 @@ public class BackendUtils {
         }
         HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
         BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
-        fetchUser(user, allowedUserType, edr, logger, allChild);
+        fetchUser(user, allowedUserType, edr, logger);
         return user;
     }
 
@@ -91,15 +91,15 @@ public class BackendUtils {
         }
         HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
         BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), allChild);
-        return fetchUser(user, allowedUserType, edr, logger, allChild);
+        return fetchUser(user, allowedUserType, edr, logger);
     }
 
     public static Object fetchUser(String objectId, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
         BackendlessUser user = BackendOps.fetchUserByObjectId(objectId, allChild);
-        return fetchUser(user, allowedUserType, edr, logger, allChild);
+        return fetchUser(user, allowedUserType, edr, logger);
     }
 
-    private static Object fetchUser(BackendlessUser user, Integer allowedUserType, String[] edr, MyLogger logger, boolean allChild) {
+    private static Object fetchUser(BackendlessUser user, Integer allowedUserType, String[] edr, MyLogger logger) {
         edr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
         int userType = (Integer)user.getProperty("user_type");
 

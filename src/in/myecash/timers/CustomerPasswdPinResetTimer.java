@@ -1,8 +1,10 @@
 package in.myecash.timers;
 
+import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.*;
@@ -14,6 +16,7 @@ import in.myecash.utilities.MyLogger;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
@@ -87,6 +90,10 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
 
             // update user account for the PIN
             BackendOps.updateCustomer(customer);
+
+            // print roles - for debug purpose
+            /*List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());*/
 
             // Change customer op status
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);

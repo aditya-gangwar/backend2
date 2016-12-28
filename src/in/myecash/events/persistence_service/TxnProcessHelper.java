@@ -1,5 +1,6 @@
 package in.myecash.events.persistence_service;
 
+import com.backendless.Backendless;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
@@ -13,10 +14,7 @@ import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 
 import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
@@ -26,7 +24,7 @@ import in.myecash.utilities.SecurityHelper;
 /**
  * Created by adgangwa on 13-05-2016.
  */
-public class TxnTableEventHelper {
+public class TxnProcessHelper {
 
     private MyLogger mLogger = new MyLogger("events.TxnTableEventHelper");
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
@@ -48,37 +46,50 @@ public class TxnTableEventHelper {
     private String merchantName;
     private String txnDate;
 
-    public void handleBeforeCreate(RunnerContext context, Transaction txn) throws Exception {
+    /*public Transaction handleTxnCommit(RunnerContext context, Transaction txn, boolean saveAlso, boolean sendSMS) {
+        mLogger.debug(context.toString());
+        mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+        return handleTxnCommit(context.getUserToken(), context.getUserId(), txn, saveAlso, sendSMS);
+    }*/
+
+    public Transaction handleTxnCommit(String userToken, String userId, Transaction txn, boolean saveAlso, boolean sendSMS) {
         BackendUtils.initAll();
-        mTransaction = txn;
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-beforeCreate";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mTransaction.getCustomer_id();
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "handleTxnCommit";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txn.getCust_private_id();
 
         mValidException = false;
         try {
-            mLogger.debug("In Transaction handleBeforeCreate");
-            if(context==null) {
-                mLogger.error("Context itself is null");
-            } else if(context.getUserToken()==null) {
-                mLogger.error("In handleBeforeCreate: RunnerContext: "+context.toString());
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.NOT_LOGGED_IN), "User not logged in");
-            } else {
-                HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, context.getUserToken() );
+            mLogger.debug("In Transaction handleTxnCommit");
+            if(userToken!=null) {
+                HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, userToken);
             }
 
+            mTransaction = txn;
             // Fetch mMerchant
-            mMerchant = (Merchants) BackendUtils.fetchUser(context.getUserId(),DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            mMerchant = (Merchants) BackendUtils.fetchUser(userId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mMerchantId = mMerchant.getAuto_id();
-            mLogger.setProperties(mMerchantId,DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
+            mLogger.setProperties(mMerchant.getAuto_id(),DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
 
-            //mLogger.debug("Invocation context: "+InvocationContext.asString());
+            // print roles - for debug purpose
+            /*List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());*/
+
+            // credit txns not allowed under expiry duration
+            // txn cancellation is allowed
+            if(mMerchant.getAdmin_status()== DbConstants.USER_STATUS_UNDER_CLOSURE &&
+                    (mTransaction.getCb_credit() > 0 || mTransaction.getCl_credit() > 0) ) {
+                // ideally it shudn't reach here - as both cl and cb settings are disabled and not allowed to be edited in app
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
+            }
+
+            // Common processing for Transaction Commit and Cancel
             commonTxnProcessing();
 
             // update mCustomer for txn table
-            updateTxnTables(mCustomer, mMerchant.getTxn_table());
+            //updateTxnTables(mCustomer, mMerchant.getTxn_table());
 
             // Fetch cashback record
             String whereClause = "rowid = '" + mCustomer.getPrivate_id() + mMerchantId + "'";
@@ -87,12 +98,26 @@ public class TxnTableEventHelper {
             if (data != null) {
                 cashback = data.get(0);
 
+                // Integrity checks related to amount
+                if(mTransaction.getCl_debit() > (cashback.getCl_credit()-cashback.getCl_debit()) ) {
+                    // already checked in app - so shouldn't reach here at first place
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.ACCOUNT_NOT_ENUF_BALANCE), "");
+                }
+                if(mTransaction.getCb_debit() > (cashback.getCb_credit()-cashback.getCb_debit()) ) {
+                    // already checked in app - so shouldn't reach here at first place
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.CB_NOT_ENUF_BALANCE), "");
+                }
+
                 // update amounts in cashback object
                 cashback.setCl_credit(cashback.getCl_credit() + mTransaction.getCl_credit());
                 cashback.setCl_debit(cashback.getCl_debit() + mTransaction.getCl_debit());
-                // check for cash account limit
+
+                // check for cash account limit - after above amount update only
                 if ((cashback.getCl_credit() - cashback.getCl_debit()) > MyGlobalSettings.getCashAccLimit()) {
-                    mValidException = true;
+                    // already checked in app - so shouldn't reach here at first place
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + mCustomerId);
                 }
                 cashback.setCb_credit(cashback.getCb_credit() + mTransaction.getCb_credit());
@@ -103,7 +128,7 @@ public class TxnTableEventHelper {
                 // add/update transaction fields
                 mTransaction.setCustomer_id(mCustomer.getMobile_num());
                 // update cardId with cardNum
-                if(txn.getUsedCardId()==null && txn.getUsedCardId().isEmpty()) {
+                if(mTransaction.getUsedCardId()==null && mTransaction.getUsedCardId().isEmpty()) {
                     mTransaction.setUsedCardId("");
                 } else {
                     mTransaction.setUsedCardId(mCustomer.getMembership_card().getCardNum());
@@ -128,13 +153,24 @@ public class TxnTableEventHelper {
                 // 3) cashback object in transaction will be used in afterCreate() of txn table too - to get updated balance
                 mTransaction.setCashback(cashback);
 
+                if(saveAlso) {
+                    mTransaction = BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
+                }
+
+                if(sendSMS) {
+                    buildAndSendTxnSMS();
+                }
+
             } else {
+                // In app - we fetch cashback before txn commit
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Txn commit: No cashback object found: "+ mMerchantId +","+ mCustomerId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.CUST_NOT_REG_WITH_MCNT), "Customer not registered with this Merchant: "+ mMerchantId +","+ mCustomerId);
             }
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+            return mTransaction;
 
         } catch(Exception e) {
             BackendUtils.handleException(e, mValidException,mLogger,mEdr);
@@ -152,7 +188,7 @@ public class TxnTableEventHelper {
      * As currently this fx. gets called in 'async' mode - while if we do it from API (i.e. sending SMS) it will be 'sync'
      * Thus it saves us few millisecs while creating txn.
      */
-    public void handleAfterCreate(RunnerContext context, Transaction txn, ExecutionResult<Transaction> result) throws Exception {
+    public void handleAfterCreate(RunnerContext context, Transaction txn, ExecutionResult<Transaction> result) {
         BackendUtils.initAll();
         mTransaction = txn;
         long startTime = System.currentTimeMillis();
@@ -288,26 +324,15 @@ public class TxnTableEventHelper {
      */
     private void commonTxnProcessing() {
 
-        // Fetch mCustomer
+        // Fetch Customer
         mCustomer = BackendOps.getCustomer(mTransaction.getCust_private_id(), BackendConstants.ID_TYPE_AUTO, true);
         mCustomerId = mCustomer.getMobile_num();
         mEdr[BackendConstants.EDR_CUST_ID_IDX] = mCustomerId;
 
-        // credit txns not allowed under expiry duration
-        // txn cancellation is allowed
-        if(mMerchant.getAdmin_status()== DbConstants.USER_STATUS_UNDER_CLOSURE) {
-            if( (mTransaction.getCb_credit() > 0 || mTransaction.getCl_credit() > 0) &&
-                   mTransaction.getCancelTime()==null ) {
-                // ideally it shudn't reach here - as both cl and cb settings are disabled and not allowed to be edited in app
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
-            }
-        }
-
         // check if mCustomer is enabled
         BackendUtils.checkCustomerStatus(mCustomer, mEdr, mLogger);
 
-        // if mCustomer in 'restricted access' mode - allow only credit txns
+        // if Customer in 'restricted access' mode - allow only credit txns
         // txn cancellation is also not allowed
         if(mCustomer.getAdmin_status()==DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY &&
                 ( mTransaction.getCl_debit()>0 || mTransaction.getCb_debit()>0 ||
@@ -356,7 +381,7 @@ public class TxnTableEventHelper {
         }
     }
 
-    private Customers updateTxnTables(Customers customer, String mchntTable) {
+    /*private Customers updateTxnTables(Customers customer, String mchntTable) {
 
         String currTables = customer.getTxn_tables();
         if(!currTables.contains(mchntTable)) {
@@ -367,12 +392,12 @@ public class TxnTableEventHelper {
             return BackendOps.updateCustomer(customer);
         }
         return null;
-    }
+    }*/
 
     private void buildAndSendTxnSMS()
     {
         String custMobile = mTransaction.getCustomer_id();
-        String txnId = mTransaction.getTrans_id();
+        //String txnId = mTransaction.getTrans_id();
         //mLogger.debug("Transaction update was successful: "+custMobile+", "+txnId);
 
         cl_debit = mTransaction.getCl_debit();
@@ -386,25 +411,19 @@ public class TxnTableEventHelper {
             || cb_debit > BackendConstants.SEND_TXN_SMS_CB_MIN_AMOUNT
                 ) {
             Cashback cashback = mTransaction.getCashback();
-            if(cashback==null) {
-                mLogger.error("Cashback object is not available.");
-                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),"Txn afterCreate: No cashback object found: "+
-                        mTransaction.getMerchant_id()+","+mTransaction.getCustomer_id());
-            } else {
-                merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
-                cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
-                cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
+            merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
+            cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
+            cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 
-                SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-                sdf.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
-                txnDate = sdf.format(mTransaction.getCreate_time());
+            SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
+            sdf.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
+            txnDate = sdf.format(mTransaction.getCreate_time());
 
-                // Build SMS
-                String smsText = buildSMS();
-                if(smsText!=null) {
-                    // Send SMS through HTTP
-                    SmsHelper.sendSMS(smsText,custMobile, mEdr, mLogger, true);
-                }
+            // Build SMS
+            String smsText = buildSMS();
+            if(smsText!=null) {
+                // Send SMS through HTTP
+                SmsHelper.sendSMS(smsText,custMobile, mEdr, mLogger, true);
             }
         }
     }

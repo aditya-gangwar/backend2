@@ -143,7 +143,7 @@ public class BackendOps {
 
     public static ArrayList<Merchants> fetchMerchants(String whereClause) {
         BackendlessDataQuery query = new BackendlessDataQuery();
-        query.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        query.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
         query.setWhereClause(whereClause);
 
         BackendlessCollection<Merchants> users = Backendless.Data.of( Merchants.class ).find(query);
@@ -269,9 +269,7 @@ public class BackendOps {
         Backendless.Data.mapTableToClass(cashbackTable, Cashback.class);
 
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        // TODO: change to max size in production
-        dataQuery.setPageSize(1);
-        //dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        dataQuery.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
         dataQuery.setWhereClause(whereClause);
 
         if(customerData) {
@@ -490,7 +488,7 @@ public class BackendOps {
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause(whereClause);
-        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        dataQuery.setPageSize( CommonConstants.DB_QUERY_PAGE_SIZE);
 
         QueryOptions options = new QueryOptions();
         options.addSortByOption("createTime ASC");
@@ -550,7 +548,7 @@ public class BackendOps {
         // fetch objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause(whereClause);
-        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        dataQuery.setPageSize( CommonConstants.DB_QUERY_PAGE_SIZE);
 
         QueryOptions options = new QueryOptions();
         options.addSortByOption("createTime ASC");
@@ -653,7 +651,7 @@ public class BackendOps {
      */
     public static MerchantStats fetchMerchantStats(String merchantId) {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
         dataQuery.setWhereClause("merchant_id = '" + merchantId + "'");
 
         BackendlessCollection<MerchantStats> collection = Backendless.Data.of(MerchantStats.class).find(dataQuery);
@@ -679,7 +677,7 @@ public class BackendOps {
         // sorted by create time
         //QueryOptions queryOptions = new QueryOptions("create_time");
         //dataQuery.setQueryOptions(queryOptions);
-        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
         dataQuery.setWhereClause(whereClause);
 
         BackendlessCollection<Transaction> collection = Backendless.Data.of(Transaction.class).find(dataQuery);
@@ -837,7 +835,7 @@ public class BackendOps {
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-        dataQuery.setPageSize(CommonConstants.dbQueryMaxPageSize);
+        dataQuery.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
         dataQuery.setWhereClause("status = '"+ DbConstantsBackend.BATCH_STATUS_OPEN+"'");
 
         BackendlessCollection<CardIdBatches> collection = Backendless.Data.of(CardIdBatches.class).find(dataQuery);
@@ -934,7 +932,7 @@ public class BackendOps {
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause(whereClause);
-        dataQuery.setPageSize( CommonConstants.dbQueryMaxPageSize );
+        dataQuery.setPageSize( CommonConstants.DB_QUERY_PAGE_SIZE);
 
         QueryOptions options = new QueryOptions();
         options.addSortByOption("created ASC");

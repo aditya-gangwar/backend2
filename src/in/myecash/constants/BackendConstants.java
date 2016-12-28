@@ -11,7 +11,7 @@ public class BackendConstants {
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = false;
-    public static final boolean TESTING_SKIP_SMS = true;
+    public static final boolean TESTING_SKIP_SMS = false;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean FORCED_DEBUG_LOGS = true;
 
@@ -23,8 +23,8 @@ public class BackendConstants {
     public static final String BACKEND_EDR_SUB_DELIMETER = ":";
     public static final String BACKEND_EDR_RESULT_OK = "SUCCESS";
     public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
-    public static final String BACKEND_EDR_SMS_OK = "OK";
-    public static final String BACKEND_EDR_SMS_NOK = "NOK";
+    public static final String BACKEND_EDR_SMS_OK = "SMS_OK";
+    public static final String BACKEND_EDR_SMS_NOK = "SMS_NOK";
     // special flags
     public static final String BACKEND_EDR_MANUAL_CHECK = "ManualCheck";
     public static final String BACKEND_EDR_SECURITY_BREACH = "SecurityBreach";
@@ -61,7 +61,8 @@ public class BackendConstants {
     public static final int EDR_SPECIAL_FLAG_IDX = 15;
     public static final int EDR_SMS_STATUS_IDX = 16;
     public static final int EDR_API_PARAMS_IDX = 17;
-    public static final int BACKEND_EDR_MAX_FIELDS = 18;
+    public static final int EDR_SMS_SUBMIT_TIME_IDX = 18;
+    public static final int BACKEND_EDR_MAX_FIELDS = 19;
 
     public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";

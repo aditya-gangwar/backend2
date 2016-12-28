@@ -7,11 +7,8 @@ import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
-import in.myecash.common.CommonUtils;
-import in.myecash.common.CsvConverter;
-import in.myecash.common.MyCustomer;
-import in.myecash.common.MyGlobalSettings;
-import in.myecash.events.persistence_service.TxnTableEventHelper;
+import in.myecash.common.*;
+import in.myecash.events.persistence_service.TxnProcessHelper;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
 import in.myecash.utilities.*;
@@ -39,6 +36,18 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Merchant operations
      */
+    /*public Transaction commitTxn(Transaction txn) {
+        TxnProcessHelper txnEventHelper = new TxnProcessHelper();
+        return txnEventHelper.handleTxnCommit(null, InvocationContext.getUserId(), txn, true, true);
+    }*/
+
+    public Transaction cancelTxn(String txnId, String cardId, String pin) {
+
+        TxnProcessHelper txnEventHelper = new TxnProcessHelper();
+        return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
+    }
+
+
     public Merchants changeMobile(String verifyparam, String newMobile, String otp) {
 
         BackendUtils.initAll();
@@ -288,8 +297,7 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.debug("Before context: "+InvocationContext.asString());
             //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
 
-            // Fetch customer using mobile or cardId
-            // Required as we need the private id of the customer to fetch the cashback
+            // Fetch customer
             Customers customer = null;
             try {
                 customer = BackendOps.getCustomer(customerId, customerIdType, true);
@@ -304,7 +312,7 @@ public class MerchantServices implements IBackendlessService {
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
 
             // Cashback details to be returned - even if customer account/card is disabled/locked
-            // so not checking for customer account/card status
+            // so not checking for customer/card status
 
             // Fetch cashback record
             // Create where clause to fetch cashback
@@ -371,7 +379,6 @@ public class MerchantServices implements IBackendlessService {
             // not checking for merchant account status
 
             boolean calculateAgain = true;
-            // TODO: see if it is really required to fetch customer.card too - can be avoided if card status is not required
             // fetch merchant stat object, if exists
             MerchantStats stats = BackendOps.fetchMerchantStats(merchantId);
             // create object if not already available
@@ -414,9 +421,6 @@ public class MerchantServices implements IBackendlessService {
                     mLogger.debug("Fetched cashback records: " + merchantId + ", " + data.size());
 
                     StringBuilder sb = new StringBuilder(CsvConverter.CB_CSV_MAX_SIZE * (data.size()+1));
-                    //sb.append("Customer Id,Account Balance,Cashback Balance,Total Account Debit,Total Account Credit,Total Cashback Debit,Total Cashback Credit,Total Billed,Total Cashback Billed");
-                    //sb.append(CommonConstants.NEWLINE_SEP);
-
                     // Add first line as header - to give the file creation time in epoch
                     sb.append(String.valueOf((new Date()).getTime())).append(CommonConstants.CSV_DELIMETER);
 
@@ -453,7 +457,6 @@ public class MerchantServices implements IBackendlessService {
                             // ignore error - but log the same
                             mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_CB_WITH_NO_CUST;
                         }
-
                     }
 
                     // upload data as CSV file
@@ -588,12 +591,6 @@ public class MerchantServices implements IBackendlessService {
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
-    }
-
-    public Transaction cancelTxn(String txnId, String cardId, String pin) {
-
-        TxnTableEventHelper txnEventHelper = new TxnTableEventHelper();
-        return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
     }
 
     /*
@@ -752,27 +749,23 @@ public class MerchantServices implements IBackendlessService {
     }
 
     private Cashback handleCashbackCreate(Merchants merchant, Customers customer) {
-        // Add cashback table name (of this merchant's) in customer record, if not already added (by some other merchant)
-        //boolean cbTableUpdated = false;
-        String currCbTables = customer.getCashback_table();
-        if(currCbTables==null || currCbTables.isEmpty()) {
-            mLogger.debug("Setting new CB tables for customer: "+merchant.getCashback_table()+","+currCbTables);
-            customer.setCashback_table(merchant.getCashback_table());
-            //cbTableUpdated = true;
 
-        } else if(!currCbTables.contains(merchant.getCashback_table())) {
-            String newCbTables = currCbTables+CommonConstants.CSV_DELIMETER+merchant.getCashback_table();
-            mLogger.debug("Setting new CB tables for customer: "+newCbTables+","+currCbTables);
-            customer.setCashback_table(newCbTables);
-            //cbTableUpdated = true;
-        }
+        // Add cashback table name (of this merchant's) in customer record, if not already added (by some other merchant)
+        String currTables = customer.getCashback_table();
+        String newTables = (currTables==null||currTables.isEmpty())
+                ? merchant.getCashback_table()
+                : (currTables+CommonConstants.CSV_DELIMETER+merchant.getCashback_table());
+        customer.setCashback_table(newTables);
+
+        // Add transaction table name (of this merchant's) in customer record, if not already added (by some other merchant)
+        currTables = customer.getTxn_tables();
+        newTables = (currTables==null||currTables.isEmpty())
+                ? merchant.getTxn_table()
+                : (currTables+CommonConstants.CSV_DELIMETER+merchant.getTxn_table());
+        customer.setTxn_tables(newTables);
 
         // not updating customer - as the same will be automatically done
         // along with cashback save in 'createCbObject' method
-        /*
-        if(cbTableUpdated) {
-            BackendOps.updateCustomer(customer);
-        }*/
 
         // create new cashback object
         // intentionally doing it after updating customer for cashback table name

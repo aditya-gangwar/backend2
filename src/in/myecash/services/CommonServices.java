@@ -190,8 +190,6 @@ public class CommonServices implements IBackendlessService {
             }
 
             // remove sensitive info
-            merchant.setCashback_table("");
-            merchant.setTxn_table("");
             merchant.setTempDevId("");
             List<MerchantDevice> devices = merchant.getTrusted_devices();
             for (MerchantDevice device : devices) {

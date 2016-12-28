@@ -27,8 +27,9 @@ public class SmsHelper {
 
     public static boolean sendSMS(String message, String recipients, String[] edr, MyLogger logger, boolean retry) {
 
-        logger.debug("SMS: " + message);
+        long sTime = System.currentTimeMillis();
 
+        logger.debug("SMS: " + message);
         if(BackendConstants.TESTING_SKIP_SMS) {
             return true;
         }
@@ -66,6 +67,8 @@ public class SmsHelper {
             while ((output = br.readLine()) != null) {
                 logger.debug("SMS server response: " + output);
             }
+            edr[BackendConstants.EDR_SMS_SUBMIT_TIME_IDX] = String.valueOf(System.currentTimeMillis() - sTime);
+
         } catch (Exception e) {
             logger.error("Failed to send SMS ("+message+") to "+recipients);
             logger.error("Failed to send SMS:"+e.toString());
