@@ -1,6 +1,7 @@
 package in.myecash.utilities;
 
 import com.backendless.Backendless;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.CsvConverter;
@@ -171,10 +172,14 @@ public class TxnArchiver
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Content-Type", "application/json");
+            //for( String key : HeadersManager.getInstance().getHeaders().keySet() )
+            //    conn.addRequestProperty( key, HeadersManager.getInstance().getHeaders().get( key ) );
+
             conn.setRequestProperty("application-id", CommonConstants.APPLICATION_ID);
             conn.setRequestProperty("user-token", mUserToken);
-            conn.setRequestProperty("secret-key", BackendConstants.SECRET_KEY);
-            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("secret-key", BackendConstants.REST_SECRET_KEY);
+            mLogger.debug(mUserToken+", "+BackendConstants.REST_SECRET_KEY);
 
             String input;
             if(status) {

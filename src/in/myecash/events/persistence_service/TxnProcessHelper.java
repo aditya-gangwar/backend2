@@ -145,6 +145,11 @@ public class TxnProcessHelper {
                     // calling app will need to upload 'card image file' with this name
                     mTransaction.setImgFileName(BackendUtils.getTxnImgFilename(mTransaction.getTrans_id()));
                 }
+
+                // update txn dependent cb fields
+                cashback.setLastTxnId(mTransaction.getTrans_id());
+                cashback.setLastTxnTime(mTransaction.getCreate_time());
+
                 // following are uses to adding cashback object to txn:
                 // 1) both txn and cashback, will get updated in one go - thus saving rollback scenarios
                 // 2) updated cashback object will be automatically returned,
@@ -268,6 +273,12 @@ public class TxnProcessHelper {
             if (cashback != null) {
                 // update amounts in cashback object
 
+                // Cannot cancel txn - if not enough CB available
+                // i.e. the customer used the cashback after this txn
+                if(mTransaction.getCb_credit() > (cashback.getCb_credit()-cashback.getCb_debit()) ) {
+                    throw new BackendlessException(String.valueOf(ErrorCodes.CB_NOT_ENUF_BALANCE), "");
+                }
+
                 // 'cl credit' is not changed in txn cancellation
                 //cashback.setCl_credit(cashback.getCl_credit() + transaction.getCl_credit());
                 // any 'cl debit' in this txn, will be returned
@@ -281,6 +292,10 @@ public class TxnProcessHelper {
                 // reverse bill amounts too
                 cashback.setTotal_billed(cashback.getTotal_billed() - mTransaction.getTotal_billed());
                 cashback.setCb_billed(cashback.getCb_billed() - mTransaction.getCb_billed());
+
+                // update txn dependent cb fields
+                cashback.setLastTxnId(mTransaction.getTrans_id());
+                cashback.setLastTxnTime(mTransaction.getCreate_time());
 
                 // cashback will be updated along with txn
                 mTransaction.setCashback(cashback);

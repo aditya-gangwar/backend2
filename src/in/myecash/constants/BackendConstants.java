@@ -6,6 +6,7 @@ package in.myecash.constants;
  */
 public class BackendConstants {
     public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
+    public static final String REST_SECRET_KEY = "022CBF46-15F0-98EA-FFFD-9E9B58617E00";
     //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
 
     // Constants to identify Testing/Debug scenarios
