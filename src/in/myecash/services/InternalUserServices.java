@@ -34,7 +34,7 @@ public class InternalUserServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
-    public List<MyCardForAction> execActionForCards(String codes, String action, String allotToUserId) {
+    public List<MyCardForAction> execActionForCards(String codes, String action, String allotToUserId, boolean getCardNumsOnly) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -90,82 +90,84 @@ public class InternalUserServices implements IBackendlessService {
                     int curStatus = card.getStatus();
                     cardForAction.setCardNum(card.getCardNum());
 
-                    // update card row - as per requested action
-                    boolean updateCard = false;
-                    switch (action) {
-                        case CommonConstants.CARDS_UPLOAD_TO_POOL:
-                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT) {
-                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
-                                card.setCcntId(internalUser.getId());
-                                updateCard = true;
-                            } else {
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                            }
-                            break;
-
-                        case CommonConstants.CARDS_ALLOT_TO_AGENT:
-                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_NEW) {
-                                // Find agent whom to allot
-                                InternalUser iu = BackendOps.getInternalUser(allotToUserId);
-                                if(BackendUtils.getUserType(iu.getId()) != DbConstants.USER_TYPE_AGENT) {
-                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
-                                } else {
-                                    BackendUtils.checkInternalUserStatus(iu);
-
-                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                    if(!getCardNumsOnly) {
+                        // update card row - as per requested action
+                        boolean updateCard = false;
+                        switch (action) {
+                            case CommonConstants.CARDS_UPLOAD_TO_POOL:
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT) {
+                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
                                     card.setCcntId(internalUser.getId());
-                                    card.setAgentId(iu.getId());
                                     updateCard = true;
-                                }
-                            } else {
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                            }
-                            break;
-
-                        case CommonConstants.CARDS_ALLOT_TO_MCHNT:
-                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
-                                // Find merchant whom to allot
-                                Merchants mchnt = BackendOps.getMerchant(allotToUserId,false,false);
-                                if(BackendUtils.getUserType(mchnt.getAuto_id()) != DbConstants.USER_TYPE_MERCHANT) {
-                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
                                 } else {
-                                    BackendUtils.checkMerchantStatus(mchnt, mEdr, mLogger);
-                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
-                                    card.setAgentId(internalUser.getId());
-                                    card.setMchntId(mchnt.getAuto_id());
-                                    updateCard = true;
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
                                 }
-                            } else {
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                            }
-                            break;
+                                break;
 
-                        case CommonConstants.CARDS_RETURN_BY_MCHNT:
-                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
-                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
-                                card.setAgentId(internalUser.getId());
-                                updateCard = true;
-                            } else {
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                            }
-                            break;
+                            case CommonConstants.CARDS_ALLOT_TO_AGENT:
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_NEW) {
+                                    // Find agent whom to allot
+                                    InternalUser iu = BackendOps.getInternalUser(allotToUserId);
+                                    if (BackendUtils.getUserType(iu.getId()) != DbConstants.USER_TYPE_AGENT) {
+                                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                    } else {
+                                        BackendUtils.checkInternalUserStatus(iu);
 
-                        case CommonConstants.CARDS_RETURN_BY_AGENT:
-                            if(curStatus==DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
-                                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
-                                card.setCcntId(internalUser.getId());
-                                updateCard = true;
-                            } else {
-                                cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                            }
-                            break;
-                    }
+                                        card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                                        card.setCcntId(internalUser.getId());
+                                        card.setAgentId(iu.getId());
+                                        updateCard = true;
+                                    }
+                                } else {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                                }
+                                break;
 
-                    if(updateCard) {
-                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_OK);
-                        card.setStatus_update_time(new Date());
-                        card.setStatus_reason("");
-                        BackendOps.saveCustomerCard(card);
+                            case CommonConstants.CARDS_ALLOT_TO_MCHNT:
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                    // Find merchant whom to allot
+                                    Merchants mchnt = BackendOps.getMerchant(allotToUserId, false, false);
+                                    if (BackendUtils.getUserType(mchnt.getAuto_id()) != DbConstants.USER_TYPE_MERCHANT) {
+                                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
+                                    } else {
+                                        BackendUtils.checkMerchantStatus(mchnt, mEdr, mLogger);
+                                        card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
+                                        card.setAgentId(internalUser.getId());
+                                        card.setMchntId(mchnt.getAuto_id());
+                                        updateCard = true;
+                                    }
+                                } else {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                                }
+                                break;
+
+                            case CommonConstants.CARDS_RETURN_BY_MCHNT:
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT) {
+                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
+                                    card.setAgentId(internalUser.getId());
+                                    updateCard = true;
+                                } else {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                                }
+                                break;
+
+                            case CommonConstants.CARDS_RETURN_BY_AGENT:
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+                                    card.setCcntId(internalUser.getId());
+                                    updateCard = true;
+                                } else {
+                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
+                                }
+                                break;
+                        }
+
+                        if (updateCard) {
+                            cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_OK);
+                            card.setStatus_update_time(new Date());
+                            card.setStatus_reason("");
+                            BackendOps.saveCustomerCard(card);
+                        }
                     }
 
                 } catch(Exception e) {

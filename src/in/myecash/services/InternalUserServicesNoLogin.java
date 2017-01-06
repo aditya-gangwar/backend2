@@ -24,16 +24,18 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
      * Public methods: Backend REST APIs
      */
     public void setDeviceForInternalUserLogin(String loginId, String deviceId) {
-        //initCommon();
+        // debug logs for this fx. will never be written
+        // taking this as default - as dont have access to internal user object
+        // taking USER_TYPE_AGENT as default
+        mLogger.setProperties(loginId, DbConstants.USER_TYPE_AGENT, false);
+        mLogger.debug("In setDeviceForLogin: " + loginId + ": " + deviceId);
+
+        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "setDeviceForInternalUserLogin";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = loginId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 deviceId;
-        // debug logs for this fx. will never be written
-        // taking this as default - as dont have access to internal user object
-        // taking USER_TYPE_AGENT as default
-        mLogger.setProperties(loginId, DbConstants.USER_TYPE_AGENT, false);
 
         try {
             if (deviceId == null || deviceId.isEmpty()) {
