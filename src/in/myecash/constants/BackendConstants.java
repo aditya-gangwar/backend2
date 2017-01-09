@@ -80,8 +80,8 @@ public class BackendConstants {
     public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
 
-    public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 1000;
-    public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 5000;
+    public static final int SEND_TXN_SMS_CL_MIN_AMOUNT = 10;
+    public static final int SEND_TXN_SMS_CB_MIN_AMOUNT = 10;
 
     public static final int LOG_POLICY_NUM_MSGS = 1;
     public static final int LOG_POLICY_FREQ_SECS = 0;

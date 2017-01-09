@@ -8,8 +8,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2787f8a4-2254-4a73-9b45-f8008f85f2a3" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/in/myecash/services/InternalUserServices.java" afterPath="$PROJECT_DIR$/src/in/myecash/services/InternalUserServices.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/in/myecash/services/InternalUserServicesNoLogin.java" afterPath="$PROJECT_DIR$/src/in/myecash/services/InternalUserServicesNoLogin.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" afterPath="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" />
     </list>
     <ignored path="backend2.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,51 +30,127 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="TxnArchiver.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/in/myecash/utilities/TxnArchiver.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2703">
-              <caret line="178" column="80" selection-start-line="178" selection-start-column="80" selection-end-line="178" selection-end-column="80" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="CommonConstants.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/CommonConstants.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2108">
-              <caret line="125" column="31" selection-start-line="125" selection-start-column="31" selection-end-line="125" selection-end-column="31" />
+            <state relative-caret-position="425">
+              <caret line="26" column="0" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="InternalUserServices.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/in/myecash/services/InternalUserServices.java">
+      <file leaf-file-name="CustomerOps.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/CustomerOps.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="37" column="31" selection-start-line="37" selection-start-column="8" selection-end-line="37" selection-end-column="31" />
+            <state relative-caret-position="68">
+              <caret line="9" column="24" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="24" />
+              <folding>
+                <element signature="imports" expanded="false" />
+                <element signature="e#815#816#0" expanded="false" />
+                <element signature="e#843#844#0" expanded="false" />
+                <element signature="e#895#896#0" expanded="false" />
+                <element signature="e#935#936#0" expanded="false" />
+                <element signature="e#968#969#0" expanded="false" />
+                <element signature="e#995#996#0" expanded="false" />
+                <element signature="e#1043#1044#0" expanded="false" />
+                <element signature="e#1081#1082#0" expanded="false" />
+                <element signature="e#1117#1118#0" expanded="false" />
+                <element signature="e#1145#1146#0" expanded="false" />
+                <element signature="e#1197#1198#0" expanded="false" />
+                <element signature="e#1237#1238#0" expanded="false" />
+                <element signature="e#1274#1275#0" expanded="false" />
+                <element signature="e#1303#1304#0" expanded="false" />
+                <element signature="e#1357#1358#0" expanded="false" />
+                <element signature="e#1399#1400#0" expanded="false" />
+                <element signature="e#1433#1434#0" expanded="false" />
+                <element signature="e#1459#1460#0" expanded="false" />
+                <element signature="e#1507#1508#0" expanded="false" />
+                <element signature="e#1543#1544#0" expanded="false" />
+                <element signature="e#1577#1578#0" expanded="false" />
+                <element signature="e#1603#1604#0" expanded="false" />
+                <element signature="e#1651#1652#0" expanded="false" />
+                <element signature="e#1687#1688#0" expanded="false" />
+                <element signature="e#1721#1722#0" expanded="false" />
+                <element signature="e#1747#1748#0" expanded="false" />
+                <element signature="e#1795#1796#0" expanded="false" />
+                <element signature="e#1831#1832#0" expanded="false" />
+                <element signature="e#1862#1863#0" expanded="false" />
+                <element signature="e#1885#1886#0" expanded="false" />
+                <element signature="e#1927#1928#0" expanded="false" />
+                <element signature="e#1957#1958#0" expanded="false" />
+                <element signature="e#1989#1990#0" expanded="false" />
+                <element signature="e#2013#2014#0" expanded="false" />
+                <element signature="e#2057#2058#0" expanded="false" />
+                <element signature="e#2089#2090#0" expanded="false" />
+                <element signature="e#2131#2132#0" expanded="false" />
+                <element signature="e#2163#2164#0" expanded="false" />
+                <element signature="e#2227#2228#0" expanded="false" />
+                <element signature="e#2275#2276#0" expanded="false" />
+                <element signature="e#2307#2308#0" expanded="false" />
+                <element signature="e#2331#2332#0" expanded="false" />
+                <element signature="e#2368#2369#0" expanded="false" />
+                <element signature="e#2395#2396#0" expanded="false" />
+                <element signature="e#2449#2450#0" expanded="false" />
+                <element signature="e#2487#2488#0" expanded="false" />
+                <element signature="e#2519#2520#0" expanded="false" />
+                <element signature="e#2543#2544#0" expanded="false" />
+                <element signature="e#2577#2578#0" expanded="false" />
+                <element signature="e#2601#2602#0" expanded="false" />
+                <element signature="e#2649#2650#0" expanded="false" />
+                <element signature="e#2681#2682#0" expanded="false" />
+                <element signature="e#2715#2716#0" expanded="false" />
+                <element signature="e#2739#2740#0" expanded="false" />
+                <element signature="e#2778#2779#0" expanded="false" />
+                <element signature="e#2807#2808#0" expanded="false" />
+                <element signature="e#2865#2866#0" expanded="false" />
+                <element signature="e#2907#2908#0" expanded="false" />
+                <element signature="e#2941#2942#0" expanded="false" />
+                <element signature="e#2965#2966#0" expanded="false" />
+                <element signature="e#3013#3014#0" expanded="false" />
+                <element signature="e#3045#3046#0" expanded="false" />
+                <element signature="e#3080#3081#0" expanded="false" />
+                <element signature="e#3105#3106#0" expanded="false" />
+                <element signature="e#3191#3192#0" expanded="false" />
+                <element signature="e#3261#3262#0" expanded="false" />
+                <element signature="e#3795#3796#0" expanded="false" />
+                <element signature="e#3867#3868#0" expanded="false" />
+                <element signature="e#4408#4409#0" expanded="false" />
+                <element signature="e#4480#4481#0" expanded="false" />
+                <element signature="e#5079#5080#0" expanded="false" />
+                <element signature="e#5148#5149#0" expanded="false" />
+                <element signature="e#5720#5721#0" expanded="false" />
+                <element signature="e#5788#5789#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CustomerServices.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/in/myecash/services/CustomerServices.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1836">
+              <caret line="122" column="0" selection-start-line="122" selection-start-column="0" selection-end-line="122" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="InternalUserServicesNoLogin.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/in/myecash/services/InternalUserServicesNoLogin.java">
+      <file leaf-file-name="GlobalSettingConstants.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/GlobalSettingConstants.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="29" column="25" selection-start-line="29" selection-start-column="25" selection-end-line="29" selection-end-column="25" />
+            <state relative-caret-position="391">
+              <caret line="25" column="31" selection-start-line="25" selection-start-column="31" selection-end-line="25" selection-end-column="31" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MyLogger.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/in/myecash/utilities/MyLogger.java">
+      <file leaf-file-name="MyGlobalSettings.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyGlobalSettings.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
-              <caret line="37" column="40" selection-start-line="37" selection-start-column="40" selection-end-line="37" selection-end-column="40" />
+            <state relative-caret-position="1122">
+              <caret line="82" column="38" selection-start-line="82" selection-start-column="38" selection-end-line="82" selection-end-column="38" />
               <folding />
             </state>
           </provider>
@@ -84,8 +159,38 @@
       <file leaf-file-name="BackendConstants.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" column="46" selection-start-line="8" selection-start-column="31" selection-end-line="8" selection-end-column="46" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GenericUserEventHandler.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/in/myecash/events/user_service/GenericUserEventHandler.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-2584">
+              <caret line="128" column="32" selection-start-line="128" selection-start-column="32" selection-end-line="128" selection-end-column="32" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MerchantServicesNoLogin.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/in/myecash/services/MerchantServicesNoLogin.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="238">
+              <caret line="201" column="30" selection-start-line="201" selection-start-column="30" selection-end-line="201" selection-end-column="30" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TxnProcessHelper.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnProcessHelper.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="391">
+              <caret line="423" column="60" selection-start-line="423" selection-start-column="60" selection-end-line="423" selection-end-column="60" />
               <folding />
             </state>
           </provider>
@@ -119,11 +224,9 @@
         <option value="$PROJECT_DIR$/src/in/myecash/timers/FailedSmsTimer.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/timers/MerchantPasswdResetTimer.java" />
         <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/GlobalSettings.java" />
-        <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyGlobalSettings.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/messaging/SmsConstants.java" />
         <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/CustomerCards.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/database/MycKeys.java" />
-        <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/GlobalSettingConstants.java" />
         <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/Customers.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/services/CustomerServicesNoLogin.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/utilities/MyLogger.java" />
@@ -152,7 +255,6 @@
         <option value="$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnProcessHelper.java" />
         <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/CsvConverter.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/services/MerchantServices.java" />
-        <option value="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/utilities/TxnArchiver.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/events/persistence_service/Transaction1TableEventHandler.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/events/persistence_service/Transaction2TableEventHandler.java" />
@@ -163,6 +265,9 @@
         <option value="$PROJECT_DIR$/src/in/myecash/services/InternalUserServices.java" />
         <option value="$PROJECT_DIR$/src/in/myecash/services/InternalUserServicesNoLogin.java" />
         <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/DbConstants.java" />
+        <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/GlobalSettingConstants.java" />
+        <option value="$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyGlobalSettings.java" />
+        <option value="$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java" />
       </list>
     </option>
   </component>
@@ -204,9 +309,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -509,6 +611,9 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -803,13 +908,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1461006506427</updated>
-    </task>
-    <task id="LOCAL-00061" summary="23 Sep">
-      <created>1474578619493</created>
-      <option name="number" value="00061" />
-      <option name="presentableId" value="LOCAL-00061" />
-      <option name="project" value="LOCAL" />
-      <updated>1474578619493</updated>
     </task>
     <task id="LOCAL-00062" summary="23 Sep">
       <created>1474658656061</created>
@@ -1147,7 +1245,14 @@
       <option name="project" value="LOCAL" />
       <updated>1483304376509</updated>
     </task>
-    <option name="localTasksCounter" value="110" />
+    <task id="LOCAL-00110" summary="01 Jan">
+      <created>1483721955876</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1483721955876</updated>
+    </task>
+    <option name="localTasksCounter" value="111" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1165,6 +1270,7 @@
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891247" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33819628" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33819628" sideWeight="0.5" order="10" side_tool="true" content_ui="tabs" />
@@ -1173,13 +1279,12 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23424068" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2944126" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33819628" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -1267,20 +1372,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyGlobalSettings.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="463">
-          <caret line="76" column="75" selection-start-line="76" selection-start-column="75" selection-end-line="76" selection-end-column="75" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/CommonUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="19" column="34" selection-start-line="19" selection-start-column="16" selection-end-line="19" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyMerchant.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="38">
@@ -1320,21 +1411,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-593">
           <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/services/MerchantServicesNoLogin.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="803">
-          <caret line="127" column="34" selection-start-line="127" selection-start-column="34" selection-end-line="127" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/events/user_service/GenericUserEventHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-982">
-          <caret line="105" column="46" selection-start-line="105" selection-start-column="46" selection-end-line="105" selection-end-column="46" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1394,13 +1470,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/services/CustomerServices.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="181" column="42" selection-start-line="181" selection-start-column="42" selection-end-line="181" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MchntTxn.java" />
     <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/Customers.java">
       <provider selected="true" editor-type-id="text-editor">
@@ -1428,6 +1497,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="293">
           <caret line="862" column="0" selection-start-line="859" selection-start-column="0" selection-end-line="862" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1446,17 +1516,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/GlobalSettingConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
-          <caret line="61" column="66" selection-start-line="61" selection-start-column="28" selection-end-line="61" selection-end-column="66" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/in/myecash/timers/CustomerPasswdPinResetTimer.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="95" column="56" selection-start-line="95" selection-start-column="56" selection-end-line="95" selection-end-column="56" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1464,6 +1528,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
           <caret line="32" column="13" selection-start-line="32" selection-start-column="13" selection-end-line="32" selection-end-column="13" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1474,17 +1539,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnProcessHelper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-90">
-          <caret line="278" column="0" selection-start-line="278" selection-start-column="0" selection-end-line="278" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/ErrorCodes.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-778">
           <caret line="58" column="47" selection-start-line="58" selection-start-column="28" selection-end-line="58" selection-end-column="47" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1499,13 +1558,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="431">
           <caret line="581" column="12" selection-start-line="581" selection-start-column="12" selection-end-line="581" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="46" selection-start-line="8" selection-start-column="31" selection-end-line="8" selection-end-column="46" />
           <folding />
         </state>
       </provider>
@@ -1522,14 +1574,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
           <caret line="37" column="93" selection-start-line="29" selection-start-column="8" selection-end-line="37" selection-end-column="93" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/in/myecash/utilities/BackendUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="602" column="23" selection-start-line="602" selection-start-column="23" selection-end-line="602" selection-end-column="23" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1594,14 +1638,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/CommonConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2108">
-          <caret line="125" column="31" selection-start-line="125" selection-start-column="31" selection-end-line="125" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/in/myecash/services/InternalUserServices.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
@@ -1628,8 +1664,164 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/in/myecash/utilities/MyLogger.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
+        <state relative-caret-position="561">
           <caret line="37" column="40" selection-start-line="37" selection-start-column="40" selection-end-line="37" selection-end-column="40" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/database/CustomerOps.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="9" column="24" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="24" />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#815#816#0" expanded="false" />
+            <element signature="e#843#844#0" expanded="false" />
+            <element signature="e#895#896#0" expanded="false" />
+            <element signature="e#935#936#0" expanded="false" />
+            <element signature="e#968#969#0" expanded="false" />
+            <element signature="e#995#996#0" expanded="false" />
+            <element signature="e#1043#1044#0" expanded="false" />
+            <element signature="e#1081#1082#0" expanded="false" />
+            <element signature="e#1117#1118#0" expanded="false" />
+            <element signature="e#1145#1146#0" expanded="false" />
+            <element signature="e#1197#1198#0" expanded="false" />
+            <element signature="e#1237#1238#0" expanded="false" />
+            <element signature="e#1274#1275#0" expanded="false" />
+            <element signature="e#1303#1304#0" expanded="false" />
+            <element signature="e#1357#1358#0" expanded="false" />
+            <element signature="e#1399#1400#0" expanded="false" />
+            <element signature="e#1433#1434#0" expanded="false" />
+            <element signature="e#1459#1460#0" expanded="false" />
+            <element signature="e#1507#1508#0" expanded="false" />
+            <element signature="e#1543#1544#0" expanded="false" />
+            <element signature="e#1577#1578#0" expanded="false" />
+            <element signature="e#1603#1604#0" expanded="false" />
+            <element signature="e#1651#1652#0" expanded="false" />
+            <element signature="e#1687#1688#0" expanded="false" />
+            <element signature="e#1721#1722#0" expanded="false" />
+            <element signature="e#1747#1748#0" expanded="false" />
+            <element signature="e#1795#1796#0" expanded="false" />
+            <element signature="e#1831#1832#0" expanded="false" />
+            <element signature="e#1862#1863#0" expanded="false" />
+            <element signature="e#1885#1886#0" expanded="false" />
+            <element signature="e#1927#1928#0" expanded="false" />
+            <element signature="e#1957#1958#0" expanded="false" />
+            <element signature="e#1989#1990#0" expanded="false" />
+            <element signature="e#2013#2014#0" expanded="false" />
+            <element signature="e#2057#2058#0" expanded="false" />
+            <element signature="e#2089#2090#0" expanded="false" />
+            <element signature="e#2131#2132#0" expanded="false" />
+            <element signature="e#2163#2164#0" expanded="false" />
+            <element signature="e#2227#2228#0" expanded="false" />
+            <element signature="e#2275#2276#0" expanded="false" />
+            <element signature="e#2307#2308#0" expanded="false" />
+            <element signature="e#2331#2332#0" expanded="false" />
+            <element signature="e#2368#2369#0" expanded="false" />
+            <element signature="e#2395#2396#0" expanded="false" />
+            <element signature="e#2449#2450#0" expanded="false" />
+            <element signature="e#2487#2488#0" expanded="false" />
+            <element signature="e#2519#2520#0" expanded="false" />
+            <element signature="e#2543#2544#0" expanded="false" />
+            <element signature="e#2577#2578#0" expanded="false" />
+            <element signature="e#2601#2602#0" expanded="false" />
+            <element signature="e#2649#2650#0" expanded="false" />
+            <element signature="e#2681#2682#0" expanded="false" />
+            <element signature="e#2715#2716#0" expanded="false" />
+            <element signature="e#2739#2740#0" expanded="false" />
+            <element signature="e#2778#2779#0" expanded="false" />
+            <element signature="e#2807#2808#0" expanded="false" />
+            <element signature="e#2865#2866#0" expanded="false" />
+            <element signature="e#2907#2908#0" expanded="false" />
+            <element signature="e#2941#2942#0" expanded="false" />
+            <element signature="e#2965#2966#0" expanded="false" />
+            <element signature="e#3013#3014#0" expanded="false" />
+            <element signature="e#3045#3046#0" expanded="false" />
+            <element signature="e#3080#3081#0" expanded="false" />
+            <element signature="e#3105#3106#0" expanded="false" />
+            <element signature="e#3191#3192#0" expanded="false" />
+            <element signature="e#3261#3262#0" expanded="false" />
+            <element signature="e#3795#3796#0" expanded="false" />
+            <element signature="e#3867#3868#0" expanded="false" />
+            <element signature="e#4408#4409#0" expanded="false" />
+            <element signature="e#4480#4481#0" expanded="false" />
+            <element signature="e#5079#5080#0" expanded="false" />
+            <element signature="e#5148#5149#0" expanded="false" />
+            <element signature="e#5720#5721#0" expanded="false" />
+            <element signature="e#5788#5789#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/services/CustomerServices.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1836">
+          <caret line="122" column="0" selection-start-line="122" selection-start-column="0" selection-end-line="122" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/MyGlobalSettings.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1122">
+          <caret line="82" column="38" selection-start-line="82" selection-start-column="38" selection-end-line="82" selection-end-column="38" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/GlobalSettingConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="25" column="31" selection-start-line="25" selection-start-column="31" selection-end-line="25" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../MyeCash2/common/src/main/java/in/myecash/common/constants/CommonConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="26" column="0" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/events/persistence_service/TxnProcessHelper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="423" column="60" selection-start-line="423" selection-start-column="60" selection-end-line="423" selection-end-column="60" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/constants/BackendConstants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/utilities/BackendUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="146" column="23" selection-start-line="146" selection-start-column="23" selection-end-line="146" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/services/MerchantServicesNoLogin.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="201" column="30" selection-start-line="201" selection-start-column="30" selection-end-line="201" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/in/myecash/events/user_service/GenericUserEventHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2584">
+          <caret line="128" column="32" selection-start-line="128" selection-start-column="32" selection-end-line="128" selection-end-column="32" />
           <folding />
         </state>
       </provider>
