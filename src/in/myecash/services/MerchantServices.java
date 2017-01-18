@@ -73,7 +73,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // New mobile number should not be registered with other merchant
                 try {
-                Merchants mchnt = BackendOps.getMerchant(newMobile, false, false);
+                    Merchants mchnt = BackendOps.getMerchant(newMobile, false, false);
                     // If here - means merchant exist - return error
                     throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
                 } catch (BackendlessException be) {
@@ -206,7 +206,7 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    public void deleteTrustedDevice(String deviceId) {
+    public void deleteTrustedDevice(String deviceId, String curDeviceId) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -214,7 +214,7 @@ public class MerchantServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = deviceId;
 
         try {
-            mLogger.debug("In changeMobile: " + deviceId);
+            mLogger.debug("In deleteTrustedDevice: " + deviceId);
 
             // Fetch merchant with all child - as the same instance is to be returned too
             Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(
@@ -231,6 +231,9 @@ public class MerchantServices implements IBackendlessService {
             MerchantDevice matched = null;
             for (MerchantDevice device : trustedDevices) {
                 if (device.getDevice_id().equals(deviceId)) {
+                    if (SecurityHelper.verifyDeviceId(device, curDeviceId)) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.LOGGED_IN_DEVICE_DELETE), "");
+                    }
                     matched = device;
                 }
             }

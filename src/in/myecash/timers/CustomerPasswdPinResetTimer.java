@@ -50,8 +50,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_CUSTOMER);
 
         try {
-            //mLogger.debug("In CustomerPasswdPinResetTimer execute");
-            //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("In CustomerPasswdPinResetTimer execute");
+            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all 'pending' merchant password reset operations
             ArrayList<CustomerOps> ops = BackendOps.fetchCustomerOps(custPwdResetWhereClause());
@@ -92,8 +92,8 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
             BackendOps.updateCustomer(customer);
 
             // print roles - for debug purpose
-            /*List<String> roles = Backendless.UserService.getUserRoles();
-            mLogger.debug("Roles: "+roles.toString());*/
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());
 
             // Change customer op status
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);

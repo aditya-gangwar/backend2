@@ -277,6 +277,7 @@ public class BackendUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_DISABLED:
                 throw new BackendlessException(String.valueOf(ErrorCodes.CARD_DISABLED), "");
 
+            case DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT:
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
@@ -296,6 +297,7 @@ public class BackendUtils {
 
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
+            case DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT:
                 edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
 

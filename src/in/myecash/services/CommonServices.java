@@ -193,7 +193,7 @@ public class CommonServices implements IBackendlessService {
             merchant.setTempDevId("");
             List<MerchantDevice> devices = merchant.getTrusted_devices();
             for (MerchantDevice device : devices) {
-                device.setDevice_id("");
+                //device.setDevice_id("");
                 device.setNamak("");
             }
 
