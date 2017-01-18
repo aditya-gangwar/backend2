@@ -60,7 +60,9 @@ public class DbConstantsBackend {
     // wrong parameter types
     public static final String WRONG_PARAM_TYPE_PASSWD = "Password";
     public static final String WRONG_PARAM_TYPE_PIN = "PIN";
-    public static final String WRONG_PARAM_TYPE_VERIFICATION = "Verification";
+    public static final String WRONG_PARAM_TYPE_CARDID = "CardId";
+    public static final String WRONG_PARAM_TYPE_DOB = "DateOfBirth";
+    public static final String WRONG_PARAM_TYPE_MOBILE = "MobileNumber";
 
     public static final Map<String, String> paramTypeToAccLockedReason;
     static {
@@ -68,7 +70,9 @@ public class DbConstantsBackend {
 
         aMap.put(WRONG_PARAM_TYPE_PASSWD, LOCKED_WRONG_PASSWORD_LIMIT_RCHD);
         aMap.put(WRONG_PARAM_TYPE_PIN, LOCKED_WRONG_PIN_LIMIT_RCHD);
-        aMap.put(WRONG_PARAM_TYPE_VERIFICATION, LOCKED_WRONG_VERIFICATION_LIMIT_RCHD);
+        aMap.put(WRONG_PARAM_TYPE_CARDID, LOCKED_WRONG_VERIFICATION_LIMIT_RCHD);
+        aMap.put(WRONG_PARAM_TYPE_DOB, LOCKED_WRONG_VERIFICATION_LIMIT_RCHD);
+        aMap.put(WRONG_PARAM_TYPE_MOBILE, LOCKED_WRONG_VERIFICATION_LIMIT_RCHD);
         //aMap.put(ATTEMPT_TYPE_PASSWORD_RESET, LOCKED_WRONG_VERIFICATION_LIMIT_RCHD);
         //aMap.put(ATTEMPT_TYPE_PASSWORD_CHANGE, LOCKED_CHANGE_PASSWORD_ATTEMPT_LIMIT_RCHD);
         //aMap.put(ATTEMPT_TYPE_PIN_RESET, LOCKED_FORGOT_PIN_ATTEMPT_LIMIT_RCHD);

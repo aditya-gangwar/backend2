@@ -82,7 +82,7 @@ public class CommonServices implements IBackendlessService {
                         Merchants merchant = BackendOps.getMerchant(userId, false, false);
                         BackendUtils.handleWrongAttempt(userId, merchant, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
 
                     } else {
                         BackendOps.loadMerchant(user);
@@ -101,7 +101,7 @@ public class CommonServices implements IBackendlessService {
                         BackendUtils.handleWrongAttempt(userId, customer, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                         mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
 
                     } else {
                         BackendOps.loadCustomer(user);
@@ -119,7 +119,7 @@ public class CommonServices implements IBackendlessService {
                         InternalUser agent = BackendOps.getInternalUser(userId);
                         BackendUtils.handleWrongAttempt(userId, agent, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
 
                     } else {
                         BackendOps.loadInternalUser(user);
@@ -441,8 +441,8 @@ public class CommonServices implements IBackendlessService {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
-                            DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                            DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
                 }
 
                 // Don't verify PIN for 'reset PIN' operation
@@ -486,8 +486,8 @@ public class CommonServices implements IBackendlessService {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
-                            DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                            DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
                 }
                 // Don't verify PIN for 'reset PIN' operation
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&

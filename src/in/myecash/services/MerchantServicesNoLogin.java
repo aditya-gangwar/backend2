@@ -137,8 +137,8 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
                 validException = true;
                 BackendUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT,
-                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                        DbConstantsBackend.WRONG_PARAM_TYPE_DOB, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), "");
             }
 
             // For new registered merchant - send the password immediately
@@ -158,6 +158,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
                 BackendOps.saveMerchantOp(op);
                 mLogger.debug("Processed passwd reset op for: " + merchant.getAuto_id());
+
+                // Change password
+                user.setPassword(BackendUtils.generateTempPassword());
+                user = BackendOps.updateUser(user);
 
                 // Send SMS to inform
                 Integer mins = MyGlobalSettings.getMchntPasswdResetMins() + GlobalSettingConstants.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL;
@@ -215,9 +219,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
                 BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
-                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_FORGOT_USERID, mEdr, mLogger);
+                        DbConstantsBackend.WRONG_PARAM_TYPE_MOBILE, DbConstants.OP_FORGOT_USERID, mEdr, mLogger);
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_MOBILE), "");
             }
 
             // send merchant id by SMS

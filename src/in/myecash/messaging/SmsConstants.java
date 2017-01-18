@@ -60,16 +60,16 @@ public class SmsConstants {
     // Password/PIN messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyeCash family !! Your User ID is '%s'. Your Password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
     public static String SMS_PASSWD_RESET_SCHEDULED = "Password reset request for MyeCash account '%s' is accepted. New password will be sent on registered mobile number within %s minutes.";
-    public static String SMS_PASSWD = "Dear User - New password for your MyeCash account %s is '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_PASSWD = "Dear User - New password for your MyeCash account %s is '%s'. Please do Change your Password immediately after Login. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PASSWD_CHANGED = "Dear User - Password changed successfully for your MyeCash account %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 
     // OTP messages
-    //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL US IF NOT DONE BY YOU.";
-    public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device. PLS CALL US IF NOT REQUESTED BY YOU.";
-    public static String SMS_LOGIN_OTP = "Login attempt detected from Unknown Device. Use OTP '%s' to add it as 'Trusted Device' for your account '%s'. PLS CALL US IF NOT REQUESTED BY YOU.";
-    public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
-    public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new membership card for account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
-    public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL US IF NOT REQUESTED BY YOU.";
+    //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL CUSTOMER IF NOT DONE BY YOU.";
+    public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device.";
+    public static String SMS_LOGIN_OTP = "Login attempt detected from Unknown Device. Use OTP '%s' to add it as 'Trusted Device' for your account '%s'. PLS CALL CUSTOMER IF NOT REQUESTED BY YOU.";
+    public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL CUSTOMER IF NOT REQUESTED BY YOU.";
+    public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new Membership Card for account %s. Valid for next %d minutes. PLS CALL CUSTOMER IF NOT REQUESTED BY YOU.";
+    public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL CUSTOMER IF NOT REQUESTED BY YOU.";
 
     public static String SMS_PIN_INIT = "Dear User - %s have initiated 'PIN Reset' for your MyeCash account '%s'. New PIN will be sent to your registered mobile number after %s minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN = "Dear User - MyeCash PIN for your account '%s' is '%s'. ALWAYS KEEP YOUR PIN SECRET. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
@@ -82,8 +82,8 @@ public class SmsConstants {
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyeCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
-    public static String SMS_MOBILE_CHANGE = "Registered Mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
-    public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL US IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_MOBILE_CHANGE = "Registered Mobile number of your MyeCash account '%s' is changed successfully to '%s'. PLS CALL CUSTOMER IMMEDIATELY IF NOT DONE BY YOU.";
+    public static String SMS_CUSTOMER_NEW_CARD = "You have registered new card with number %s to your account %s. PLS CALL CUSTOMER IMMEDIATELY IF NOT DONE BY YOU.";
     public static String SMS_DISABLE_CARD = "Dear %s - Your MyeCash Customer Card bearing number '%s' is Disabled now. Please get new Card from any MyeCash Merchant.";
 
 }

@@ -86,8 +86,8 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
-                            DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                            DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
                 }
 
                 // Verification successful - Generate OTP
@@ -122,7 +122,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                     validException = true;
                     BackendUtils.handleWrongAttempt(userId, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
                 } else {
                     throw e;
                 }
@@ -216,9 +216,9 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             String cardNumDb = customer.getMembership_card().getCardNum();
             if (cardNumDb == null || !cardNumDb.equalsIgnoreCase(secret)) {
                 BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
-                        DbConstantsBackend.WRONG_PARAM_TYPE_VERIFICATION, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
+                        DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
             }
 
             // For new registered customer - send the password immediately

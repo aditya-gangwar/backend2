@@ -82,8 +82,10 @@ public class MerchantServices implements IBackendlessService {
 
                 // Validate based on given current number
                 if (!merchant.getDob().equals(verifyparam)) {
+                    BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
+                            DbConstantsBackend.WRONG_PARAM_TYPE_DOB, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                     validException = true;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), "");
                 }
 
                 // Generate OTP to verify new mobile number
