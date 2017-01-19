@@ -205,6 +205,12 @@ public class BackendUtils {
                     errorMsg = "Account is locked";
                 }
                 break;
+
+            default:
+                errorCode = ErrorCodes.NO_SUCH_USER;
+                errorMsg = "Invalid customer state: "+customer.getAdmin_status();
+                edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                break;
         }
         if(errorCode != null) {
             throw new BackendlessException(errorCode.toString(), errorMsg);

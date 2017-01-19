@@ -331,8 +331,6 @@ public class CommonServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = opCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER +
                 mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 argCardId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                otp+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                argPin+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 opParam;
 
         boolean validException = false;
@@ -353,6 +351,7 @@ public class CommonServices implements IBackendlessService {
             BackendlessUser custUser = null;
             CustomerOps customerOp = null;
             String cardIdDb = null;
+            CustomerCards newCard = null;
             switch (userType) {
                 case DbConstants.USER_TYPE_MERCHANT:
                     // OP_CHANGE_PIN not allowed to merchant
@@ -408,6 +407,7 @@ public class CommonServices implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
             }
 
+
             // OTP not required for following:
             // - 'Change PIN' operation
             // - 'Reset PIN' by customer himself from app
@@ -416,16 +416,27 @@ public class CommonServices implements IBackendlessService {
                     !opCode.equals(DbConstants.OP_CHANGE_PIN) &&
                     !(opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
 
-                // Verifications to check if new data (card / mobile) already exist
-                CustomerCards newCard = null;
+                // Verify against provided card ids
                 if (opCode.equals(DbConstants.OP_NEW_CARD)) {
                     // check new card exists and is in correct state
                     newCard = BackendOps.getCustomerCard(argCardId, true);
                     BackendUtils.checkCardForAllocation(newCard, merchantId, mEdr, mLogger);
 
-                } else if (opCode.equals(DbConstants.OP_CHANGE_MOBILE)) {
+                } else {
+                    // Card Id should be correct and card in correct state
+                    if(cardIdDb.equals(argCardId)) {
+                        BackendUtils.checkCardForUse(customer.getMembership_card());
+                    } else {
+                        validException = true;
+                        BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                                DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                    }
+                }
+
+                // verify against provided mobile number
+                if (opCode.equals(DbConstants.OP_CHANGE_MOBILE)) {
                     // check that new mobile is not already registered for some other customer
-                    // customer should not exist
                     try {
                         customer = BackendOps.getCustomer(opParam, BackendConstants.ID_TYPE_MOBILE, false);
                         // If here - means customer exist - return error
@@ -433,16 +444,6 @@ public class CommonServices implements IBackendlessService {
                     } catch (BackendlessException be) {
                         // No such customer exist - we can proceed
                     }
-                }
-
-                // Don't verify QR card# for 'new card' operation
-                if (!opCode.equals(DbConstants.OP_NEW_CARD) &&
-                        !cardIdDb.equals(argCardId)) {
-
-                    validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
-                            DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
                 }
 
                 // Don't verify PIN for 'reset PIN' operation
@@ -472,7 +473,7 @@ public class CommonServices implements IBackendlessService {
 
             } else {
                 // Second run, as OTP available OR
-                // First run for following: (sp no OTP verification req for these)
+                // First run for following: (so no OTP verification req for these)
                 // - 'change PIN' case OR
                 // - 'reset PIN' from customer app
 
@@ -481,13 +482,15 @@ public class CommonServices implements IBackendlessService {
                 // For above mentioned 2 First run scenarios - these will be required
 
                 // Don't verify QR card# for 'new card' operation
-                if (!opCode.equals(DbConstants.OP_NEW_CARD) &&
-                        !cardIdDb.equals(argCardId)) {
-
-                    validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
-                            DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                if (!opCode.equals(DbConstants.OP_NEW_CARD)) {
+                    if(cardIdDb.equals(argCardId)) {
+                        BackendUtils.checkCardForUse(customer.getMembership_card());
+                    } else {
+                        validException = true;
+                        BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                                DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                    }
                 }
                 // Don't verify PIN for 'reset PIN' operation
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
@@ -496,8 +499,7 @@ public class CommonServices implements IBackendlessService {
                     validException = true;
                     BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: "
-                            + customer.getMobile_num());
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
                 }
 
                 // For PIN reset request - check if any already pending
@@ -541,7 +543,6 @@ public class CommonServices implements IBackendlessService {
                 }
 
                 // set extra params in presentable format
-                CustomerCards newCard = null;
                 if(opCode.equals(DbConstants.OP_NEW_CARD)) {
                     newCard = BackendOps.getCustomerCard(argCardId, true);
                     String extraParams = "Old Card: "+customer.getMembership_card().getCardNum()+", New Card: "+newCard.getCardNum();
@@ -612,63 +613,6 @@ public class CommonServices implements IBackendlessService {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
     }
-
-    /*public void resetFileRefreshFlag(String userId) {
-        BackendUtils.initAll();
-        long startTime = System.currentTimeMillis();
-        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "setFileRefreshFlag";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId;
-
-        try {
-            // Send userType param as null to avoid checking within fetchCurrentUser fx.
-            // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
-            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
-
-            Merchants merchant = null;
-            Customers customer = null;
-            if (userType == DbConstants.USER_TYPE_MERCHANT) {
-                merchant = (Merchants) userObj;
-                if (!merchant.getAuto_id().equals(userId)) {
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
-                            "Provided Merchant Id dont match: " + userId);
-                }
-                mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-                if(merchant.isRefreshFilesOnce()) {
-                    merchant.setRefreshFilesOnce(false);
-                    BackendOps.updateMerchant(merchant);
-                }
-
-            } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {
-                customer = (Customers) userObj;
-                if (!customer.getPrivate_id().equals(userId)) {
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),
-                            "Provided Customer Id dont match: " + userId);
-                }
-                mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-                if(customer.isRefreshFilesOnce()) {
-                    customer.setRefreshFilesOnce(false);
-                    BackendOps.updateCustomer(customer);
-                }
-
-            } else {
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
-            }
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-
-        } catch(Exception e) {
-            BackendUtils.handleException(e,false,mLogger,mEdr);
-            throw e;
-        } finally {
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
-        }
-    }*/
 
     /*
      * Private helper methods

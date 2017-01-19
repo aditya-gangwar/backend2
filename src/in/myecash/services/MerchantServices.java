@@ -392,8 +392,9 @@ public class MerchantServices implements IBackendlessService {
                 stats = new MerchantStats();
                 stats.setMerchant_id(merchantId);
             } else {
+                calculateAgain = CommonUtils.mchntStatsRefreshReq(stats);
                 // return old object, if last updated within configured hours
-                Date updateTime = stats.getUpdated();
+                /*Date updateTime = stats.getUpdated();
                 if(updateTime==null) {
                     updateTime = stats.getCreated();
                 }
@@ -402,7 +403,7 @@ public class MerchantServices implements IBackendlessService {
                 if( (now - updated) < (MyGlobalSettings.getMchntDashBNoRefreshHrs()*60*60*1000) ) {
                     // return old object - dont calculate again
                     calculateAgain = false;
-                }
+                }*/
             }
 
             if(calculateAgain) {
@@ -473,6 +474,11 @@ public class MerchantServices implements IBackendlessService {
                 // as for merchant stats anyways are calculated fresh each time from cashback objects
                 try {
                     stats = BackendOps.saveMerchantStats(stats);
+
+                    long updateTime = (stats.getUpdated()==null) ?
+                            stats.getCreated().getTime() :
+                            stats.getUpdated().getTime();
+                    mLogger.debug("Re-calculated and updated stats: " + updateTime);
                 } catch (Exception e) {
                     // ignore the exception
                     mLogger.error("Exception while saving merchantStats object: " + e.toString());
@@ -616,6 +622,9 @@ public class MerchantServices implements IBackendlessService {
         Cashback cashback = null;
         boolean validException = false;
         try {
+            mLogger.debug("Before context: "+InvocationContext.asString());
+            mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
+
             // Fetch merchant
             Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customerMobile;
@@ -624,10 +633,15 @@ public class MerchantServices implements IBackendlessService {
             Customers customer = null;
             try {
                 customer = BackendOps.getCustomer(customerMobile, BackendConstants.ID_TYPE_MOBILE, false);
-                // If here - means customer exist - return error
-                throw new BackendlessException(String.valueOf(ErrorCodes.USER_ALREADY_REGISTERED), customerMobile+" is already registered as customer");
             } catch (BackendlessException be) {
                 // No such customer exist - we can proceed
+                mLogger.debug("Customer not registered: "+customerMobile);
+            }
+
+            if(customer!=null) {
+                // If here - means customer exist - return error
+                mLogger.debug("Customer already registered: "+customerMobile+","+customer.getMobile_num());
+                throw new BackendlessException(String.valueOf(ErrorCodes.USER_ALREADY_REGISTERED), customerMobile+" is already registered as customer");
             }
 
             // fetch customer card object
@@ -761,14 +775,18 @@ public class MerchantServices implements IBackendlessService {
         String currTables = customer.getCashback_table();
         String newTables = (currTables==null||currTables.isEmpty())
                 ? merchant.getCashback_table()
-                : (currTables+CommonConstants.CSV_DELIMETER+merchant.getCashback_table());
+                : ( (currTables.contains(merchant.getCashback_table())
+                    ? currTables
+                    : currTables+CommonConstants.CSV_DELIMETER+merchant.getCashback_table()) );
         customer.setCashback_table(newTables);
 
         // Add transaction table name (of this merchant's) in customer record, if not already added (by some other merchant)
         currTables = customer.getTxn_tables();
         newTables = (currTables==null||currTables.isEmpty())
                 ? merchant.getTxn_table()
-                : (currTables+CommonConstants.CSV_DELIMETER+merchant.getTxn_table());
+                : ( (currTables.contains(merchant.getTxn_table())
+                ? currTables
+                : currTables+CommonConstants.CSV_DELIMETER+merchant.getTxn_table()) );
         customer.setTxn_tables(newTables);
 
         // not updating customer - as the same will be automatically done
