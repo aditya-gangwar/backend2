@@ -55,7 +55,7 @@ public class SmsConstants {
     public static String SMS_TXN_DEBIT_CL = "MyeCash: %s debited Rs %d from your Account on %s. Balance: Account:Rs %d, Cashback:Rs %d.";
     public static String SMS_TXN_DEBIT_CB = "MyeCash: %s redeemed Rs %d from your Cashback on %s. Balance: Account:Rs %d, Cashback:Rs %d";
 
-    public static String SMS_TXN_CANCEL = "MyeCash: %s cancelled transaction with ID %s. Balance: Account:Rs %d, Cashback:Rs %d";
+    public static String SMS_TXN_CANCEL = "MyeCash: %s cancelled transaction done at %s. Balance: Account:Rs %d, Cashback:Rs %d";
 
     // Password/PIN messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyeCash family !! Your User ID is '%s'. Your Password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";

@@ -331,12 +331,15 @@ public class CommonServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = opCode+BackendConstants.BACKEND_EDR_SUB_DELIMETER +
                 mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 argCardId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                otp+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 opParam;
 
         boolean validException = false;
 
         try {
             // Both merchant and customer users are allowed
+            mLogger.debug("Context: "+InvocationContext.asString());
+            mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
 
             // We need the 'user' object also for 'change mobile' scenario
             // so, not using 'fetchCurrentUser' function - rather directly fetching object
@@ -510,12 +513,17 @@ public class CommonServices implements IBackendlessService {
                 }
 
                 // Verify OTP - only for second run scenarios
+                // i.e. do not check for:
+                // - change PIN' case AND
+                // - 'reset PIN' from customer app
                 if( !opCode.equals(DbConstants.OP_CHANGE_PIN) &&
-                        (opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
+                        !(opCode.equals(DbConstants.OP_RESET_PIN) && userType==DbConstants.USER_TYPE_CUSTOMER) ) {
                     if(!BackendOps.validateOtp(mobileNum, opCode, otp, mEdr, mLogger)) {
                         validException = true;
                         throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
                     }
+                } else {
+                    mLogger.debug("opcode: "+opCode+", userType: "+userType);
                 }
 
                 // First add to the Merchant Ops table, and then do the actual update
@@ -530,12 +538,15 @@ public class CommonServices implements IBackendlessService {
                 if(userType==DbConstants.USER_TYPE_CUSTOMER) {
                     customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                     customerOp.setImgFilename("");
+                    customerOp.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
                 } else {
-                    customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
+                    //customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
+                    customerOp.setInitiatedBy(merchantName);
                     customerOp.setRequestor_id(merchantId);
+                    // leave empty, so as not visible in Customer App
+                    customerOp.setInitiatedVia("");
                     customerOp.setImgFilename(BackendUtils.getCustOpImgFilename(opCode, customer.getPrivate_id()));
                 }
-                customerOp.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
                 if(opCode.equals(DbConstants.OP_RESET_PIN)) {
                     customerOp.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
                 } else {

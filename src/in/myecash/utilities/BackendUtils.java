@@ -206,6 +206,9 @@ public class BackendUtils {
                 }
                 break;
 
+            case DbConstants.USER_STATUS_ACTIVE:
+                break;
+
             default:
                 errorCode = ErrorCodes.NO_SUCH_USER;
                 errorMsg = "Invalid customer state: "+customer.getAdmin_status();

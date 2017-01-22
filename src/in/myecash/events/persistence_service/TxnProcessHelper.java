@@ -303,11 +303,12 @@ public class TxnProcessHelper {
 
                 // Build SMS
                 merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
+                SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+                String txnTime = sdf.format(mTransaction.getCreate_time());
                 cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
                 cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 
-                String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,
-                        mTransaction.getTrans_id(),cl_balance,cb_balance);
+                String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,txnTime,cl_balance,cb_balance);
                 if(smsText!=null) {
                     // Send SMS through HTTP
                     SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger, true);

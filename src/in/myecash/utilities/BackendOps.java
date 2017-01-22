@@ -87,6 +87,13 @@ public class BackendOps {
     }
 
     public static BackendlessUser fetchUserByObjectId(String objectId, boolean allMchntChilds) {
+        if(objectId==null || objectId.isEmpty()) {
+            // this usually happens, if same user logs in from anoter device
+            // and then tries some request from first device
+            // Multiple login is off in backendless
+            throw new BackendlessException(String.valueOf(ErrorCodes.SESSION_TIMEOUT), "Logged is user object id is null");
+        }
+
         ArrayList<String> relationProps = new ArrayList<>();
         // add all childs
         relationProps.add("merchant");
@@ -349,6 +356,7 @@ public class BackendOps {
     }
 
     public static boolean validateOtp(String userId, String opcode, String rcvdOtp, String[] edr, MyLogger logger) {
+        logger.debug("In validateOtp");
         AllOtp otp = null;
         try {
             otp = BackendOps.fetchOtp(userId, opcode);

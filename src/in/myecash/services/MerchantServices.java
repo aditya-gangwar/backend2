@@ -36,11 +36,6 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Merchant operations
      */
-    /*public Transaction commitTxn(Transaction txn) {
-        TxnProcessHelper txnEventHelper = new TxnProcessHelper();
-        return txnEventHelper.handleTxnCommit(null, InvocationContext.getUserId(), txn, true, true);
-    }*/
-
     public Transaction cancelTxn(String txnId, String cardId, String pin) {
 
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
@@ -315,6 +310,14 @@ public class MerchantServices implements IBackendlessService {
                 throw e;
             }
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getMobile_num();
+
+            // Check customer status - mainky to allow unlocking if 'acc lock' duration passed
+            // Else ignore the status and return customer details
+            try {
+                BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
+            } catch (BackendlessException e) {
+                // ignore the exception
+            }
 
             // Cashback details to be returned - even if customer account/card is disabled/locked
             // so not checking for customer/card status

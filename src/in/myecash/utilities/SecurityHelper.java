@@ -37,9 +37,13 @@ public class SecurityHelper {
             byte[] salt = SaltedHashService.generateSalt();
             String otpStr = generateOTP();
             byte[] id = SaltedHashService.getEncrypted(otpStr,salt);
+            logger.debug("Salt: "+new String(salt));
+            logger.debug("Encrypted OTP: "+new String(id));
 
             otp.setNamak(Base64.getEncoder().encodeToString(salt));
             otp.setOtp_value(Base64.getEncoder().encodeToString(id));
+            logger.debug("Salt: "+otp.getNamak());
+            logger.debug("PIN: "+otp.getOtp_value());
 
             return otpStr;
 
@@ -50,9 +54,13 @@ public class SecurityHelper {
     }
 
     public static boolean verifyOtp(AllOtp otp, String rcvdOtp, MyLogger logger) {
+        logger.debug("In verifyOtp");
         try {
             byte[] salt = Base64.getDecoder().decode(otp.getNamak());
             byte[] id = Base64.getDecoder().decode(otp.getOtp_value());
+            logger.debug("Salt: "+new String(salt));
+            logger.debug("Encrypted OTP: "+new String(id));
+
             return SaltedHashService.authenticate(rcvdOtp, id, salt);
 
         } catch (Exception e) {
