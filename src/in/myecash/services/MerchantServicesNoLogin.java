@@ -136,9 +136,9 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             if (storedDob == null || !storedDob.equalsIgnoreCase(dob)) {
 
                 validException = true;
-                BackendUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT,
+                int cnt = BackendUtils.handleWrongAttempt(userId, merchant, DbConstants.USER_TYPE_MERCHANT,
                         DbConstantsBackend.WRONG_PARAM_TYPE_DOB, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), String.valueOf(cnt));
             }
 
             // For new registered merchant - send the password immediately
@@ -218,10 +218,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();
             if (mobile == null || !mobile.equalsIgnoreCase(mobileNum)) {
-                BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
+                int cnt = BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
                         DbConstantsBackend.WRONG_PARAM_TYPE_MOBILE, DbConstants.OP_FORGOT_USERID, mEdr, mLogger);
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_MOBILE), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_MOBILE), String.valueOf(cnt));
             }
 
             // send merchant id by SMS

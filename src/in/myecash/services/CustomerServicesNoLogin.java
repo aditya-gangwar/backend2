@@ -75,9 +75,9 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                         !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + mobileNum);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
                 }
 
                 // verify PIN - if provided
@@ -85,9 +85,9 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                         !cardNumDb.equals(cardNum)) {
 
                     validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
                 }
 
                 // Verification successful - Generate OTP
@@ -120,9 +120,9 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 if(e.getMessage().contains("password")) {
                     // Handle wrong attempt
                     validException = true;
-                    BackendUtils.handleWrongAttempt(userId, customer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(userId, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), String.valueOf(cnt));
                 } else {
                     throw e;
                 }
@@ -180,7 +180,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetInternalUserPassword";
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "resetCustomerPassword";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 secret;
        boolean validException = false;
@@ -215,10 +215,10 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String cardNumDb = customer.getMembership_card().getCardNum();
             if (cardNumDb == null || !cardNumDb.equalsIgnoreCase(secret)) {
-                BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
+                int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
             }
 
             // For new registered customer - send the password immediately
@@ -232,12 +232,17 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 op.setPrivateId(customer.getPrivate_id());
                 op.setOp_code(DbConstants.OP_RESET_PASSWD);
                 op.setOp_status(DbConstantsBackend.USER_OP_STATUS_PENDING);
+                op.setRequestor_id(customer.getPrivate_id());
                 op.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                 op.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
                 op.setCreateTime(new Date());
 
                 BackendOps.saveCustomerOp(op);
                 mLogger.debug("Processed passwd reset op for: " + customer.getPrivate_id());
+
+                // Change password
+                user.setPassword(BackendUtils.generateTempPassword());
+                user = BackendOps.updateUser(user);
 
                 // Send SMS to inform
                 Integer mins = MyGlobalSettings.getCustPasswdResetMins() + GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;

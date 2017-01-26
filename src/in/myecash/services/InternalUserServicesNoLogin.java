@@ -106,10 +106,10 @@ public class InternalUserServicesNoLogin implements IBackendlessService {
             // check for 'extra verification'
             String dob = internalUser.getDob();
             if (dob == null || !dob.equalsIgnoreCase(secret1)) {
-                BackendUtils.handleWrongAttempt(userId, internalUser, userType,
+                int cnt = BackendUtils.handleWrongAttempt(userId, internalUser, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_DOB, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), "");
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), String.valueOf(cnt));
             }
 
             internalUserPwdResetImmediate(user, internalUser);

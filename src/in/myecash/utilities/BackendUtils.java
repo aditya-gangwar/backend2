@@ -5,6 +5,7 @@ import com.backendless.BackendlessUser;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.InvocationContext;
+import com.backendless.servercode.RunnerContext;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
@@ -322,7 +323,7 @@ public class BackendUtils {
     /*
      * Handles 'wrong attempt' by any type of user
      */
-    public static void handleWrongAttempt(String userId, Object userObject, int userType,
+    public static int handleWrongAttempt(String userId, Object userObject, int userType,
                                           String wrongParamType, String opCode, String[] edr, MyLogger logger) {
         // check similar wrong attempts today
         int cnt = BackendOps.getWrongAttemptCnt(userId, wrongParamType);
@@ -374,6 +375,9 @@ public class BackendUtils {
                 logger.error(stackTraceStr(e));
                 edr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.IGNORED_ERROR_WRONG_ATTEMPT_SAVE_FAILED;
             }
+
+            // return available attempts
+            return (confMaxAttempts - cnt);
         }
     }
 
@@ -548,7 +552,9 @@ public class BackendUtils {
         // to be removed once issue is fixed on backendless side
         // currently for 'custom error code' getCode() always returns 0 - from event handlers
         return new BackendlessException(be.getCode(),
-                CommonConstants.PREFIX_ERROR_CODE_AS_MSG + be.getCode()+"/"+be.getMessage());
+                CommonConstants.PREFIX_ERROR_CODE_AS_MSG+CommonConstants.SPECIAL_DELIMETER +
+                        be.getCode()+CommonConstants.SPECIAL_DELIMETER +
+                        be.getMessage());
     }
 
     public static void handleException(Exception e, boolean validException, MyLogger logger, String[] edr) {
@@ -655,6 +661,21 @@ public class BackendUtils {
         String time = mSdfDateTimeFilename.format(new Date());
         String filename = opCode+"_"+custPrivateId+"_"+time+"."+CommonConstants.PHOTO_FILE_FORMAT;
         return filename.replace(" ","_");
+    }
+
+    public static void printCtxtInfo(MyLogger logger, RunnerContext context) {
+        logger.debug("Headers: "+HeadersManager.getInstance().getHeaders().toString());
+        logger.debug("RunnerContext: "+context.toString());
+        List<String> roles = Backendless.UserService.getUserRoles();
+        logger.debug("Roles: "+roles.toString());
+    }
+
+    public static void printCtxtInfo(MyLogger logger) {
+        logger.debug("Headers: "+HeadersManager.getInstance().getHeaders().toString());
+        //logger.debug("RunnerContext: "+context.toString());
+        logger.debug( "InvocationContext: "+ InvocationContext.asString() );
+        List<String> roles = Backendless.UserService.getUserRoles();
+        logger.debug("Roles: "+roles.toString());
     }
 
     public static void initAll() {

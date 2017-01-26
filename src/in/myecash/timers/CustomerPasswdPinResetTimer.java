@@ -136,6 +136,10 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
             BackendOps.updateUser(user);
             mLogger.debug("Updated customer for password reset: " + customer.getMobile_num());
 
+            // print roles - for debug purpose
+            List<String> roles = Backendless.UserService.getUserRoles();
+            mLogger.debug("Roles: "+roles.toString());
+
             // Change merchant op status
             op.setOp_status(DbConstantsBackend.USER_OP_STATUS_COMPLETE);
             BackendOps.saveCustomerOp(op);

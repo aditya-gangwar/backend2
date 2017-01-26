@@ -362,10 +362,10 @@ public class TxnProcessHelper {
             //mLogger.debug("Customer PIN is required");
             if (mTransaction.getCpin() != null) {
                 if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
-                    BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
                     mValidException = true; // to avoid logging of this exception
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + mCustomerId);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
                 } else {
                     mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
                 }

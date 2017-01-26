@@ -80,9 +80,9 @@ public class CommonServices implements IBackendlessService {
                     if(verifyFailed) {
                         validException = true;
                         Merchants merchant = BackendOps.getMerchant(userId, false, false);
-                        BackendUtils.handleWrongAttempt(userId, merchant, userType,
+                        int cnt = BackendUtils.handleWrongAttempt(userId, merchant, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), String.valueOf(cnt));
 
                     } else {
                         BackendOps.loadMerchant(user);
@@ -98,10 +98,10 @@ public class CommonServices implements IBackendlessService {
                     if(verifyFailed) {
                         validException = true;
                         Customers customer = BackendOps.getCustomer(userId, BackendConstants.ID_TYPE_MOBILE, false);
-                        BackendUtils.handleWrongAttempt(userId, customer, userType,
+                        int cnt = BackendUtils.handleWrongAttempt(userId, customer, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                         mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), String.valueOf(cnt));
 
                     } else {
                         BackendOps.loadCustomer(user);
@@ -117,9 +117,9 @@ public class CommonServices implements IBackendlessService {
                     if(verifyFailed) {
                         validException = true;
                         InternalUser agent = BackendOps.getInternalUser(userId);
-                        BackendUtils.handleWrongAttempt(userId, agent, userType,
+                        int cnt = BackendUtils.handleWrongAttempt(userId, agent, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), String.valueOf(cnt));
 
                     } else {
                         BackendOps.loadInternalUser(user);
@@ -332,6 +332,7 @@ public class CommonServices implements IBackendlessService {
                 mobileNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 argCardId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 otp+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                argPin+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 opParam;
 
         boolean validException = false;
@@ -410,7 +411,6 @@ public class CommonServices implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
             }
 
-
             // OTP not required for following:
             // - 'Change PIN' operation
             // - 'Reset PIN' by customer himself from app
@@ -431,21 +431,25 @@ public class CommonServices implements IBackendlessService {
                         BackendUtils.checkCardForUse(customer.getMembership_card());
                     } else {
                         validException = true;
-                        BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                        int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
                     }
                 }
 
                 // verify against provided mobile number
                 if (opCode.equals(DbConstants.OP_CHANGE_MOBILE)) {
                     // check that new mobile is not already registered for some other customer
+                    Customers newCust = null;
                     try {
-                        customer = BackendOps.getCustomer(opParam, BackendConstants.ID_TYPE_MOBILE, false);
-                        // If here - means customer exist - return error
-                        throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
+                        newCust = BackendOps.getCustomer(opParam, BackendConstants.ID_TYPE_MOBILE, false);
                     } catch (BackendlessException be) {
                         // No such customer exist - we can proceed
+                    }
+                    if(newCust!=null) {
+                        // If here - means customer exist - return error
+                        mLogger.debug("Customer already registered: "+opParam+","+customer.getMobile_num());
+                        throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
                     }
                 }
 
@@ -454,9 +458,9 @@ public class CommonServices implements IBackendlessService {
                         !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
                 }
 
                 // Generate OTP and send SMS
@@ -490,9 +494,9 @@ public class CommonServices implements IBackendlessService {
                         BackendUtils.checkCardForUse(customer.getMembership_card());
                     } else {
                         validException = true;
-                        BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                        int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
-                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), "");
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
                     }
                 }
                 // Don't verify PIN for 'reset PIN' operation
@@ -500,9 +504,9 @@ public class CommonServices implements IBackendlessService {
                         !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
-                    BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                    int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_PIN, opCode, mEdr, mLogger);
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "Wrong PIN attempt: " + customer.getMobile_num());
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
                 }
 
                 // For PIN reset request - check if any already pending
@@ -539,6 +543,7 @@ public class CommonServices implements IBackendlessService {
                     customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_CUSTOMER);
                     customerOp.setImgFilename("");
                     customerOp.setInitiatedVia(DbConstantsBackend.USER_OP_INITVIA_APP);
+                    customerOp.setRequestor_id(customer.getPrivate_id());
                 } else {
                     //customerOp.setInitiatedBy(DbConstantsBackend.USER_OP_INITBY_MCHNT);
                     customerOp.setInitiatedBy(merchantName);
@@ -597,7 +602,7 @@ public class CommonServices implements IBackendlessService {
                     }
                 } catch(Exception e) {
                     if(!validException) {
-                        mLogger.error("execCustomerOp: Exception while customer operation: "+customer.getPrivate_id());
+                        mLogger.error("execCustomerOp: Exception while customer operation: "+customer.getPrivate_id(), e);
                         // Rollback - delete customer op added
                         try {
                             BackendOps.deleteCustomerOp(customerOp);
@@ -670,8 +675,9 @@ public class CommonServices implements IBackendlessService {
         String oldMobile = customer.getMobile_num();
 
         // update mobile number
-        custUser.setProperty("user_id", newMobile);
         customer.setMobile_num(newMobile);
+
+        custUser.setProperty("user_id", newMobile);
         // update status to 'restricted access'
         // not using setCustomerStatus() fx. - to avoid two DB operations
         customer.setAdmin_status(DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY);
@@ -696,7 +702,8 @@ public class CommonServices implements IBackendlessService {
 
         // Send SMS through HTTP
         String smsText = String.format(SmsConstants.SMS_PIN_INIT,
-                merchantName, CommonUtils.getPartialVisibleStr(customer.getMobile_num()),
+                (merchantName==null?"You":merchantName),
+                CommonUtils.getPartialVisibleStr(customer.getMobile_num()),
                 MyGlobalSettings.getCustPasswdResetMins().toString());
         SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
     }

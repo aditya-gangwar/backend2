@@ -220,7 +220,7 @@ public class BackendOps {
         if( user.getTotalObjects() == 0) {
             // No customer found is not an error
             //return null;
-            String errorMsg = "No Customer found: "+custId;
+            String errorMsg = "No Customer found: "+custId+". whereclause: "+query.getWhereClause();
             throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
             if(fetchCard && user.getData().get(0).getMembership_card()==null) {
@@ -499,7 +499,7 @@ public class BackendOps {
         dataQuery.setPageSize( CommonConstants.DB_QUERY_PAGE_SIZE);
 
         QueryOptions options = new QueryOptions();
-        options.addSortByOption("createTime ASC");
+        options.addSortByOption("createTime DESC");
         dataQuery.setQueryOptions(options);
 
         BackendlessCollection<MerchantOps> collection = Backendless.Data.of(MerchantOps.class).find(dataQuery);
@@ -559,7 +559,7 @@ public class BackendOps {
         dataQuery.setPageSize( CommonConstants.DB_QUERY_PAGE_SIZE);
 
         QueryOptions options = new QueryOptions();
-        options.addSortByOption("createTime ASC");
+        options.addSortByOption("createTime DESC");
         dataQuery.setQueryOptions(options);
 
         BackendlessCollection<CustomerOps> collection = Backendless.Data.of(CustomerOps.class).find(dataQuery);

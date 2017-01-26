@@ -67,20 +67,24 @@ public class MerchantServices implements IBackendlessService {
                 // First run, generate OTP if all fine
 
                 // New mobile number should not be registered with other merchant
+                Merchants newMchnt = null;
                 try {
-                    Merchants mchnt = BackendOps.getMerchant(newMobile, false, false);
-                    // If here - means merchant exist - return error
-                    throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
+                    newMchnt = BackendOps.getMerchant(newMobile, false, false);
                 } catch (BackendlessException be) {
-                    // No such merchant exist - we can proceed
+                    // No such Merchant exist - we can proceed
+                }
+                if(newMchnt!=null) {
+                    // If here - means customer exist - return error
+                    mLogger.debug("Merchant already registered: "+newMobile+","+merchant.getMobile_num());
+                    throw new BackendlessException(String.valueOf(ErrorCodes.MOBILE_ALREADY_REGISTERED), "");
                 }
 
                 // Validate based on given current number
                 if (!merchant.getDob().equals(verifyparam)) {
-                    BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
+                    int cnt = BackendUtils.handleWrongAttempt(merchant.getAuto_id(), merchant, DbConstants.USER_TYPE_MERCHANT,
                             DbConstantsBackend.WRONG_PARAM_TYPE_DOB, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                     validException = true;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), "");
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_DOB), String.valueOf(cnt));
                 }
 
                 // Generate OTP to verify new mobile number
@@ -516,8 +520,7 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.setProperties(merchantId, DbConstants.USER_TYPE_MERCHANT, debugLogs);
             // Fetch merchant - send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediately after
-            Object userObj = BackendUtils.fetchCurrentUser(
-                    null, mEdr, mLogger, false);
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
             int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
 
             Merchants merchant = null;
@@ -709,20 +712,20 @@ public class MerchantServices implements IBackendlessService {
                     // assign custom role to it
                     BackendOps.assignRole(customerMobile, BackendConstants.ROLE_CUSTOMER);
 
-                    // create cashback also - to avoid another call to 'getCashback' from merchant
-                    cashback = createCbObject(merchant, customer);
-
-                    // Add 'customer details' in the cashback object to be returned
-                    // these details are not stored in DB along with cashback object
-                    cashback.setOther_details(MyCustomer.toCsvString(customer));
-                    // remove 'not needed sensitive' fields from cashback object
-                    stripCashback(cashback);
-
                 } catch(Exception e) {
                     // rollback to not-usable state
                     rollbackRegister(customerMobile, card);
                     throw e;
                 }
+
+                // create cashback also - to avoid another call to 'getCashback' from merchant
+                cashback = createCbObject(merchant, customer);
+
+                // Add 'customer details' in the cashback object to be returned
+                // these details are not stored in DB along with cashback object
+                cashback.setOther_details(MyCustomer.toCsvString(customer));
+                // remove 'not needed sensitive' fields from cashback object
+                stripCashback(cashback);
 
                 // Send welcome sms to the customer
                 String name = customer.getFirstName()+" "+customer.getLastName();
@@ -750,6 +753,33 @@ public class MerchantServices implements IBackendlessService {
     /*
      * Private helper methods
      */
+    /*private void regCustomerUser(Customers customer) {
+        // Create customer user
+        BackendlessUser customerUser = new BackendlessUser();
+        customerUser.setProperty("user_id", customer.getMobile_num());
+        // use generated PIN as password
+        customerUser.setPassword(BackendUtils.generateTempPassword());
+        customerUser.setProperty("user_type", DbConstants.USER_TYPE_CUSTOMER);
+        // Both 'user' and 'customer' objects get created in single go
+        // This also ensures that 'customer' object's 'ownerId' remains null
+        // This helps to avoid direct update from app by the merchant who created this customer object
+        customerUser.setProperty("customer", customer);
+
+        //mLogger.debug("Context: "+InvocationContext.asString());
+        //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
+        customerUser = BackendOps.registerUser(customerUser);
+        try {
+            customer = (Customers) customerUser.getProperty("customer");
+            // assign custom role to it
+            BackendOps.assignRole(customer.getMobile_num(), BackendConstants.ROLE_CUSTOMER);
+
+        } catch(Exception e) {
+            // rollback to not-usable state
+            rollbackRegister(customerMobile, card);
+            throw e;
+        }
+    }*/
+
     private Customers createCustomer() {
         Customers customer = new Customers();
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);

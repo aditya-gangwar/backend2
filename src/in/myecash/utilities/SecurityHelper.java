@@ -130,7 +130,7 @@ public class SecurityHelper {
     }
 
     public static boolean verifyCustPin(Customers customer, String rcvdPin, MyLogger logger) {
-        //logger.debug("In verifyCustPin");
+        logger.debug("In verifyCustPin");
         try {
             byte[] salt = Base64.getDecoder().decode(customer.getNamak());
             byte[] pin = Base64.getDecoder().decode(customer.getTxn_pin());

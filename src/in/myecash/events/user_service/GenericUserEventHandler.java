@@ -2,6 +2,7 @@ package in.myecash.events.user_service;
 
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import in.myecash.utilities.BackendOps;
@@ -255,13 +256,14 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 //if(result.getException().getExceptionClass().endsWith("UserLoginException")) {
                 // crude way to check for failure due to wrong password - but above ones were not working properly
                 if (result.getException().getExceptionMessage().contains("password")) {
-                    mLogger.debug("Login failed for user: " + login + " due to wrong id/passwd");
+                    int cnt = 0;
+                    mLogger.debug("Login failed for user: " + login + " due to wrong id/passwd. "+result.getException().getExceptionMessage());
                     switch (userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-                            BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
+                            cnt = BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if (!merchant.getFirst_login_ok()) {
                                 // first login not done yet
@@ -273,9 +275,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                         case DbConstants.USER_TYPE_CUSTOMER:
                             // fetch customer
+                            //BackendUtils.printCtxtInfo(mLogger, context);
+                            //mLogger.debug("Before customer object: "+login);
                             Customers customer = BackendOps.getCustomer(login, BackendConstants.ID_TYPE_MOBILE, false);
+                            //mLogger.debug("Got customer object");
                             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-                            BackendUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER,
+                            cnt = BackendUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if (!customer.getFirst_login_ok()) {
                                 // first login not done yet
@@ -291,10 +296,14 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // fetch agent
                             InternalUser internalUser = BackendOps.getInternalUser(login);
                             mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX] = internalUser.getId();
-                            BackendUtils.handleWrongAttempt(login, internalUser, userType,
+                            cnt = BackendUtils.handleWrongAttempt(login, internalUser, userType,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             break;
                     }
+
+                    validException = true;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_PASSWD), String.valueOf(cnt));
+
                 } else {
                     mLogger.debug("Login failed for user: " + login + ": " + result.getException().toString());
                 }
@@ -316,5 +325,50 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         } finally {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
+    }
+
+    @Override
+    public void beforeRestorePassword( RunnerContext context, String email ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.beforeRestorePassword");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+        // update not allowed from app - return exception
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "beforeRestorePassword";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = email;
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
+    }
+
+    @Override
+    public void beforeRegister( RunnerContext context, HashMap userValue ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.beforeRegister");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+        // update not allowed from app - return exception
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "beforeRegister";
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
+    }
+
+    @Override
+    public void beforeFind( RunnerContext context, BackendlessDataQuery query ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.beforeFind");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+        // update not allowed from app - return exception
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "users-beforeFind";
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
+    }
+
+    @Override
+    public void beforeUpdate( RunnerContext context, HashMap userValue ) throws Exception
+    {
+        MyLogger mLogger = new MyLogger("events.beforeUpdate");
+        String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
+        // update not allowed from app - return exception
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "users-beforeUpdate";
+        BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
+        throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
 }
