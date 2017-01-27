@@ -45,8 +45,16 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_MERCHANT);
 
         try {
-            //mLogger.debug("In MerchantPasswdResetTimer execute");
-            //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            mLogger.debug("In MerchantPasswdResetTimer execute");
+            /*
+             * An issue was observed wherein the 'user-token' header remains set,
+             * if the time run happens after 'Txn Commit' from Merchant App.
+             * This lead to the processing assuming {Merchant, AuthenticatedUser} roles - and hence permission issues
+             * So, user-token header is explicitly removed here.
+             */
+            mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            HeadersManager.getInstance().removeHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY);
+            mLogger.debug("After: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all 'pending' merchant password reset operations
             ArrayList<MerchantOps> ops = BackendOps.fetchMerchantOps(mchntPwdResetWhereClause());

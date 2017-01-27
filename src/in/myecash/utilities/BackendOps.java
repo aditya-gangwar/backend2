@@ -486,7 +486,7 @@ public class BackendOps {
         // created within last 'cool off mins'
         // Taking twice (*2) time - as it may happen that white 'reset mins' duration is passed
         // but passwdResetTime have not exceuted yet - as it executes every 10/15 mins or so
-        long time = (new Date().getTime()) - (2*MyGlobalSettings.getMchntPasswdResetMins() * 60 * 1000);
+        long time = (new Date().getTime()) - (2*MyGlobalSettings.getMchntPasswdResetMins() * CommonConstants.MILLISECS_IN_MINUTE);
         whereClause.append(" AND createTime > ").append(time);
 
         return fetchMerchantOps(whereClause.toString());
@@ -546,7 +546,7 @@ public class BackendOps {
         whereClause.append("AND privateId = '").append(custPvtId).append("'");
 
         // created within last 'cool off' mins
-        long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * 60 * 1000);
+        long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * CommonConstants.MILLISECS_IN_MINUTE);
         whereClause.append(" AND createTime > ").append(time);
 
         return fetchCustomerOps(whereClause.toString());
@@ -624,7 +624,7 @@ public class BackendOps {
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
 
         long now = (new Date()).getTime();
-        long expiryTime = now - (MyGlobalSettings.getWrongAttemptResetHrs()*CommonConstants.MILLISECS_IN_HOUR);
+        long expiryTime = now - (MyGlobalSettings.getWrongAttemptResetMins()*CommonConstants.MILLISECS_IN_MINUTE);
 
         //DateUtil todayMidnight = new DateUtil(BackendConstants.TIMEZONE);
         //todayMidnight.toMidnight();

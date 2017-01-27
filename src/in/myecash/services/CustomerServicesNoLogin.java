@@ -295,7 +295,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
         whereClause.append("AND mobile_num = '").append(customerMobileNum).append("'");
 
         // created within last 'cool off' mins
-        long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * 60 * 1000);
+        long time = (new Date().getTime()) - (MyGlobalSettings.getCustPasswdResetMins() * CommonConstants.MILLISECS_IN_MINUTE);
         whereClause.append(" AND createTime > ").append(time);
         return whereClause.toString();
     }

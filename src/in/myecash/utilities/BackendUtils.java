@@ -162,7 +162,7 @@ public class BackendUtils {
 
             case DbConstants.USER_STATUS_LOCKED:
                 // Check if temporary blocked duration is over
-                if(!checkMchntStatusExpiry(merchant, MyGlobalSettings.getAccBlockHrs(DbConstants.USER_TYPE_MERCHANT), edr, logger)) {
+                if(!checkMchntStatusExpiry(merchant, MyGlobalSettings.getAccBlockMins(DbConstants.USER_TYPE_MERCHANT), edr, logger)) {
                     // expiry duration is not over yet
                     errorCode = ErrorCodes.USER_ACC_LOCKED;
                     errorMsg = "Account is locked";
@@ -195,12 +195,12 @@ public class BackendUtils {
                 // As this fx. does not have all this info to decide - so it will not raise any exception
                 // calling fx. should check it itself for this status
                 // However, if 'restricted duration' is passed, the status will be changed to 'Enabled' here only
-                checkCustStatusExpiry(customer, MyGlobalSettings.getCustAccLimitModeHrs(), edr, logger);
+                checkCustStatusExpiry(customer, MyGlobalSettings.getCustAccLimitModeMins(), edr, logger);
                 break;
 
             case DbConstants.USER_STATUS_LOCKED:
                 // Check if temporary blocked duration is over
-                if(!checkCustStatusExpiry(customer, MyGlobalSettings.getAccBlockHrs(DbConstants.USER_TYPE_CUSTOMER), edr, logger)) {
+                if(!checkCustStatusExpiry(customer, MyGlobalSettings.getAccBlockMins(DbConstants.USER_TYPE_CUSTOMER), edr, logger)) {
                     // expiry duration is not over yet
                     errorCode = ErrorCodes.USER_ACC_LOCKED;
                     errorMsg = "Account is locked";
@@ -230,13 +230,13 @@ public class BackendUtils {
         }
     }
 
-    private static boolean checkCustStatusExpiry(Customers customer, int hours, String[] edr, MyLogger logger) {
+    private static boolean checkCustStatusExpiry(Customers customer, int mins, String[] edr, MyLogger logger) {
         Date blockedTime = customer.getStatus_update_time();
         if (blockedTime != null && blockedTime.getTime() > 0) {
             // check for temp blocking duration expiry
             Date now = new Date();
             long timeDiff = now.getTime() - blockedTime.getTime();
-            long allowedDuration = hours * 60 * 60 * 1000;
+            long allowedDuration = mins * CommonConstants.MILLISECS_IN_MINUTE;
 
             if (timeDiff > allowedDuration) {
                 try {
@@ -254,13 +254,13 @@ public class BackendUtils {
         return true;
     }
 
-    private static boolean checkMchntStatusExpiry(Merchants merchant, int hours, String[] edr, MyLogger logger) {
+    private static boolean checkMchntStatusExpiry(Merchants merchant, int mins, String[] edr, MyLogger logger) {
         Date blockedTime = merchant.getStatus_update_time();
         if (blockedTime != null && blockedTime.getTime() > 0) {
             // check for temp blocking duration expiry
             Date now = new Date();
             long timeDiff = now.getTime() - blockedTime.getTime();
-            long allowedDuration = hours * 60 * 60 * 1000;
+            long allowedDuration = mins * CommonConstants.MILLISECS_IN_MINUTE;
 
             if (timeDiff > allowedDuration) {
                 try {
@@ -456,11 +456,11 @@ public class BackendUtils {
 
         switch(statusReason) {
             case DbConstantsBackend.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockMins(userType));
             case DbConstantsBackend.LOCKED_WRONG_PIN_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PIN, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockMins(userType));
             case DbConstantsBackend.LOCKED_WRONG_VERIFICATION_LIMIT_RCHD:
-                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_VERIFY_FAILED, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockHrs(userType));
+                return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_VERIFY_FAILED, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockMins(userType));
         }
 
         return null;

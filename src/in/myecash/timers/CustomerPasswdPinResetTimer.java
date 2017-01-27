@@ -34,7 +34,7 @@ import in.myecash.utilities.SecurityHelper;
  * Timer duration should be 1/6th of the configured merchant passwd reset cool off mins value
  * So, if cool off mins is 60, then timer should run every 10 mins
  */
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':600}},'timername':'CustomerPasswdReset'}")
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':300}},'timername':'CustomerPasswdReset'}")
 public class CustomerPasswdPinResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.CustomerPasswdPinResetTimer");
@@ -51,7 +51,15 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
 
         try {
             mLogger.debug("In CustomerPasswdPinResetTimer execute");
+            /*
+             * An issue was observed wherein the 'user-token' header remains set,
+             * if the time run happens after 'Txn Commit' from Merchant App.
+             * This lead to the processing assuming {Merchant, AuthenticatedUser} roles - and hence permission issues
+             * So, user-token header is explicitly removed here.
+             */
             mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
+            HeadersManager.getInstance().removeHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY);
+            mLogger.debug("After: " + HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch all 'pending' merchant password reset operations
             ArrayList<CustomerOps> ops = BackendOps.fetchCustomerOps(custPwdResetWhereClause());
