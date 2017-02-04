@@ -4,6 +4,7 @@ import com.backendless.BackendlessUser;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import in.myecash.common.CommonUtils;
+import in.myecash.common.MyErrorParams;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
@@ -171,7 +172,10 @@ public class MerchantServicesNoLogin implements IBackendlessService {
                 SmsHelper.sendSMS(smsText, op.getMobile_num(), mEdr, mLogger, true);
 
                 validException = true;
-                throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), "");
+                String errMsg = (new MyErrorParams(ErrorCodes.OP_SCHEDULED, -1,
+                        CommonUtils.roundUpTo(MyGlobalSettings.getMchntPasswdResetMins()+GlobalSettingConstants.MERCHANT_PASSWORD_RESET_TIMER_INTERVAL,5),
+                        "")).toCsvString();
+                throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), errMsg);
             }
 
             // no exception - means function execution success

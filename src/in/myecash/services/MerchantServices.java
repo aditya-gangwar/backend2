@@ -753,33 +753,6 @@ public class MerchantServices implements IBackendlessService {
     /*
      * Private helper methods
      */
-    /*private void regCustomerUser(Customers customer) {
-        // Create customer user
-        BackendlessUser customerUser = new BackendlessUser();
-        customerUser.setProperty("user_id", customer.getMobile_num());
-        // use generated PIN as password
-        customerUser.setPassword(BackendUtils.generateTempPassword());
-        customerUser.setProperty("user_type", DbConstants.USER_TYPE_CUSTOMER);
-        // Both 'user' and 'customer' objects get created in single go
-        // This also ensures that 'customer' object's 'ownerId' remains null
-        // This helps to avoid direct update from app by the merchant who created this customer object
-        customerUser.setProperty("customer", customer);
-
-        //mLogger.debug("Context: "+InvocationContext.asString());
-        //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
-        customerUser = BackendOps.registerUser(customerUser);
-        try {
-            customer = (Customers) customerUser.getProperty("customer");
-            // assign custom role to it
-            BackendOps.assignRole(customer.getMobile_num(), BackendConstants.ROLE_CUSTOMER);
-
-        } catch(Exception e) {
-            // rollback to not-usable state
-            rollbackRegister(customerMobile, card);
-            throw e;
-        }
-    }*/
-
     private Customers createCustomer() {
         Customers customer = new Customers();
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);

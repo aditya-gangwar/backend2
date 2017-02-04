@@ -352,7 +352,7 @@ public class TxnProcessHelper {
         // txn cancellation is also not allowed
         if(mCustomer.getAdmin_status()==DbConstants.USER_STATUS_LIMITED_CREDIT_ONLY &&
                 ( mTransaction.getCl_debit()>0 || mTransaction.getCb_debit()>0 ||
-                        mTransaction.getCancelTime()==null )) {
+                        mTransaction.getCancelTime()!=null )) {
             mValidException = true; // to avoid logging of this exception
             throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
         }

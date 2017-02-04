@@ -7,6 +7,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.RunnerContext;
 import in.myecash.common.CommonUtils;
+import in.myecash.common.MyErrorParams;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
@@ -551,10 +552,12 @@ public class BackendUtils {
     public static BackendlessException getNewException(BackendlessException be) {
         // to be removed once issue is fixed on backendless side
         // currently for 'custom error code' getCode() always returns 0 - from event handlers
-        return new BackendlessException(be.getCode(),
+        /*return new BackendlessException(be.getCode(),
                 CommonConstants.PREFIX_ERROR_CODE_AS_MSG+CommonConstants.SPECIAL_DELIMETER +
                         be.getCode()+CommonConstants.SPECIAL_DELIMETER +
-                        be.getMessage());
+                        be.getMessage());*/
+        MyErrorParams params = new MyErrorParams(Integer.parseInt(be.getCode()),-1,-1,"");
+        return new BackendlessException(be.getCode(),params.toCsvString());
     }
 
     public static void handleException(Exception e, boolean validException, MyLogger logger, String[] edr) {

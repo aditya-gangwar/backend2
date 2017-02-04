@@ -7,6 +7,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
 import in.myecash.common.CommonUtils;
+import in.myecash.common.MyErrorParams;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.constants.BackendConstants;
 import in.myecash.constants.DbConstantsBackend;
@@ -590,7 +591,10 @@ public class CommonServices implements IBackendlessService {
                             resetCustomerPin(customer, merchantName);
                             validException = true;
                             // send imageFilename as part of exception - hack as no value can be returned in this case
-                            throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), customerOp.getImgFilename());
+                            String errMsg = (new MyErrorParams(ErrorCodes.OP_SCHEDULED, -1,
+                                    CommonUtils.roundUpTo(MyGlobalSettings.getCustPasswdResetMins()+GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL,5),
+                                    customerOp.getImgFilename())).toCsvString();
+                            throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), errMsg);
 
                         case DbConstants.OP_CHANGE_PIN:
                             if (opParam == null || opParam.isEmpty() || opParam.length() != CommonConstants.PIN_LEN) {
