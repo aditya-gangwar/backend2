@@ -158,6 +158,8 @@ public class AdminServices implements IBackendlessService {
                         // disable cb and cl add
                         merchant.setCb_rate("0");
                         merchant.setCl_add_enable(false);
+                        merchant.setPrepaidCbRate("0");
+                        merchant.setPrepaidCbMinAmt(0);
                         merchant.setRemoveReqDate(new Date());
 
                         newStatus = DbConstants.USER_STATUS_UNDER_CLOSURE;

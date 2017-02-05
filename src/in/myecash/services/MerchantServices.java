@@ -158,7 +158,8 @@ public class MerchantServices implements IBackendlessService {
     }
 
     public Merchants updateSettings(String cbRate, boolean addClEnabled, String email, String contactPhone,
-                                    boolean askLinkedInvNum, boolean linkedInvNumOptional, boolean invNumOnlyNmbrs) {
+                                    boolean askLinkedInvNum, boolean linkedInvNumOptional, boolean invNumOnlyNmbrs,
+                                    String ppCbRate, int ppMinAmt) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -192,6 +193,8 @@ public class MerchantServices implements IBackendlessService {
             merchant.setInvoiceNumAsk(askLinkedInvNum);
             merchant.setInvoiceNumOptional(linkedInvNumOptional);
             merchant.setInvoiceNumOnlyNumbers(invNumOnlyNmbrs);
+            merchant.setPrepaidCbRate(ppCbRate);
+            merchant.setPrepaidCbMinAmt(ppMinAmt);
             // update object in DB
             merchant = BackendOps.updateMerchant(merchant);
 

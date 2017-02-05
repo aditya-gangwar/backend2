@@ -271,7 +271,6 @@ public class InternalUserServices implements IBackendlessService {
             merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
             merchant.setLastRenewDate(new Date());
-            //merchant.setAdmin_remarks("New registered merchant");
             merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
             merchant.setAgentId(agent.getId());
@@ -279,7 +278,6 @@ public class InternalUserServices implements IBackendlessService {
             merchant.setCl_debit_limit_for_pin(-1);
             merchant.setCb_debit_limit_for_pin(-1);
             // set cashback and transaction table names
-            //setCbAndTransTables(merchant, merchantCnt);
             merchant.setCashback_table(DbConstantsBackend.CASHBACK_TABLE_NAME + city.getCbTableCode());
             BackendOps.describeTable(merchant.getCashback_table()); // just to check that the table exists
             merchant.setTxn_table(DbConstantsBackend.TRANSACTION_TABLE_NAME + city.getCbTableCode());
