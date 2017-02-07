@@ -225,6 +225,10 @@ public class SecurityHelper {
     }
 
     public static String generateOTP() {
+        if(BackendConstants.TESTING_USE_FIXED_OTP) {
+            return BackendConstants.TESTING_FIXED_OTP_VALUE;
+        }
+
         // random numeric string
         SecureRandom random = new SecureRandom();
         char[] id = new char[CommonConstants.OTP_LEN];

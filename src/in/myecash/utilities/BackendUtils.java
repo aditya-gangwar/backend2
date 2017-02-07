@@ -556,7 +556,15 @@ public class BackendUtils {
                 CommonConstants.PREFIX_ERROR_CODE_AS_MSG+CommonConstants.SPECIAL_DELIMETER +
                         be.getCode()+CommonConstants.SPECIAL_DELIMETER +
                         be.getMessage());*/
-        MyErrorParams params = new MyErrorParams(Integer.parseInt(be.getCode()),-1,-1,"");
+
+        int attempts = -1;
+        try {
+            attempts = Integer.parseInt(be.getMessage()); //will also get checked if msg is valid integer
+        } catch(Exception e) {
+            // ignore
+        }
+
+        MyErrorParams params = new MyErrorParams(Integer.parseInt(be.getCode()),attempts,-1,"");
         return new BackendlessException(be.getCode(),params.toCsvString());
     }
 
@@ -635,6 +643,10 @@ public class BackendUtils {
      * Other Miscellaneous functions
      */
     public static boolean isTrustedDevice(String deviceId, List<MerchantDevice> trustedDevices) {
+
+        if(BackendConstants.TESTING_SKIP_DEVICEID_CHECK) {
+            return true;
+        }
         //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
         if (trustedDevices != null &&
                 (deviceId != null && !deviceId.isEmpty())) {

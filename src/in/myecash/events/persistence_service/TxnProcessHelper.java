@@ -79,7 +79,9 @@ public class TxnProcessHelper {
             // credit txns not allowed under expiry duration
             // txn cancellation is allowed
             if(mMerchant.getAdmin_status()== DbConstants.USER_STATUS_UNDER_CLOSURE &&
-                    (mTransaction.getCb_credit() > 0 || mTransaction.getCl_credit() > 0) ) {
+                    (mTransaction.getCb_credit() > 0 ||
+                            mTransaction.getCl_credit() > 0 ||
+                            mTransaction.getExtra_cb_credit() > 0 ) ) {
                 // ideally it shudn't reach here - as both cl and cb settings are disabled and not allowed to be edited in app
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.ACC_UNDER_EXPIRY), "");
@@ -120,7 +122,8 @@ public class TxnProcessHelper {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + mCustomerId);
                 }
-                cashback.setCb_credit(cashback.getCb_credit() + mTransaction.getCb_credit());
+                cashback.setCb_credit( cashback.getCb_credit() +
+                        (mTransaction.getCb_credit()+mTransaction.getExtra_cb_credit()) );
                 cashback.setCb_debit(cashback.getCb_debit() + mTransaction.getCb_debit());
                 cashback.setTotal_billed(cashback.getTotal_billed() + mTransaction.getTotal_billed());
                 cashback.setCb_billed(cashback.getCb_billed() + mTransaction.getCb_billed());
@@ -275,6 +278,7 @@ public class TxnProcessHelper {
 
                 // Cannot cancel txn - if not enough CB available
                 // i.e. the customer used the cashback after this txn
+                // 'extra cashback' cannot be cancelled - so not checking for the same
                 if(mTransaction.getCb_credit() > (cashback.getCb_credit()-cashback.getCb_debit()) ) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.CB_NOT_ENUF_BALANCE), "");
                 }
@@ -284,7 +288,8 @@ public class TxnProcessHelper {
                 // any 'cl debit' in this txn, will be returned
                 cashback.setCl_debit(cashback.getCl_debit() - mTransaction.getCl_debit());
 
-                // any 'cb credit' will be deducted
+                // 'cb credit on Bill' will be deducted
+                // 'extra cashback' cannot be cancelled - as 'add cash' cant be
                 cashback.setCb_credit(cashback.getCb_credit() - mTransaction.getCb_credit());
                 // any 'cb debit' will be returned
                 cashback.setCb_debit(cashback.getCb_debit() - mTransaction.getCb_debit());
@@ -419,7 +424,7 @@ public class TxnProcessHelper {
         cl_debit = mTransaction.getCl_debit();
         cl_credit = mTransaction.getCl_credit();
         cb_debit = mTransaction.getCb_debit();
-        cb_credit = mTransaction.getCb_credit();
+        cb_credit = mTransaction.getCb_credit() + mTransaction.getExtra_cb_credit();
 
         // Send SMS only in cases of 'redeem > INR 10' and 'add cash in account'
         if( cl_debit > BackendConstants.SEND_TXN_SMS_CL_MIN_AMOUNT

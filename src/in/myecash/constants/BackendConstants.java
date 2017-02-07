@@ -13,7 +13,9 @@ public class BackendConstants {
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = false;
     public static final boolean TESTING_SKIP_SMS = false;
-    public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
+    public static final boolean TESTING_SKIP_DEVICEID_CHECK = true;
+    public static final boolean TESTING_USE_FIXED_OTP = true;
+    public static final String TESTING_FIXED_OTP_VALUE = "12345";
     public static final boolean FORCED_DEBUG_LOGS = true;
 
     // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<internal user id>,
@@ -95,7 +97,7 @@ public class BackendConstants {
     public static final String ROLE_CC = "CustomerCare";
     public static final String ROLE_CCNT = "CardController";
 
-    public static final int DEVICE_INFO_VALID_SECS = 300;
+    public static final int DEVICE_INFO_VALID_SECS = 600;
 
     // Customer id type to fetch record
     public static final int ID_TYPE_MOBILE = 0;
