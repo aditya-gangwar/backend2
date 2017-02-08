@@ -14,6 +14,12 @@ import in.myecash.constants.*;
 import in.myecash.database.*;
 import in.myecash.messaging.SmsHelper;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -991,6 +997,75 @@ public class BackendOps {
     public static void saveGlobalSetting(GlobalSettings data) {
         Backendless.Data.mapTableToClass("GlobalSettings", GlobalSettings.class);
         Backendless.Persistence.save( data );
+    }
+
+    /*
+     * Bulk Operations via REST
+     */
+    public static int doBulkRequest(String txnTableName, String whereClause, String method, String updateStr,
+                                     String userToken, MyLogger logger) {
+        /*
+        * curl
+        * -H application-id:09667F8B-98A7-E6B9-FFEB-B2B6EE831A00
+        * -H secret-key:95971CBD-BADD-C61D-FF32-559664AE4F00
+        * -H Content-Type:application/json
+        * -X DELETE
+        * -v https://api.backendless.com/v1/data/bulk/<tablename>?where=<whereClause>
+        */
+        try {
+            String whereClauseEnc = URLEncoder.encode(whereClause, "UTF-8");
+
+            // Building URL without URI
+            StringBuilder sb = new StringBuilder(CommonConstants.BULK_API_URL);
+            sb.append(txnTableName);
+            sb.append("?where=");
+            sb.append(whereClauseEnc);
+
+            URL url = new URL(sb.toString());
+            logger.debug("Bulk URL: "+url.toString());
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(method);
+            //for( String key : HeadersManager.getInstance().getHeaders().keySet() )
+            //    conn.addRequestProperty( key, HeadersManager.getInstance().getHeaders().get( key ) );
+
+            conn.setRequestProperty("application-id", CommonConstants.APPLICATION_ID);
+            conn.setRequestProperty("user-token", userToken);
+            conn.setRequestProperty("secret-key", BackendConstants.REST_SECRET_KEY);
+            conn.setRequestProperty("application-type", "REST");
+            //logger.debug(userToken+", "+BackendConstants.REST_SECRET_KEY);
+
+            if(updateStr!=null && !updateStr.isEmpty()) {
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                OutputStream os = conn.getOutputStream();
+                os.write(updateStr.getBytes());
+                os.flush();
+            }
+
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                logger.error("Error HTTP response: "+conn.getResponseCode());
+                return -1;
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+            int records = 0;
+            String output;
+            while ((output = br.readLine()) != null) {
+                logger.debug("Output from server: "+output);
+                records = Integer.parseInt(output.replaceAll("\\p{C}", "?"));
+            }
+
+            conn.disconnect();
+            logger.debug("Bulk Op rows: "+records);
+            return records;
+
+        } catch (Exception e) {
+            logger.error("Bulk Op failed: "+e.toString());
+            return -1;
+        }
     }
 
 

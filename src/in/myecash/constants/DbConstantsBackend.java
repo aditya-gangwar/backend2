@@ -14,6 +14,11 @@ public class DbConstantsBackend {
     public static String TRANSACTION_TABLE_NAME = "Transaction";
     public static String MERCHANT_ID_BATCH_TABLE_NAME = "MerchantIdBatches";
     public static String CARD_ID_BATCH_TABLE_NAME = "CardIdBatches";
+    public static String WRONG_ATTEMPTS_TABLE_NAME = "WrongAttempts";
+    public static String MCHNT_OPS_TABLE_NAME = "MerchantOps";
+    public static String CUST_OPS_TABLE_NAME = "CustomerOps";
+    // Number of Transaction tables currently in DB
+    public static int TRANSACTION_TABLE_CNT = 6;
 
     // Account locked and other reasons
     // Disable specific reason defined in string.xml of apps

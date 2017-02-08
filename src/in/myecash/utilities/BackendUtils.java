@@ -680,7 +680,9 @@ public class BackendUtils {
 
     public static void printCtxtInfo(MyLogger logger, RunnerContext context) {
         logger.debug("Headers: "+HeadersManager.getInstance().getHeaders().toString());
-        logger.debug("RunnerContext: "+context.toString());
+        if(context!=null) {
+            logger.debug("RunnerContext: " + context.toString());
+        }
         List<String> roles = Backendless.UserService.getUserRoles();
         logger.debug("Roles: "+roles.toString());
     }

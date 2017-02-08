@@ -18,6 +18,11 @@ public class BackendConstants {
     public static final String TESTING_FIXED_OTP_VALUE = "12345";
     public static final boolean FORCED_DEBUG_LOGS = true;
 
+    // Values used in EoD script
+    public static final int RECORDS_DEL_BUFFER_DAYS = 5;
+    public static final int WRONG_ATTEMPTS_DEL_DAYS = 5;
+    public static final int FAILED_SMS_DEL_DAYS = 5;
+
     // <m:api name>,<m:start time>,<m:end time>,<execution duration>,<user id>,<user type>,<mchnt id>,<internal user id>,
     // <cust id>,<cust card id>,<api parameters>,<m:success/failure>,<exception code>,<exception msg>,<special flag>
     // 50+10+10+5+10+10+10+10+10+10+50+10+5+100 = ~300 chars

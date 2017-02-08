@@ -322,12 +322,12 @@ public class InternalUserServices implements IBackendlessService {
                 //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
                 mLogger.debug("Saved dummy txn csv file: " + filePath);
 
-                fileDir = CommonUtils.getTxnImgDir(merchantId);
+                /*fileDir = CommonUtils.getTxnImgDir(merchantId);
                 filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
                 Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
                 // Give write access to this merchant to this directory
                 FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
-                mLogger.debug("Saved dummy txn image file: " + filePath);
+                mLogger.debug("Saved dummy txn image file: " + filePath);*/
 
             } catch(Exception e) {
                 mLogger.fatal("Failed to create merchant directories: "+merchantId+","+e.toString());

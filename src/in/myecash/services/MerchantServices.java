@@ -599,8 +599,8 @@ public class MerchantServices implements IBackendlessService {
             // not checking for merchant account status
 
             // archive txns
-            mLogger.debug("Context: "+InvocationContext.asString());
-            mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("Context: "+InvocationContext.asString());
+            //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
             TxnArchiver archiver = new TxnArchiver(mLogger, merchant, InvocationContext.getUserToken());
             archiver.archiveMerchantTxns(mEdr);
 
