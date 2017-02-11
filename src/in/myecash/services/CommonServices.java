@@ -38,6 +38,17 @@ public class CommonServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
+    public void isSessionValid() {
+        // Just to check if user have valid session
+        BackendUtils.initAll();
+        try {
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        }
+    }
+
     public void changePassword(String userId, String oldPasswd, String newPasswd) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();

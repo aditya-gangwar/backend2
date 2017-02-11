@@ -263,6 +263,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             // fetch merchant
                             Merchants merchant = BackendOps.getMerchant(login, false, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+                            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
                             cnt = BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if (!merchant.getFirst_login_ok()) {
@@ -280,6 +282,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             Customers customer = BackendOps.getCustomer(login, BackendConstants.ID_TYPE_MOBILE, false);
                             //mLogger.debug("Got customer object");
                             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
+
+                            BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
                             cnt = BackendUtils.handleWrongAttempt(login, customer, DbConstants.USER_TYPE_CUSTOMER,
                                     DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
                             if (!customer.getFirst_login_ok()) {

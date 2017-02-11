@@ -337,6 +337,8 @@ public class BackendUtils {
             try {
                 switch(userType) {
                     case DbConstants.USER_TYPE_MERCHANT:
+                        // if already locked - simply return and dont throw 'attempt exceed' exception
+                        // This way
                         setMerchantStatus((Merchants)userObject, DbConstants.USER_STATUS_LOCKED,
                                 DbConstantsBackend.paramTypeToAccLockedReason.get(wrongParamType), edr, logger);
                         break;

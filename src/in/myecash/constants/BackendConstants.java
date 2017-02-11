@@ -13,8 +13,8 @@ public class BackendConstants {
     //TODO: correct them in final testing and production
     public static final boolean DEBUG_MODE = false;
     public static final boolean TESTING_SKIP_SMS = false;
-    public static final boolean TESTING_SKIP_DEVICEID_CHECK = true;
-    public static final boolean TESTING_USE_FIXED_OTP = true;
+    public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
+    public static final boolean TESTING_USE_FIXED_OTP = false;
     public static final String TESTING_FIXED_OTP_VALUE = "12345";
     public static final boolean FORCED_DEBUG_LOGS = true;
 
