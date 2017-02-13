@@ -302,7 +302,7 @@ public class CommonServices implements IBackendlessService {
 
             if (userType == DbConstants.USER_TYPE_CC || userType == DbConstants.USER_TYPE_CCNT || userType == DbConstants.USER_TYPE_AGENT) {
                 try {
-                    memberCard = BackendOps.getCustomerCard(cardId, true);
+                    memberCard = BackendOps.getCustomerCard(cardId, !BackendUtils.isCardNum(cardId));
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
                         // CC agent may enter wrong customer id by mistake
@@ -354,9 +354,15 @@ public class CommonServices implements IBackendlessService {
             mLogger.debug("Context: "+InvocationContext.asString());
             mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
 
+            /*if(!InvocationContext.getUserToken().equals(HeadersManager.getInstance().getHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY))) {
+                mLogger.debug("User token not in sync case: "+InvocationContext.getUserToken()+", "+HeadersManager.getInstance().getHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY));
+                HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken());
+            }*/
+
             // We need the 'user' object also for 'change mobile' scenario
             // so, not using 'fetchCurrentUser' function - rather directly fetching object
-            BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), false);
+            //BackendlessUser user = BackendOps.fetchUserByObjectId(InvocationContext.getUserId(), false);
+            BackendlessUser user = BackendUtils.fetchCurrentBLUser(null, mEdr, mLogger, false);
             mEdr[BackendConstants.EDR_USER_ID_IDX] = (String) user.getProperty("user_id");
             int userType = (Integer)user.getProperty("user_type");
             mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(userType);

@@ -74,37 +74,16 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                     // check admin status
                     BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
-
-                    // Check if 'device id' not set
-                    // This is set in setDeviceId() backend API
-                    String deviceInfo = merchant.getTempDevId();
-                    if (deviceInfo == null || deviceInfo.isEmpty()) {
-                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                        throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
-                    }
-
-                    // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<time>,<otp>
-                    String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
-                    String deviceId = csvFields[0];
-                    long entryTime = Long.parseLong(csvFields[4]);
-                    String rcvdOtp = (csvFields.length == 6) ? csvFields[5] : null;
-
-                    // 'deviceInfo' is valid only if from last DEVICE_INFO_VALID_SECS
-                    // This logic helps us to avoid resetting 'tempDevId' to NULL on each login call
-                    long timeDiff = System.currentTimeMillis() - entryTime;
-                    if (timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS * 1000) &&
-                            BackendConstants.TESTING_SKIP_DEVICEID_CHECK) {
-                        // deviceInfo is old than 5 mins = 300 secs
-                        // most probably from last login call - setDeviceInfo not called before this login
-                        // can indicate sabotage
-                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                        throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "Device data is old");
-                    }
+                    // Get deviceId - if valid
+                    String deviceId = getDeviceId(merchant.getTempDevId());
 
                     // Check if device is in trusted list
                     List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
                     if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                         // Device not in trusted list
+
+                        String[] csvFields = merchant.getTempDevId().split(CommonConstants.CSV_DELIMETER);
+                        String rcvdOtp = (csvFields.length == 6) ? csvFields[5] : null;
 
                         if (rcvdOtp == null || rcvdOtp.isEmpty()) {
                             // First run of un-trusted device - generate OTP
@@ -264,15 +243,24 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             Merchants merchant = BackendOps.getMerchant(login, false, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
-                            BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
-                            cnt = BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
-                                    DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
-                            if (!merchant.getFirst_login_ok()) {
-                                // first login not done yet
-                                mLogger.debug("First login pending");
-                                validException = true;
-                                throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
+                            // Check for trusted device
+                            // this, so as someone else cannot get account locked for other merchant account
+                            String deviceId = getDeviceId(merchant.getTempDevId());
+                            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                            if (BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                                BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
+                                cnt = BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
+                                        DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
+                                if (!merchant.getFirst_login_ok()) {
+                                    // first login not done yet
+                                    mLogger.debug("First login pending");
+                                    validException = true;
+                                    throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
+                                }
+                            } else {
+                                throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                             }
+
                             break;
 
                         case DbConstants.USER_TYPE_CUSTOMER:
@@ -329,6 +317,35 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
         } finally {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
+    }
+
+    private String getDeviceId(String deviceInfo) {
+        // Check if 'device id' not set
+        // This is set in setDeviceId() backend API
+        if (deviceInfo == null || deviceInfo.isEmpty()) {
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
+        }
+
+        // deviceInfo format: <device id>,<manufacturer>,<model>,<os version>,<time>,<otp>
+        String[] csvFields = deviceInfo.split(CommonConstants.CSV_DELIMETER);
+        String deviceId = csvFields[0];
+        long entryTime = Long.parseLong(csvFields[4]);
+        //String rcvdOtp = (csvFields.length == 6) ? csvFields[5] : null;
+
+        // 'deviceInfo' is valid only if from last DEVICE_INFO_VALID_SECS
+        // This logic helps us to avoid resetting 'tempDevId' to NULL on each login call
+        long timeDiff = System.currentTimeMillis() - entryTime;
+        if (timeDiff > (BackendConstants.DEVICE_INFO_VALID_SECS * 1000) &&
+                BackendConstants.TESTING_SKIP_DEVICEID_CHECK) {
+            // deviceInfo is old than 5 mins = 300 secs
+            // most probably from last login call - setDeviceInfo not called before this login
+            // can indicate sabotage
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+            throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "Device data is old");
+        }
+
+        return deviceId;
     }
 
     @Override

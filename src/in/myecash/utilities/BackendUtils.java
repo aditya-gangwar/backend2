@@ -500,6 +500,10 @@ public class BackendUtils {
         }
     }
 
+    public static boolean isCardNum(String id) {
+        return (id.length()==CommonConstants.CUSTOMER_CARDID_LEN);
+    }
+
     /*
      * Get User type - depending upon the length of ID
      */
