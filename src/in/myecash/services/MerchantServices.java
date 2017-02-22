@@ -311,6 +311,12 @@ public class MerchantServices implements IBackendlessService {
                 if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER)) &&
                         customerIdType!=BackendConstants.ID_TYPE_AUTO) {
                     // this will happen always in case of 'user registration' etc
+
+                    // if card was scanned, check its validity
+                    if(customerIdType==BackendConstants.ID_TYPE_CARD) {
+                        CustomerCards card = BackendOps.getCustomerCard(customerId, true);
+                        BackendUtils.checkCardForAllocation(card, merchantId, mEdr, mLogger);
+                    }
                     validException = true;
                 }
                 throw e;
@@ -475,7 +481,7 @@ public class MerchantServices implements IBackendlessService {
                     }
 
                     // upload data as CSV file
-                    createCsvFile(sb.toString(), merchantId, user.getObjectId());
+                    createCsvFile(sb.toString(), merchantId, user.getObjectId(), callByCC);
                 }
 
                 // save stats object - don't bother about return status
@@ -862,7 +868,7 @@ public class MerchantServices implements IBackendlessService {
         }
     }
 
-    private void createCsvFile(String data, String merchantId, String userObjId) {
+    private void createCsvFile(String data, String merchantId, String userObjId, boolean callByCC) {
         try {
             String filePath = CommonUtils.getMerchantCustFilePath(merchantId);
 
@@ -876,7 +882,9 @@ public class MerchantServices implements IBackendlessService {
 
             // Give read access to this merchant to this file
             // no other merchant can read it
-            FilePermission.READ.grantForUser( userObjId, filePath);
+            if(!callByCC) {
+                FilePermission.READ.grantForUser(userObjId, filePath);
+            }
             //mLogger.debug("Gave read access to: " + filePath);
 
         } catch (Exception e) {

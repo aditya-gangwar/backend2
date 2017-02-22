@@ -309,6 +309,7 @@ public class TxnProcessHelper {
                 // Build SMS
                 merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);
                 SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME, CommonConstants.DATE_LOCALE);
+                sdf.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
                 String txnTime = sdf.format(mTransaction.getCreate_time());
                 cb_balance = cashback.getCb_credit() - cashback.getCb_debit();
                 cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
@@ -437,7 +438,7 @@ public class TxnProcessHelper {
             cl_balance = cashback.getCl_credit() - cashback.getCl_debit();
 
             SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_BACKEND, CommonConstants.DATE_LOCALE);
-            sdf.setTimeZone(TimeZone.getTimeZone(BackendConstants.TIMEZONE));
+            sdf.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
             txnDate = sdf.format(mTransaction.getCreate_time());
 
             // Build SMS

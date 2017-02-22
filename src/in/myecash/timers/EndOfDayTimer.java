@@ -29,7 +29,8 @@ import java.util.Date;
 // TODO: Daily EBS backup should be completed this
 // TODO: No connections from Merchant/Customers should be allowed, when this is running.
 
-@BackendlessTimer("{'startDate':1486582200000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'EndOfDay'}")
+// 19:30 in GMT = 01:00 in IST
+@BackendlessTimer("{'startDate':1486582200000,'frequency':{'schedule':'daily','repeat':{'every':19:30}},'timername':'EndOfDay'}")
 public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.CustomerPasswdPinResetTimer");
@@ -78,7 +79,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
 
     private void delCustOps(String userToken) {
         // Build where clause
-        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(MyGlobalSettings.getOpsKeepDays()+BackendConstants.RECORDS_DEL_BUFFER_DAYS);
         Date delDate = now.toMidnight().getTime();
 
@@ -96,7 +97,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
 
     private void delMchntOps(String userToken) {
         // Build where clause
-        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(MyGlobalSettings.getOpsKeepDays()+BackendConstants.RECORDS_DEL_BUFFER_DAYS);
         Date delDate = now.toMidnight().getTime();
 
@@ -114,7 +115,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
 
     private void delWrongAttempts(String userToken) {
         // Build where clause
-        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(BackendConstants.WRONG_ATTEMPTS_DEL_DAYS);
         Date delDate = now.toMidnight().getTime();
 
@@ -152,7 +153,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
     private String buildTxnWhereClause() {
         StringBuilder whereClause = new StringBuilder();
 
-        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         // 3 days as buffer
         now.removeDays(MyGlobalSettings.getTxnsIntableKeepDays()+BackendConstants.RECORDS_DEL_BUFFER_DAYS);
         Date txnInDbFrom = now.toMidnight().getTime();
@@ -165,12 +166,12 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
 
     private void createTxnImgDir() {
         try {
-            DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+            DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
             String fileDir = CommonUtils.getTxnImgDir(now.getTime());
             String filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR + BackendConstants.DUMMY_FILENAME;
             Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
             // Give write access to Merchants to this directory
-            FilePermission.WRITE.grantForRole("Merchant", fileDir);
+            //FilePermission.WRITE.grantForRole("Merchant", fileDir);
             mLogger.debug("Saved dummy txn image file: " + filePath);
 
         } catch (Exception e) {

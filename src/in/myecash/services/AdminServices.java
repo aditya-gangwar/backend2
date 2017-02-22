@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by adgangwa on 19-07-2016.
@@ -246,9 +247,10 @@ public class AdminServices implements IBackendlessService {
                 break;*/
 
             case DbConstants.OP_ACC_CLOSURE:
-                DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+                DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
                 now.addDays(MyGlobalSettings.getMchntExpiryDays());
                 SimpleDateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_ONLY_DATE_DISPLAY, CommonConstants.DATE_LOCALE);
+                sdf.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
 
                 smsText = String.format(SmsConstants.SMS_ADMIN_MCHNT_ACC_CLOSURE,
                         CommonUtils.getPartialVisibleStr(merchant.getAuto_id()),

@@ -288,7 +288,7 @@ public class TxnArchiver
         whereClause.append("merchant_id = '").append(merchantId).append("'");
 
         // time after which txns should be in DB
-        DateUtil now = new DateUtil(BackendConstants.TIMEZONE);
+        DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         // -1 as 'today' is inclusive
         now.removeDays(MyGlobalSettings.getTxnsIntableKeepDays()-1);
         Date txnInDbFrom = now.toMidnight().getTime();

@@ -240,7 +240,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     switch (userType) {
                         case DbConstants.USER_TYPE_MERCHANT:
                             // fetch merchant
-                            Merchants merchant = BackendOps.getMerchant(login, false, false);
+                            Merchants merchant = BackendOps.getMerchant(login, true, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
                             // Check for trusted device
@@ -258,7 +258,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                     throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                                 }
                             } else {
-                                throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
+                                throw new BackendlessException(String.valueOf(ErrorCodes.WRNG_PSWD_NOT_TRUSTED_DEV), "");
                             }
 
                             break;

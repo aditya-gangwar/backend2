@@ -72,7 +72,7 @@ public class BackendConstants {
     public static final int EDR_SMS_SUBMIT_TIME_IDX = 18;
     public static final int BACKEND_EDR_MAX_FIELDS = 19;
 
-    public static final String TIMEZONE = "Asia/Kolkata";
+    //public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";
     public static final String DUMMY_FILENAME = "dummy.txt";
 

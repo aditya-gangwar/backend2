@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import in.myecash.common.database.*;
@@ -457,6 +458,12 @@ public class BackendUtils {
 
     private static String getAccLockedSmsText(String userId, int userType, String statusReason) {
 
+        if(userType==DbConstants.USER_TYPE_AGENT ||
+                userType==DbConstants.USER_TYPE_CC ||
+                userType==DbConstants.USER_TYPE_CCNT) {
+            return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_INTERNAL, CommonUtils.getPartialVisibleStr(userId));
+        }
+
         switch(statusReason) {
             case DbConstantsBackend.LOCKED_WRONG_PASSWORD_LIMIT_RCHD:
                 return String.format(SmsConstants.SMS_ACCOUNT_LOCKED_PASSWORD, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getAccBlockMins(userType));
@@ -680,6 +687,7 @@ public class BackendUtils {
 
     public static String getCustOpImgFilename(String opCode, String custPrivateId) {
         String time = mSdfDateTimeFilename.format(new Date());
+        mSdfDateTimeFilename.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
         String filename = opCode+"_"+custPrivateId+"_"+time+"."+CommonConstants.PHOTO_FILE_FORMAT;
         return filename.replace(" ","_");
     }

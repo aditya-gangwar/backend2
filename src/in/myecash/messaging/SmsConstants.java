@@ -38,6 +38,7 @@ public class SmsConstants {
 
 
     // Account Status change SMS
+    public static String SMS_ACCOUNT_LOCKED_INTERNAL = "Your MyeCash account '%s' is locked due to multiple wrong verifications. Contact Admin to get it unlocked.";
     public static String SMS_ACCOUNT_LOCKED_PASSWORD = "Your MyeCash account '%s' is locked due to multiple wrong password attempts. It will be unlocked automatically after %s minutes.";
     public static String SMS_ACCOUNT_LOCKED_PIN = "Your MyeCash account '%s' is locked due to multiple wrong PIN attempts. It will be unlocked automatically after %s minutes.";
     public static String SMS_ACCOUNT_LOCKED_VERIFY_FAILED = "Your MyeCash account '%s' is locked due to multiple wrong verifications. It will be unlocked automatically after %s minutes.";
@@ -78,7 +79,7 @@ public class SmsConstants {
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyeCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family. Your Merchant ID for login is %s. Happy Customers to you.";
-    public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. Your registered Mobile number (%s) is also your customer ID. To manage your account, download MyeCash Customer App from Android store.";
+    public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. Your registered Mobile number is '%s'. To manage your account, download MyeCash Customer App from Android store.";
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyeCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages
