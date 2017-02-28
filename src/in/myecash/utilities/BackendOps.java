@@ -710,8 +710,9 @@ public class BackendOps {
         return transactions;
     }
 
-    public static Transaction fetchTxn(String txnId, String tableName) {
+    public static Transaction fetchTxn(String txnId, String tableName, String cbTableName) {
         Backendless.Data.mapTableToClass(tableName, Transaction.class);
+        Backendless.Data.mapTableToClass(cbTableName, Cashback.class);
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();

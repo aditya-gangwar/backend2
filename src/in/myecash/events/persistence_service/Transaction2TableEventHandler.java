@@ -1,5 +1,6 @@
 package in.myecash.events.persistence_service;
 
+import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
@@ -21,9 +22,10 @@ import in.myecash.utilities.MyLogger;
 @Asset( "Transaction2" )
 public class Transaction2TableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Transaction>
 {
-    @Override
+    /*@Override
     public void beforeCreate( RunnerContext context, Transaction transaction) throws Exception
     {
+        Backendless.Data.mapTableToClass("Transaction2", Transaction.class);
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
         txnEventHelper.handleTxnCommit(context.getUserToken(), context.getUserId(), transaction, false, false);
     }
@@ -32,9 +34,10 @@ public class Transaction2TableEventHandler extends com.backendless.servercode.ex
     @Override
     public void afterCreate( RunnerContext context, Transaction transaction, ExecutionResult<Transaction> result ) throws Exception
     {
+        Backendless.Data.mapTableToClass("Transaction2", Transaction.class);
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
         txnEventHelper.handleAfterCreate(context, transaction, result);
-    }
+    }*/
 
     @Override
     public void beforeUpdate( RunnerContext context, Transaction transaction ) throws Exception

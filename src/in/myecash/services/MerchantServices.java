@@ -42,6 +42,11 @@ public class MerchantServices implements IBackendlessService {
         return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
     }
 
+    public Transaction commitTxn(String csvTxnData) throws Exception {
+        TxnProcessHelper txnEventHelper = new TxnProcessHelper();
+        return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, true, true);
+    }
+
     public Merchants changeMobile(String verifyparam, String newMobile, String otp) {
 
         BackendUtils.initAll();

@@ -6,6 +6,7 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.ExecutionResult;
 import com.backendless.servercode.RunnerContext;
 import in.myecash.common.CommonUtils;
+import in.myecash.common.CsvConverter;
 import in.myecash.common.MyGlobalSettings;
 import in.myecash.messaging.SmsConstants;
 import in.myecash.messaging.SmsHelper;
@@ -46,27 +47,25 @@ public class TxnProcessHelper {
     private String merchantName;
     private String txnDate;
 
-    /*public Transaction handleTxnCommit(RunnerContext context, Transaction txn, boolean saveAlso, boolean sendSMS) {
-        mLogger.debug(context.toString());
-        mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
-        return handleTxnCommit(context.getUserToken(), context.getUserId(), txn, saveAlso, sendSMS);
-    }*/
 
-    public Transaction handleTxnCommit(String userToken, String userId, Transaction txn, boolean saveAlso, boolean sendSMS) {
+    //public Transaction handleTxnCommit(String userToken, String userId, Transaction txn, boolean saveAlso, boolean sendSMS) {
+    public Transaction handleTxnCommit(String userId, String txnCsvStr, boolean saveAlso, boolean sendSMS) throws Exception {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "handleTxnCommit";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txn.getCust_private_id();
+        //mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txn.getCust_private_id();
 
         mValidException = false;
         try {
             mLogger.debug("In Transaction handleTxnCommit");
-            if(userToken!=null) {
+            /*if(userToken!=null) {
                 HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, userToken);
-            }
+            }*/
 
-            mTransaction = txn;
+            //mTransaction = txn;
+            mTransaction = CsvConverter.txnFromCsvStr(txnCsvStr);
+
             // Fetch mMerchant
             mMerchant = (Merchants) BackendUtils.fetchUser(userId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mMerchantId = mMerchant.getAuto_id();
@@ -117,7 +116,9 @@ public class TxnProcessHelper {
                 cashback.setCl_debit(cashback.getCl_debit() + mTransaction.getCl_debit());
 
                 // check for cash account limit - after above amount update only
-                if ((cashback.getCl_credit() - cashback.getCl_debit()) > MyGlobalSettings.getCashAccLimit()) {
+                // only if some add to account is happening
+                if ( mTransaction.getCl_credit()>0 &&
+                        (cashback.getCl_credit() - cashback.getCl_debit()) > MyGlobalSettings.getCashAccLimit()) {
                     // already checked in app - so shouldn't reach here at first place
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.CASH_ACCOUNT_LIMIT_RCHD), "Cash account limit reached: " + mCustomerId);
@@ -182,9 +183,9 @@ public class TxnProcessHelper {
 
         } catch(Exception e) {
             BackendUtils.handleException(e, mValidException,mLogger,mEdr);
-            if(e instanceof BackendlessException) {
+            /*if(e instanceof BackendlessException) {
                 throw BackendUtils.getNewException((BackendlessException) e);
-            }
+            }*/
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -196,7 +197,7 @@ public class TxnProcessHelper {
      * As currently this fx. gets called in 'async' mode - while if we do it from API (i.e. sending SMS) it will be 'sync'
      * Thus it saves us few millisecs while creating txn.
      */
-    public void handleAfterCreate(RunnerContext context, Transaction txn, ExecutionResult<Transaction> result) {
+    /*public void handleAfterCreate(RunnerContext context, Transaction txn, ExecutionResult<Transaction> result) {
         BackendUtils.initAll();
         mTransaction = txn;
         long startTime = System.currentTimeMillis();
@@ -204,6 +205,7 @@ public class TxnProcessHelper {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-afterCreate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mTransaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 mTransaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                mTransaction.getCust_private_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 mTransaction.getTrans_id();
 
         try {
@@ -224,7 +226,7 @@ public class TxnProcessHelper {
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
-    }
+    }*/
 
     public Transaction cancelTxn(String ctxtUserId, String txnId, String cardId, String pin) {
         BackendUtils.initAll();
@@ -243,7 +245,7 @@ public class TxnProcessHelper {
             mLogger.setProperties(mMerchantId,DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
 
             // fetch txn
-            mTransaction = BackendOps.fetchTxn(txnId, mMerchant.getTxn_table());
+            mTransaction = BackendOps.fetchTxn(txnId, mMerchant.getTxn_table(), mMerchant.getCashback_table());
             if(!mTransaction.getMerchant_id().equals(mMerchantId) ) {
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Txn does not below to this Merchant: "+txnId);
@@ -331,9 +333,9 @@ public class TxnProcessHelper {
 
         } catch(Exception e) {
             BackendUtils.handleException(e, mValidException,mLogger,mEdr);
-            if(e instanceof BackendlessException) {
+            /*if(e instanceof BackendlessException) {
                 throw BackendUtils.getNewException((BackendlessException) e);
-            }
+            }*/
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
