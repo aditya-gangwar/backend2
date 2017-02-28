@@ -2,7 +2,6 @@ package in.myecash.timers;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
-import com.backendless.FilePermission;
 import com.backendless.HeadersManager;
 import com.backendless.servercode.annotation.BackendlessTimer;
 import in.myecash.common.CommonUtils;
@@ -11,6 +10,7 @@ import in.myecash.common.MyGlobalSettings;
 import in.myecash.common.constants.CommonConstants;
 import in.myecash.constants.BackendConstants;
 import in.myecash.constants.DbConstantsBackend;
+import in.myecash.security.SecurityMisc;
 import in.myecash.utilities.BackendOps;
 import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
@@ -26,14 +26,14 @@ import java.util.Date;
  * object which describes all properties of the timer.
  */
 
-// TODO: Daily EBS backup should be completed this
+// TODO: Daily EBS backup should be completed before this
 // TODO: No connections from Merchant/Customers should be allowed, when this is running.
 
-// 19:30 in GMT = 01:00 in IST
-@BackendlessTimer("{'startDate':1486582200000,'frequency':{'schedule':'daily','repeat':{'every':19:30}},'timername':'EndOfDay'}")
+// run at 19:00 in GMT = 12:30 in IST
+@BackendlessTimer("{'startDate':1488245400000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'EndOfDay'}")
 public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExtender
 {
-    private MyLogger mLogger = new MyLogger("services.CustomerPasswdPinResetTimer");
+    private MyLogger mLogger = new MyLogger("services.EndOfDayTimer");
     private String[] mEdr = new String[BackendConstants.BACKEND_EDR_MAX_FIELDS];;
 
     @Override
@@ -44,31 +44,39 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "EndOfDayTimer";
 
+        String params = null;
         try {
             // First login
-            BackendlessUser user = BackendOps.loginUser("autoAdmin", "autoAdmin@123");
+            BackendlessUser user = BackendOps.loginUser("autoAdmin", SecurityMisc.getAutoAdminPasswd());
             BackendUtils.printCtxtInfo(mLogger, null);
             String userToken = HeadersManager.getInstance().getHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY);
 
             // Create Txn Image directory for today
-            createTxnImgDir();
+            boolean status = createTxnImgDir();
+            params = "createTxnImgDir"+BackendConstants.BACKEND_EDR_KEY_VALUE_DELIMETER+status+BackendConstants.BACKEND_EDR_SUB_DELIMETER;
 
             // Delete wrong attempts rows
-            delWrongAttempts(userToken);
+            int cnt = delWrongAttempts(userToken);
+            params = params+"delWrongAttempts"+BackendConstants.BACKEND_EDR_KEY_VALUE_DELIMETER+cnt+BackendConstants.BACKEND_EDR_SUB_DELIMETER;
 
             // Delete wrong attempts rows
-            delMchntOps(userToken);
+            cnt = delMchntOps(userToken);
+            params = params+"delMchntOps"+BackendConstants.BACKEND_EDR_KEY_VALUE_DELIMETER+cnt+BackendConstants.BACKEND_EDR_SUB_DELIMETER;
 
             // Delete wrong attempts rows
-            delCustOps(userToken);
+            cnt = delCustOps(userToken);
+            params = params+"delCustOps"+BackendConstants.BACKEND_EDR_KEY_VALUE_DELIMETER+cnt+BackendConstants.BACKEND_EDR_SUB_DELIMETER;
 
             // Delete archived Txns
-            delArchivedTxns(userToken);
+            String statusStr = delArchivedTxns(userToken);
+            params = params+statusStr;
 
             // no exception - means function execution success
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = params;
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = params;
             BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
@@ -77,7 +85,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
         }
     }
 
-    private void delCustOps(String userToken) {
+    private int delCustOps(String userToken) {
         // Build where clause
         DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(MyGlobalSettings.getOpsKeepDays()+BackendConstants.RECORDS_DEL_BUFFER_DAYS);
@@ -88,14 +96,16 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             int recDel = BackendOps.doBulkRequest(DbConstantsBackend.CUST_OPS_TABLE_NAME, whereClause, "DELETE",
                     null, userToken, mLogger);
             mLogger.debug("delCustOps: "+recDel);
+            return recDel;
 
         } catch (Exception e) {
             // log and ignore
             BackendUtils.handleException(e,false,mLogger,mEdr);
         }
+        return -1;
     }
 
-    private void delMchntOps(String userToken) {
+    private int delMchntOps(String userToken) {
         // Build where clause
         DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(MyGlobalSettings.getOpsKeepDays()+BackendConstants.RECORDS_DEL_BUFFER_DAYS);
@@ -106,14 +116,16 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             int recDel = BackendOps.doBulkRequest(DbConstantsBackend.MCHNT_OPS_TABLE_NAME, whereClause, "DELETE",
                     null, userToken, mLogger);
             mLogger.debug("delMchntOps: "+recDel);
+            return recDel;
 
         } catch (Exception e) {
             // log and ignore
             BackendUtils.handleException(e,false,mLogger,mEdr);
         }
+        return -1;
     }
 
-    private void delWrongAttempts(String userToken) {
+    private int delWrongAttempts(String userToken) {
         // Build where clause
         DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
         now.removeDays(BackendConstants.WRONG_ATTEMPTS_DEL_DAYS);
@@ -124,15 +136,18 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             int recDel = BackendOps.doBulkRequest(DbConstantsBackend.WRONG_ATTEMPTS_TABLE_NAME, whereClause, "DELETE",
                     null, userToken, mLogger);
             mLogger.debug("delWrongAttempts: "+recDel);
+            return recDel;
 
         } catch (Exception e) {
             // log and ignore
             BackendUtils.handleException(e,false,mLogger,mEdr);
         }
+        return -1;
     }
 
-    private void delArchivedTxns(String userToken) {
+    private String delArchivedTxns(String userToken) {
 
+        String result = "";
         String whereClause = buildTxnWhereClause();
         for(int i=1; i<= DbConstantsBackend.TRANSACTION_TABLE_CNT; i++) {
 
@@ -140,6 +155,11 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             try {
                 int recDel = BackendOps.doBulkRequest(tableName, whereClause, "DELETE",
                         null, userToken, mLogger);
+
+                if(i>1) {
+                    result = result + BackendConstants.BACKEND_EDR_SUB_DELIMETER;
+                }
+                result = result + tableName + BackendConstants.BACKEND_EDR_KEY_VALUE_DELIMETER + recDel;
                 mLogger.debug("Deleted archived Txns: "+tableName+" "+recDel);
 
             } catch (Exception e) {
@@ -147,7 +167,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
                 BackendUtils.handleException(e,false,mLogger,mEdr);
             }
         }
-
+        return null;
     }
 
     private String buildTxnWhereClause() {
@@ -164,7 +184,7 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
         return whereClause.toString();
     }
 
-    private void createTxnImgDir() {
+    private boolean createTxnImgDir() {
         try {
             DateUtil now = new DateUtil(CommonConstants.TIMEZONE);
             String fileDir = CommonUtils.getTxnImgDir(now.getTime());
@@ -173,11 +193,13 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             // Give write access to Merchants to this directory
             //FilePermission.WRITE.grantForRole("Merchant", fileDir);
             mLogger.debug("Saved dummy txn image file: " + filePath);
+            return true;
 
         } catch (Exception e) {
             // log and ignore
             BackendUtils.handleException(e,false,mLogger,mEdr);
         }
+        return false;
     }
 
 }

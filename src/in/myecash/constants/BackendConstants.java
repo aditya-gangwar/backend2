@@ -29,6 +29,7 @@ public class BackendConstants {
     public static final int BACKEND_EDR_MAX_SIZE = 500;
     public static final String BACKEND_EDR_DELIMETER = "#";
     public static final String BACKEND_EDR_SUB_DELIMETER = ":";
+    public static final String BACKEND_EDR_KEY_VALUE_DELIMETER = "_";
     public static final String BACKEND_EDR_RESULT_OK = "SUCCESS";
     public static final String BACKEND_EDR_RESULT_NOK = "FAILURE";
     public static final String BACKEND_EDR_SMS_OK = "SMS_OK";

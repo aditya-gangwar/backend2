@@ -12,11 +12,11 @@ import in.myecash.utilities.BackendUtils;
 import in.myecash.utilities.MyLogger;
 
 /**
- * Transaction6TableEventHandler handles events for all entities. This is accomplished
- * with the @Asset( "Transaction6" ) annotation.
- * The methods in the class correspond to the events selected in Backendless
- * Console.
- */
+* Transaction6TableEventHandler handles events for all entities. This is accomplished
+* with the @Asset( "Transaction6" ) annotation.
+* The methods in the class correspond to the events selected in Backendless
+* Console.
+*/
 @Asset( "Transaction6" )
 public class Transaction6TableEventHandler extends com.backendless.servercode.extension.PersistenceExtender<Transaction>
 {
@@ -48,5 +48,4 @@ public class Transaction6TableEventHandler extends com.backendless.servercode.ex
         BackendUtils.writeOpNotAllowedEdr(mLogger, mEdr);
         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
     }
-
 }

@@ -363,6 +363,25 @@ public class TxnProcessHelper {
             throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
         }
 
+        // check if card required and provided and matches
+        if(BackendUtils.customerCardRequired(mTransaction)) {
+            if(mTransaction.getUsedCardId()!=null) {
+                if(!mTransaction.getUsedCardId().equals(mCustomer.getMembership_card().getCard_id())) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
+                }
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Missing: " + mCustomerId);
+            }
+        }
+
+        // check that card is not disabled - only if used
+        if(mTransaction.getUsedCardId()!=null && !mTransaction.getUsedCardId().isEmpty()) {
+            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
+            BackendUtils.checkCardForUse(mCustomer.getMembership_card());
+        }
+
         // verify PIN
         if(CommonUtils.customerPinRequired(mMerchant, mTransaction)) {
             //mLogger.debug("Customer PIN is required");
@@ -381,25 +400,6 @@ public class TxnProcessHelper {
             }
         } else {
             mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
-        }
-
-        // check if card required and provided and matches
-        if(BackendUtils.customerCardRequired(mTransaction)) {
-            if(mTransaction.getUsedCardId()!=null) {
-                if(!mTransaction.getUsedCardId().equals(mCustomer.getMembership_card().getCard_id())) {
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
-                }
-            } else {
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Missing: " + mCustomerId);
-            }
-        }
-
-        // check that card is not disabled - only if used
-        if(mTransaction.getUsedCardId()!=null && !mTransaction.getUsedCardId().isEmpty()) {
-            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
-            BackendUtils.checkCardForUse(mCustomer.getMembership_card());
         }
     }
 

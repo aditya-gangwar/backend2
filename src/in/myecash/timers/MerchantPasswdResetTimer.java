@@ -29,7 +29,7 @@ import java.util.Date;
  * Timer duration should be 1/6th of the configured merchant passwd reset cool off mins value
  * So, if cool off mins is 60, then timer should run every 10 mins
  */
-@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':300}},'timername':'MerchantPasswdReset'}")
+@BackendlessTimer("{'startDate':1464294360000,'frequency':{'schedule':'custom','repeat':{'every':600}},'timername':'MerchantPasswdReset'}")
 public class MerchantPasswdResetTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.MerchantPasswdResetTimer");

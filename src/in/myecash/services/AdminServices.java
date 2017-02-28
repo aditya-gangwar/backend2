@@ -279,10 +279,10 @@ public class AdminServices implements IBackendlessService {
         execCustManualOp(DbConstants.OP_RESET_PIN, customerId, ticketNum, reason, remarks, "", adminPwd);
     }
     public void custEnableAccount(String customerId, String ticketNum, String reason, String remarks, String adminPwd) {
-        execMchntManualOp(DbConstants.OP_ENABLE_ACC, customerId, ticketNum, reason, remarks, "", adminPwd);
+        execCustManualOp(DbConstants.OP_ENABLE_ACC, customerId, ticketNum, reason, remarks, "", adminPwd);
     }
     public void custChangeMobileNum(String newMobile, String customerId, String ticketNum, String reason, String remarks, String adminPwd) {
-        execMchntManualOp(DbConstants.OP_CHANGE_MOBILE, customerId, ticketNum, reason, remarks, newMobile, adminPwd);
+        execCustManualOp(DbConstants.OP_CHANGE_MOBILE, customerId, ticketNum, reason, remarks, newMobile, adminPwd);
     }
 
     /*
@@ -640,7 +640,7 @@ public class AdminServices implements IBackendlessService {
         }
     }
 
-    public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd, String keyadminPwd) {
+    public void openNextCardIdBatch(String countryCode, String rangeId, String adminPwd, String cardKey) {
         long startTime = System.currentTimeMillis();
         try {
             BackendUtils.initAll();
@@ -655,7 +655,7 @@ public class AdminServices implements IBackendlessService {
             mLogger.debug("In openNextCardIdBatch: "+countryCode+": "+rangeId);
 
             // Get key - before logging as Admin - as getting key will need to login as keyadmin
-            String key = SecurityHelper.getKey(SecurityHelper.MEMBERCARD_KEY_COL_NAME, keyadminPwd, mLogger);
+            //String key = SecurityHelper.getKey(SecurityHelper.MEMBERCARD_KEY_COL_NAME, keyadminPwd, mLogger);
 
             // login using 'admin' user
             BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
@@ -699,9 +699,9 @@ public class AdminServices implements IBackendlessService {
                 CustomerCards card = new CustomerCards();
                 String cardNum = cardIdPrefix + String.format("%03d",i);
                 card.setCardNum(cardNum);
-                card.setCard_id(SecurityHelper.getCardIdFromNum(cardNum, key, mLogger));
+                card.setCard_id(SecurityHelper.getCardIdFromNum(cardNum, cardKey, mLogger));
                 // check if its being decoded properly
-                String decodedCardNum = SecurityHelper.getCardNumFromId(card.getCard_id(), key, mLogger);
+                String decodedCardNum = SecurityHelper.getCardNumFromId(card.getCard_id(), cardKey, mLogger);
                 if(!decodedCardNum.equals(cardNum)) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Decoded cardNum not same as encoded");
                 }

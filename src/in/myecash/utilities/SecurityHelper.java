@@ -23,10 +23,9 @@ import java.util.Random;
  */
 public class SecurityHelper {
 
-    private static final String KEYADMIN_LOGINID = "keyadmin";
-
-    public static final String MEMBERCARD_KEY_COL_NAME = "memberCardKey";
-    public static final String DEVICEID_KEY_COL_NAME = "deviceIdKey";
+    //private static final String KEYADMIN_LOGINID = "keyadmin";
+    //public static final String MEMBERCARD_KEY_COL_NAME = "memberCardKey";
+    //public static final String DEVICEID_KEY_COL_NAME = "deviceIdKey";
 
 
     /*
@@ -37,13 +36,13 @@ public class SecurityHelper {
             byte[] salt = SaltedHashService.generateSalt();
             String otpStr = generateOTP();
             byte[] id = SaltedHashService.getEncrypted(otpStr,salt);
-            logger.debug("Salt: "+new String(salt));
-            logger.debug("Encrypted OTP: "+new String(id));
+            //logger.debug("Salt: "+new String(salt));
+            //logger.debug("Encrypted OTP: "+new String(id));
 
             otp.setNamak(Base64.getEncoder().encodeToString(salt));
             otp.setOtp_value(Base64.getEncoder().encodeToString(id));
-            logger.debug("Salt: "+otp.getNamak());
-            logger.debug("PIN: "+otp.getOtp_value());
+            //logger.debug("Salt: "+otp.getNamak());
+            //logger.debug("PIN: "+otp.getOtp_value());
 
             return otpStr;
 
@@ -58,8 +57,8 @@ public class SecurityHelper {
         try {
             byte[] salt = Base64.getDecoder().decode(otp.getNamak());
             byte[] id = Base64.getDecoder().decode(otp.getOtp_value());
-            logger.debug("Salt: "+new String(salt));
-            logger.debug("Encrypted OTP: "+new String(id));
+            //logger.debug("Salt: "+new String(salt));
+            //logger.debug("Encrypted OTP: "+new String(id));
 
             return SaltedHashService.authenticate(rcvdOtp, id, salt);
 
@@ -189,7 +188,7 @@ public class SecurityHelper {
     /*
      * Function to get desired key
      */
-    public static String getKey(String keyName, String keyadminPwd, MyLogger logger) {
+    /*public static String getKey(String keyName, String keyadminPwd, MyLogger logger) {
         //logger.debug("In getKey");
 
         // login using 'admin' user
@@ -209,7 +208,7 @@ public class SecurityHelper {
         BackendOps.logoutUser();
         //logger.debug("Exiting getKey: "+key);
         return key;
-    }
+    }*/
 
     /*
      * Private helper fxs.

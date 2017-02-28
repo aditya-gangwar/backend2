@@ -25,7 +25,6 @@ public class Transaction1TableEventHandler extends com.backendless.servercode.ex
     {
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
         txnEventHelper.handleTxnCommit(context.getUserToken(), context.getUserId(), transaction, false, false);
-        //txnEventHelper.handleTxnCommit(context, transaction, false, false);
     }
 
     @Async

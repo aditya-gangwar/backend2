@@ -730,11 +730,18 @@ public class BackendUtils {
 
         Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
 
-        Backendless.Data.mapTableToClass( "Transaction0", Transaction.class );
-        Backendless.Data.mapTableToClass( "Cashback0", Cashback.class );
-
         Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );
+        Backendless.Data.mapTableToClass( "Transaction2", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback2", Cashback.class );
+        Backendless.Data.mapTableToClass( "Transaction3", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback3", Cashback.class );
+        Backendless.Data.mapTableToClass( "Transaction4", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback4", Cashback.class );
+        Backendless.Data.mapTableToClass( "Transaction5", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback5", Cashback.class );
+        Backendless.Data.mapTableToClass( "Transaction6", Transaction.class );
+        Backendless.Data.mapTableToClass( "Cashback6", Cashback.class );
     }
 
 }
