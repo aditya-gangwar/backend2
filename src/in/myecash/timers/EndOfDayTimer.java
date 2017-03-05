@@ -71,6 +71,9 @@ public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExt
             String statusStr = delArchivedTxns(userToken);
             params = params+statusStr;
 
+            // Reset Mchnt Id Counter
+            Backendless.Counters.reset(DbConstantsBackend.ORDER_ID_COUNTER);
+
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_API_PARAMS_IDX] = params;
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;

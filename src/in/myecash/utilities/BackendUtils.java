@@ -30,6 +30,7 @@ import in.myecash.database.*;
 public class BackendUtils {
 
     private static final SimpleDateFormat mSdfDateTimeFilename = new SimpleDateFormat(CommonConstants.DATE_FORMAT_WITH_TIME_FILENAME, CommonConstants.DATE_LOCALE);
+    private static final SimpleDateFormat mSdfTimeDay = new SimpleDateFormat(CommonConstants.DATE_FORMAT_DDMMYY, CommonConstants.DATE_LOCALE);
 
     /*
      * Password & ID generators
@@ -66,6 +67,15 @@ public class BackendUtils {
             id[i] = BackendConstants.pwdChars[random.nextInt(BackendConstants.pwdChars.length)];
         }
         return new String(id);
+    }
+
+    public static String generateMchntOrderId() {
+        mSdfTimeDay.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
+        String day = mSdfTimeDay.format(new Date());
+        Long orderCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.ORDER_ID_COUNTER);
+
+        // Order Id : <MO>+<4 chars for curr day in ddMMyy format> + <daily counter>
+        return CommonConstants.MCHNT_ORDER_ID_PREFIX + Base35.fromBase10(Long.parseLong(day), 4) + orderCnt.toString();
     }
 
 
@@ -119,6 +129,7 @@ public class BackendUtils {
                 logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, merchant.getDebugLogs());
                 // check if merchant is enabled
                 BackendUtils.checkMerchantStatus(merchant, edr, logger);
+                logger.debug("Fetched merchant: "+merchant.getAuto_id()+", "+merchant.getCashback_table());
                 return merchant;
 
             case DbConstants.USER_TYPE_CCNT:
@@ -137,6 +148,7 @@ public class BackendUtils {
                 logger.setProperties(edr[BackendConstants.EDR_USER_ID_IDX], userType, customer.getDebugLogs());
                 // check if customer is enabled
                 BackendUtils.checkCustomerStatus(customer, edr, logger);
+                logger.debug("Fetched customer: "+customer.getPrivate_id()+", "+customer.getCashback_table());
                 return customer;
         }
 
@@ -314,9 +326,9 @@ public class BackendUtils {
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
 
             case DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT:
-                if(!card.getMchntId().equals(merchantId)) {
+                /*if(!card.getMchntId().equals(merchantId)) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.CARD_WRONG_OWNER_MCHNT), "");
-                }
+                }*/
                 break;
         }
     }
@@ -686,8 +698,8 @@ public class BackendUtils {
     }
 
     public static String getCustOpImgFilename(String opCode, String custPrivateId) {
-        String time = mSdfDateTimeFilename.format(new Date());
         mSdfDateTimeFilename.setTimeZone(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
+        String time = mSdfDateTimeFilename.format(new Date());
         String filename = opCode+"_"+custPrivateId+"_"+time+"."+CommonConstants.PHOTO_FILE_FORMAT;
         return filename.replace(" ","_");
     }
@@ -727,6 +739,7 @@ public class BackendUtils {
         Backendless.Data.mapTableToClass("BusinessCategories", BusinessCategories.class);
         Backendless.Data.mapTableToClass("Address", Address.class);
         Backendless.Data.mapTableToClass("Cities", Cities.class);
+        Backendless.Data.mapTableToClass("MerchantOrders", MerchantOrders.class);
 
         Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
 

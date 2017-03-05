@@ -34,12 +34,14 @@ public class InternalUserServices implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
-    public List<MyCardForAction> execActionForCards(String codes, String action, String allotToUserId, boolean getCardNumsOnly) {
+    public List<MyCardForAction> execActionForCards(String codes, String action, String allotToUserId, String orderId, boolean getCardNumsOnly) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "execActionForCards";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = action+BackendConstants.BACKEND_EDR_SUB_DELIMETER+allotToUserId;
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = action+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                allotToUserId+BackendConstants.BACKEND_EDR_SUB_DELIMETER
+                +orderId;
 
         try {
             // Fetch user
@@ -124,17 +126,34 @@ public class InternalUserServices implements IBackendlessService {
                                 break;
 
                             case CommonConstants.CARDS_ALLOT_TO_MCHNT:
-                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                //if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
+                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_NEW) {
                                     // Find merchant whom to allot
                                     Merchants mchnt = BackendOps.getMerchant(allotToUserId, false, false);
                                     if (BackendUtils.getUserType(mchnt.getAuto_id()) != DbConstants.USER_TYPE_MERCHANT) {
                                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
                                     } else {
                                         BackendUtils.checkMerchantStatus(mchnt, mEdr, mLogger);
-                                        card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
-                                        card.setAgentId(internalUser.getId());
-                                        card.setMchntId(mchnt.getAuto_id());
-                                        updateCard = true;
+                                        // fetch order
+                                        List<MerchantOrders> orders = BackendOps.fetchMchntOrders("orderId = '"+orderId+"'");
+                                        if(orders==null || orders.size()!=1) {
+                                            cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ORDER);
+                                        } else {
+                                            // Update Card values
+                                            if(userType==DbConstants.USER_TYPE_CCNT) {
+                                                card.setCcntId(internalUser.getId());
+                                            } else {
+                                                if(!orders.get(0).getIsFirstOrder()) {
+                                                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                                                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),
+                                                            "Request from Agent for non-first order");
+                                                }
+                                                card.setAgentId(internalUser.getId());
+                                            }
+                                            card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_MERCHANT);
+                                            card.setMchntId(mchnt.getAuto_id());
+                                            updateCard = true;
+                                        }
                                     }
                                 } else {
                                     cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
@@ -346,7 +365,8 @@ public class InternalUserServices implements IBackendlessService {
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
             if(merchantId!=null && !merchantId.isEmpty()) {
-                BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+                rollbackRegister(merchantId);
+                //BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             }
             throw e;
         } finally {

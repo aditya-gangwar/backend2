@@ -23,6 +23,7 @@ import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.utilities.SecurityHelper;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -392,7 +393,9 @@ public class CommonServices implements IBackendlessService {
                     // Fetch Customer user
                     custUser = BackendOps.fetchUser(mobileNum, DbConstants.USER_TYPE_CUSTOMER, false);
                     customer = (Customers) custUser.getProperty("customer");
-                    cardIdDb = customer.getMembership_card().getCard_id();
+                    if(customer.getMembership_card()!=null) {
+                        cardIdDb = customer.getMembership_card().getCard_id();
+                    }
                     break;
 
                 case DbConstants.USER_TYPE_CUSTOMER:
@@ -409,7 +412,9 @@ public class CommonServices implements IBackendlessService {
                     }
 
                     // as customer enters card number and dont scan the card
-                    cardIdDb = customer.getMembership_card().getCardNum();
+                    if(customer.getMembership_card()!=null) {
+                        cardIdDb = customer.getMembership_card().getCardNum();
+                    }
                     mLogger.setProperties(mEdr[BackendConstants.EDR_USER_ID_IDX], userType, customer.getDebugLogs());
                     break;
 
@@ -645,6 +650,84 @@ public class CommonServices implements IBackendlessService {
 
         } catch(Exception e) {
             BackendUtils.handleException(e,validException,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public List<MerchantOrders> getMchntOrders(String merchantId, String orderId, String statusCsvStr) {
+
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        boolean positiveException = false;
+
+        try {
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMchntOrders";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchantId+BackendConstants.BACKEND_EDR_SUB_DELIMETER +
+                    orderId+BackendConstants.BACKEND_EDR_SUB_DELIMETER +
+                    statusCsvStr;
+
+            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            Merchants merchant = null;
+            boolean byCCUser = false;
+            if(userType==DbConstants.USER_TYPE_MERCHANT) {
+                merchant = (Merchants) userObj;
+                // check to ensure that merchant is requesting for itself only
+                if (!merchant.getAuto_id().equals(merchantId)) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA),"Invalid merchant id provided: " + merchantId);
+                }
+            } else if(userType==DbConstants.USER_TYPE_CC || userType==DbConstants.USER_TYPE_CCNT || userType==DbConstants.USER_TYPE_AGENT) {
+                // use provided merchant values
+                byCCUser = true;
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // not checking for merchant account status
+
+            // fetch merchant orders
+            String whereClause = null;
+            if(merchantId!=null && !merchantId.isEmpty()) {
+                whereClause = "merchantId = '"+merchantId+"'";
+            }
+            if(orderId!=null && !orderId.isEmpty()) {
+                if(whereClause==null) {
+                    whereClause = "orderId = '" + orderId + "'";
+                } else {
+                    whereClause = whereClause + "AND orderId = '" + orderId + "'";
+                }
+            }
+            if(statusCsvStr!=null && !statusCsvStr.isEmpty()) {
+                if (whereClause == null) {
+                    whereClause = "status IN ("+statusCsvStr+")";
+                } else {
+                    whereClause = whereClause + "AND status IN ("+statusCsvStr+")";;
+                }
+            }
+            mLogger.debug("where clause: "+whereClause);
+
+            List<MerchantOrders> orders = BackendOps.fetchMchntOrders(whereClause);
+            if(orders==null) {
+                // not exactly a positive exception - but using it to avoid logging of this as error
+                // as it can happen frequently as valid scenario
+                positiveException = true;
+                throw new BackendlessException(String.valueOf(ErrorCodes.BL_ERROR_NO_DATA_FOUND), "");
+            } else {
+                mLogger.debug("Fetched Mchnt Orders: "+orders.size());
+            }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return orders;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,positiveException,mLogger,mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);

@@ -83,7 +83,7 @@ public class BackendConstants {
     // used in generating temporary passwords
     // not using 'o','l','1','0' in pwdChars to avoid confusion
     public static final char[] pwdChars = "abcdefghijkmnpqrstuvwxyz23456789".toCharArray();
-    public static final char[] pinAndOtpChars = "0123456789".toCharArray();
+    public static final char[] onlyNumbers = "0123456789".toCharArray();
     // used in generating random transaction ids, passwords and PINs
     public static final char[] txnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 

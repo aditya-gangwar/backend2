@@ -1,22 +1,17 @@
 package in.myecash.utilities;
 
-import com.backendless.Backendless;
-import com.backendless.BackendlessCollection;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.persistence.BackendlessDataQuery;
 import in.myecash.common.constants.CommonConstants;
 import in.myecash.common.constants.ErrorCodes;
 import in.myecash.common.database.Customers;
 import in.myecash.common.database.MerchantDevice;
 import in.myecash.constants.BackendConstants;
 import in.myecash.database.AllOtp;
-import in.myecash.database.MycKeys;
 import in.myecash.security.SaltedHashService;
 import in.myecash.security.SimpleAES;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
 
 /**
  * Created by adgangwa on 23-12-2016.
@@ -162,6 +157,23 @@ public class SecurityHelper {
         }
     }
 
+    public static String getCardBarcode(String cardNum, MyLogger logger) {
+        try {
+            // random numeric string
+            SecureRandom random = new SecureRandom();
+            char[] id = new char[CommonConstants.CUSTOMER_CARDID_LEN];
+            for (int i = 0; i < CommonConstants.CUSTOMER_CARDID_LEN; i++) {
+                id[i] = BackendConstants.onlyNumbers[random.nextInt(BackendConstants.onlyNumbers.length)];
+            }
+
+            return CommonConstants.MEMBER_CARD_ID_PREFIX + new String(id);
+
+        } catch (Exception e) {
+            logger.error("Exception while encrypting text: "+e);
+            throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Generate barcode failed");
+        }
+    }
+
     public static String getCardNumFromId(String cardId, String key, MyLogger logger) {
         //logger.debug("In getDecrypted: "+cardId);
 
@@ -218,7 +230,7 @@ public class SecurityHelper {
         SecureRandom random = new SecureRandom();
         char[] id = new char[CommonConstants.PIN_LEN];
         for (int i = 0; i < CommonConstants.PIN_LEN; i++) {
-            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
+            id[i] = BackendConstants.onlyNumbers[random.nextInt(BackendConstants.onlyNumbers.length)];
         }
         return new String(id);
     }
@@ -232,7 +244,7 @@ public class SecurityHelper {
         SecureRandom random = new SecureRandom();
         char[] id = new char[CommonConstants.OTP_LEN];
         for (int i = 0; i < CommonConstants.OTP_LEN; i++) {
-            id[i] = BackendConstants.pinAndOtpChars[random.nextInt(BackendConstants.pinAndOtpChars.length)];
+            id[i] = BackendConstants.onlyNumbers[random.nextInt(BackendConstants.onlyNumbers.length)];
         }
         return new String(id);
     }

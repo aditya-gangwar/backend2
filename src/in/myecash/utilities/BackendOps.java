@@ -685,6 +685,7 @@ public class BackendOps {
      */
     public static List<Transaction> fetchTransactions(String whereClause, String tableName) {
         Backendless.Data.mapTableToClass(tableName, Transaction.class);
+        //Backendless.Data.mapTableToClass(cbTableName, Cashback.class);
 
         // fetch txns object from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
@@ -733,8 +734,9 @@ public class BackendOps {
         }
     }
 
-    public static Transaction updateTxn(Transaction txn, String tableName) {
+    public static Transaction updateTxn(Transaction txn, String tableName, String cbTableName) {
         Backendless.Data.mapTableToClass(tableName, Transaction.class);
+        Backendless.Data.mapTableToClass(cbTableName, Cashback.class);
         return Backendless.Persistence.save(txn);
     }
 
@@ -999,6 +1001,54 @@ public class BackendOps {
         Backendless.Data.mapTableToClass("GlobalSettings", GlobalSettings.class);
         Backendless.Persistence.save( data );
     }
+
+    /*
+     * Merchant Order fxs
+     */
+    public static List<MerchantOrders> fetchMchntOrders(String whereClause) {
+        //Backendless.Data.mapTableToClass("MerchantOrders", MerchantOrders.class);
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
+        query.setWhereClause(whereClause);
+
+        /*QueryOptions options = new QueryOptions();
+        options.addSortByOption("createTime DESC");
+        query.setQueryOptions(options);*/
+
+        Backendless.Data.mapTableToClass("MerchantOrders", MerchantOrders.class);
+        BackendlessCollection<MerchantOrders> collection = Backendless.Data.of( MerchantOrders.class ).find(query);
+        int cnt = collection.getTotalObjects();
+        if( cnt == 0) {
+            // No matching merchant order is not an error
+            return null;
+        }
+
+        List<MerchantOrders> objects = new ArrayList<MerchantOrders>();
+        while (collection.getCurrentPage().size() > 0)
+        {
+            objects.addAll(collection.getData());
+            collection = collection.nextPage();
+        }
+        return objects;
+    }
+
+    public static int getMchntOrderCnt(String whereClause) {
+        Backendless.Data.mapTableToClass("MerchantOrders", MerchantOrders.class);
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<MerchantOrders> users = Backendless.Data.of( MerchantOrders.class ).find(query);
+        return users.getTotalObjects();
+    }
+
+    public static MerchantOrders saveMchntOrder(MerchantOrders order) {
+        return Backendless.Persistence.save( order );
+    }
+
+    public static void deleteMchntOrder(MerchantOrders order) {
+        Backendless.Persistence.of( MerchantOrders.class ).remove( order );
+    }
+
 
     /*
      * Bulk Operations via REST

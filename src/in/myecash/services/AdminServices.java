@@ -18,6 +18,7 @@ import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.utilities.SecurityHelper;
 
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -693,6 +694,9 @@ public class AdminServices implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "No available batch in given range id : "+countryCode+","+rangeId);
             }
 
+            // to be used for barcode generation
+            SecureRandom random = new SecureRandom();
+
             // create member card rows for this batch
             String cardIdPrefix = BackendConstants.MY_CARD_ISSUER_ID + countryCode + lowestBatch.getRangeBatchId();
             for(int i=BackendConstants.CARD_ID_MIN_SNO_PER_BATCH; i<=BackendConstants.CARD_ID_MAX_SNO_PER_BATCH; i++) {
@@ -705,6 +709,15 @@ public class AdminServices implements IBackendlessService {
                 if(!decodedCardNum.equals(cardNum)) {
                     throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Decoded cardNum not same as encoded");
                 }
+
+                // set barcode number
+                char[] id = new char[CommonConstants.CUSTOMER_CARD_BARCODE_SALT_LEN];
+                for (int k = 0; k < CommonConstants.CUSTOMER_CARD_BARCODE_SALT_LEN; k++) {
+                    id[k] = BackendConstants.onlyNumbers[random.nextInt(BackendConstants.onlyNumbers.length)];
+                }
+                String barcode = CommonConstants.MEMBER_BARCODE_ID_PREFIX + cardNum + new String(id);
+                card.setBarCode(barcode);
+
                 card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT);
                 card.setStatus_update_time(new Date());
                 BackendOps.saveCustomerCard(card);

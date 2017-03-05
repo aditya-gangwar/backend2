@@ -58,6 +58,7 @@ public class DbConstantsBackend {
      */
     public static final String CUSTOMER_ID_COUNTER = "customer_id";
     public static final String MERCHANT_ID_COUNTER = "merchant_id";
+    public static final String ORDER_ID_COUNTER = "order_id";
 
     /*
      * WrongAttempts table

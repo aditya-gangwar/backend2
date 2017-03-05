@@ -163,7 +163,7 @@ public class TxnProcessHelper {
                 mTransaction.setCashback(cashback);
 
                 if(saveAlso) {
-                    mTransaction = BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
+                    mTransaction = BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table(), mMerchant.getCashback_table());
                 }
 
                 if(sendSMS) {
@@ -306,7 +306,7 @@ public class TxnProcessHelper {
 
                 // cashback will be updated along with txn
                 mTransaction.setCashback(cashback);
-                BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table());
+                BackendOps.updateTxn(mTransaction, mMerchant.getTxn_table(), mMerchant.getCashback_table());
 
                 // Build SMS
                 merchantName = mTransaction.getMerchant_name().toUpperCase(Locale.ENGLISH);

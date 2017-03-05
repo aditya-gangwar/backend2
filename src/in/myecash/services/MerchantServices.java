@@ -47,6 +47,12 @@ public class MerchantServices implements IBackendlessService {
         return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, true, true);
     }
 
+    public Transaction writeTxn(String csvTxnData, String tableName) throws Exception {
+        Transaction txn = CsvConverter.txnFromCsvStr(csvTxnData);
+        Backendless.Data.mapTableToClass(tableName, Transaction.class);
+        return Backendless.Persistence.save(txn);
+    }
+
     public Merchants changeMobile(String verifyparam, String newMobile, String otp) {
 
         BackendUtils.initAll();
@@ -342,6 +348,7 @@ public class MerchantServices implements IBackendlessService {
             // Fetch cashback record
             // Create where clause to fetch cashback
             String whereClause = "rowid = '" + customer.getPrivate_id()+merchantId + "'";
+            mLogger.debug("Before fetchCashback: "+whereClause+","+merchantCbTable);
             ArrayList<Cashback> data = BackendOps.fetchCashback(whereClause, merchantCbTable, false);
             Cashback cashback = null;
             if(data == null) {
@@ -452,6 +459,17 @@ public class MerchantServices implements IBackendlessService {
 
                     for (int k = 0; k < data.size(); k++) {
                         Cashback cb = data.get(k);
+
+                        // if all amounts 0 - then ignore
+                        // i.e. probably this customer bought the card from this merchant
+                        // but didn't do any txn as such
+                        if(cb.getCb_credit()==0 &&
+                                cb.getCb_debit()==0 &&
+                                cb.getCl_credit()==0 &&
+                                cb.getCl_debit()==0) {
+                            continue;
+                        }
+
                         // update customer counts
                         // no need to check for 'debit' amount - as 'credit' amount is total amount and includes debit amount too
                         if (cb.getCb_credit() > 0 && cb.getCl_credit() > 0) {
@@ -613,6 +631,117 @@ public class MerchantServices implements IBackendlessService {
             //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
             TxnArchiver archiver = new TxnArchiver(mLogger, merchant, InvocationContext.getUserToken());
             archiver.archiveMerchantTxns(mEdr);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public MerchantOrders createMchntOrder(String itemSku, int itemQty, int totalPrice) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "createMchntOrder";
+
+        try {
+            mLogger.debug("In createMchntOrder");
+
+            // Fetch merchant
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+
+            // Check SKU and Price
+            int price = 0;
+            if(itemSku.equals(DbConstants.SKU_CUSTOMER_CARDS)) {
+                price = itemQty * MyGlobalSettings.getCustCardPrice();
+                if(price!=totalPrice) {
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Total Price not correct: "+totalPrice);
+                }
+            } else {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid SKU: "+itemSku);
+            }
+
+            // Check if first order
+            boolean isFirstOrder = false;
+            String whereClause = "merchantId = '"+merchant.getAuto_id()+"'";
+            if(BackendOps.getMchntOrderCnt(whereClause)==0) {
+                isFirstOrder = true;
+            }
+
+            // Create Order object
+            Date now = new Date();
+            MerchantOrders order = new MerchantOrders();
+            order.setOrderId(BackendUtils.generateMchntOrderId());
+            order.setMerchantId(merchant.getAuto_id());
+            order.setCreateTime(now);
+            order.setIsFirstOrder(isFirstOrder);
+
+            order.setItemSku(itemSku);
+            order.setItemQty(itemQty);
+            order.setItemPrice(MyGlobalSettings.getCustCardPrice());
+            order.setTotalPrice(price);
+
+            order.setStatus(DbConstants.MCHNT_ORDER_STATUS.New.name());
+            order.setStatusChangeTime(now);
+            order.setStatusChangeUser(merchant.getAuto_id());
+
+            // Save order object
+            MerchantOrders savedOrder = BackendOps.saveMchntOrder(order);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+            return savedOrder;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void deleteMchntOrder(String orderId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "deleteMchntOrder";
+
+        try {
+            mLogger.debug("In deleteMchntOrder");
+
+            // Fetch merchant
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+
+            // fetch order
+            String whereClause = "orderId = '"+orderId+"'";
+            List<MerchantOrders> orders = BackendOps.fetchMchntOrders(whereClause);
+            if(orders==null) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_DATA_FOUND), "No Order with ID: "+orderId);
+            }
+            MerchantOrders dbOrder = orders.get(0);
+
+            // Check that order belongs to this mchnt only
+            if(!dbOrder.getMerchantId().equals(merchant.getAuto_id())) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Merchant Order does not below to this merchant: "+orderId);
+            }
+
+            // Only New order can be deleted
+            if(!dbOrder.getStatus().equals(DbConstants.MCHNT_ORDER_STATUS.New.name())) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+                throw new BackendlessException(String.valueOf(ErrorCodes.MO_DEL_INVALID_STATUS), "Invalid MO status for delete:"+orderId);
+            }
+
+            // delete order
+            BackendOps.deleteMchntOrder(dbOrder);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
