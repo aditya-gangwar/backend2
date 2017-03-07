@@ -286,49 +286,6 @@ public class CommonServices implements IBackendlessService {
         }
     }
 
-    public CustomerCards getMemberCard(String cardId) {
-        BackendUtils.initAll();
-        long startTime = System.currentTimeMillis();
-        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
-        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMemberCard";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cardId;
-
-        boolean validException = false;
-        CustomerCards memberCard = null;
-        try {
-            // Send userType param as null to avoid checking within fetchCurrentUser fx.
-            // But check immediatly after
-            Object userObj = BackendUtils.fetchCurrentUser(null, mEdr, mLogger, true);
-            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
-
-            if (userType == DbConstants.USER_TYPE_CC || userType == DbConstants.USER_TYPE_CCNT || userType == DbConstants.USER_TYPE_AGENT) {
-                try {
-                    memberCard = BackendOps.getCustomerCard(cardId, !BackendUtils.isCardNum(cardId));
-                } catch(BackendlessException e) {
-                    if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
-                        // CC agent may enter wrong customer id by mistake
-                        validException = true;
-                    }
-                    throw e;
-                }
-                mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = memberCard.getCardNum();
-            } else {
-                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
-            }
-
-            // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            return memberCard;
-
-        } catch (Exception e) {
-            BackendUtils.handleException(e, validException, mLogger, mEdr);
-            throw e;
-        } finally {
-            BackendUtils.finalHandling(startTime, mLogger, mEdr);
-        }
-    }
-
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
      * OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number - only from customer app
@@ -445,6 +402,7 @@ public class CommonServices implements IBackendlessService {
                 // Verify against provided card ids
                 if (opCode.equals(DbConstants.OP_NEW_CARD)) {
                     // check new card exists and is in correct state
+                    //newCard = BackendOps.getCustomerCard(argCardId, true);
                     newCard = BackendOps.getCustomerCard(argCardId, true);
                     BackendUtils.checkCardForAllocation(newCard, merchantId, mEdr, mLogger);
 

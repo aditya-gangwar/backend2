@@ -274,6 +274,38 @@ public class BackendOps {
     }
 
     /*
+     * Customer card new operations
+     */
+    /*public static CustomerCardsNew getCustomerCardNew(String key, boolean isID) {
+        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
+        if(isID) {
+            dataQuery.setWhereClause("card_id = '" + key + "'");
+        } else {
+            dataQuery.setWhereClause("cardNum = '" + key + "'");
+        }
+
+        BackendlessCollection<CustomerCardsNew> collection = Backendless.Data.of(CustomerCardsNew.class).find(dataQuery);
+        if( collection.getTotalObjects() == 0) {
+            String errorMsg = "No membership card found: "+key;
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
+        } else {
+            return collection.getData().get(0);
+        }
+    }
+
+    public static CustomerCardsNew saveCustomerCardNew(CustomerCardsNew card) {
+        return Backendless.Persistence.save( card );
+    }
+
+    public static int getCardCntNew(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<CustomerCardsNew> users = Backendless.Data.of( CustomerCardsNew.class ).find(query);
+        return users.getTotalObjects();
+    }*/
+
+    /*
      * Cashback operations
      */
     public static ArrayList<Cashback> fetchCashback(String whereClause, String cashbackTable,
@@ -1047,6 +1079,23 @@ public class BackendOps {
 
     public static void deleteMchntOrder(MerchantOrders order) {
         Backendless.Persistence.of( MerchantOrders.class ).remove( order );
+    }
+
+    public static int getAllottedCardCnt(String orderId) {
+        String whereClause = "orderId = '"+orderId+"'";
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<CustomerCards> users = Backendless.Data.of( CustomerCards.class ).find(query);
+        return users.getTotalObjects();
+    }
+
+    public static List<CustomerCards> getAllottedCards(String orderId) {
+        String whereClause = "orderId = '"+orderId+"'";
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        return Backendless.Data.of( CustomerCards.class ).find(query).getData();
     }
 
 

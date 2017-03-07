@@ -302,7 +302,7 @@ public class BackendUtils {
                 throw new BackendlessException(String.valueOf(ErrorCodes.CARD_DISABLED), "");
 
             case DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT:
-            case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
+            //case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "");
 
@@ -319,7 +319,7 @@ public class BackendUtils {
             case DbConstants.CUSTOMER_CARD_STATUS_DISABLED:
                 throw new BackendlessException(String.valueOf(ErrorCodes.CARD_DISABLED), "");
 
-            case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
+            //case DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT:
             case DbConstants.CUSTOMER_CARD_STATUS_NEW:
             case DbConstants.CUSTOMER_CARD_STATUS_FOR_PRINT:
                 edr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
@@ -727,6 +727,7 @@ public class BackendUtils {
 
         // Table to class mapping - for backendless
         Backendless.Data.mapTableToClass("CustomerCards", CustomerCards.class);
+        //Backendless.Data.mapTableToClass("CustomerCardsNew", CustomerCardsNew.class);
         Backendless.Data.mapTableToClass("Customers", Customers.class);
         Backendless.Data.mapTableToClass("Merchants", Merchants.class);
         Backendless.Data.mapTableToClass("CustomerOps", CustomerOps.class);
