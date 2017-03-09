@@ -81,13 +81,14 @@ public class InternalUserServices implements IBackendlessService {
 
                 // Find merchant whom to allot
                 merchant = BackendOps.getMerchant(allotToUserId, false, false);
-                BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
-
-                // match merchant id
-                if(!allotToUserId.equals(effectOrder.getMerchantId())) {
-                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),
-                            "Merchant ID given and in order don't match");
+                if(action.equals(CommonConstants.CARDS_ALLOT_TO_MCHNT)) {
+                    BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
+                    // match merchant id
+                    if(!allotToUserId.equals(effectOrder.getMerchantId())) {
+                        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                        throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR),
+                                "Merchant ID given and in order don't match");
+                    }
                 }
 
                 // Agent can allocate cards to only first order
@@ -135,27 +136,7 @@ public class InternalUserServices implements IBackendlessService {
                                 }
                                 break;
 
-                            /*case CommonConstants.CARDS_ALLOT_TO_AGENT:
-                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_NEW) {
-                                    // Find agent whom to allot
-                                    InternalUser iu = BackendOps.getInternalUser(allotToUserId);
-                                    if (BackendUtils.getUserType(iu.getId()) != DbConstants.USER_TYPE_AGENT) {
-                                        cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ALLOT);
-                                    } else {
-                                        BackendUtils.checkInternalUserStatus(iu);
-
-                                        card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
-                                        card.setCcntId(internalUser.getId());
-                                        card.setAgentId(iu.getId());
-                                        updateCard = true;
-                                    }
-                                } else {
-                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                                }
-                                break;*/
-
                             case CommonConstants.CARDS_ALLOT_TO_MCHNT:
-                                //if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
                                 if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_NEW) {
 
                                    if(allotCardCnt < effectOrder.getItemQty()) {
@@ -182,7 +163,6 @@ public class InternalUserServices implements IBackendlessService {
                                     if(!card.getOrderId().equals(orderId)) {
                                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_ORDER);
                                     } else if(allotCardCnt > 0) {
-                                        //card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT);
                                         card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
                                         card.setCcntId(internalUser.getId());
                                         card.setOrderId("");
@@ -191,21 +171,10 @@ public class InternalUserServices implements IBackendlessService {
                                     } else {
                                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ORDER_EMPTY);
                                     }
-
                                 } else {
                                     cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
                                 }
                                 break;
-
-                            /*case CommonConstants.CARDS_RETURN_BY_AGENT:
-                                if (curStatus == DbConstants.CUSTOMER_CARD_STATUS_WITH_AGENT) {
-                                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
-                                    card.setCcntId(internalUser.getId());
-                                    updateCard = true;
-                                } else {
-                                    cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_WRONG_STATUS);
-                                }
-                                break;*/
                         }
 
                         if (updateCard) {
@@ -264,6 +233,7 @@ public class InternalUserServices implements IBackendlessService {
                 }
 
                 effectOrder.setAllotedCardCnt(allotCardCnt);
+                // change order status, if required
                 if(allotCardCnt == effectOrder.getItemQty() &&
                         action.equals(CommonConstants.CARDS_ALLOT_TO_MCHNT) &&
                         effectOrder.getStatus().equals(DbConstants.MCHNT_ORDER_STATUS.New.name())) {
@@ -343,6 +313,112 @@ public class InternalUserServices implements IBackendlessService {
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public MerchantOrders changeOrderStatus(MerchantOrders updatedOrder) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "changeOrderStatus";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = updatedOrder.getOrderId()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                updatedOrder.getStatus();
+
+        try {
+            // Fetch user
+            InternalUser internalUser = (InternalUser) BackendUtils.fetchCurrentUser(null, mEdr, mLogger, false);
+            int userType = Integer.parseInt(mEdr[BackendConstants.EDR_USER_TYPE_IDX]);
+
+            // check for allowed roles and their actions
+            switch (userType) {
+                case DbConstants.USER_TYPE_CCNT:
+                    break;
+                default:
+                    mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
+            }
+
+            // fetch order
+            List<MerchantOrders> orders = BackendOps.fetchMchntOrders("orderId = '" + updatedOrder.getOrderId() + "'");
+            if (orders == null || orders.size() != 1) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_DATA_FOUND), "Order Not found: " + updatedOrder.getOrderId());
+            }
+            MerchantOrders orderInDb = orders.get(0);
+
+            DbConstants.MCHNT_ORDER_STATUS newStatus = DbConstants.MCHNT_ORDER_STATUS.valueOf(updatedOrder.getStatus());
+            switch (newStatus) {
+                case Shipped:
+                    if(updatedOrder.getInvoiceId().isEmpty() || updatedOrder.getInvoiceUrl().isEmpty()) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invoice details missing");
+                    }
+                    // check that agent id is valid
+                    try {
+                        BackendOps.getInternalUser(updatedOrder.getAgentId());
+                    } catch (Exception e) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Agent ID");
+                    }
+                    orderInDb.setAgentId(updatedOrder.getAgentId());
+                    orderInDb.setInvoiceId(updatedOrder.getInvoiceId());
+                    orderInDb.setInvoiceUrl(updatedOrder.getInvoiceUrl());
+                    break;
+
+                case Completed:
+                    if(orderInDb.getAllotedCardCnt().intValue()!=orderInDb.getItemQty().intValue()) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.MCHNT_ORDER_ALLOT_CARDS), "Free up the allocated cards first ");
+                    }
+                    if(orderInDb.getStatus().equals(DbConstants.MCHNT_ORDER_STATUS.Shipped.name())) {
+                        if(updatedOrder.getActualPayMode().isEmpty() || updatedOrder.getPaymentRef().isEmpty()) {
+                            throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invoice details missing");
+                        }
+                        // check that agent id is valid
+                        try {
+                            BackendOps.getInternalUser(updatedOrder.getAgentId());
+                        } catch (Exception e) {
+                            throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Agent ID");
+                        }
+                        orderInDb.setAgentId(updatedOrder.getAgentId());
+                        orderInDb.setActualPayMode(updatedOrder.getActualPayMode());
+                        orderInDb.setPaymentRef(updatedOrder.getPaymentRef());
+                    }
+                    break;
+
+                case PaymentVerifyPending:
+                    if(updatedOrder.getActualPayMode().isEmpty() || updatedOrder.getPaymentRef().isEmpty()) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invoice details missing");
+                    }
+                    // check that agent id is valid
+                    try {
+                        BackendOps.getInternalUser(updatedOrder.getAgentId());
+                    } catch (Exception e) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Agent ID");
+                    }
+                    orderInDb.setAgentId(updatedOrder.getAgentId());
+                    orderInDb.setActualPayMode(updatedOrder.getActualPayMode());
+                    orderInDb.setPaymentRef(updatedOrder.getPaymentRef());
+                    break;
+
+                case Rejected:
+                case PaymentFailed:
+                    if(orderInDb.getAllotedCardCnt()>0) {
+                        throw new BackendlessException(String.valueOf(ErrorCodes.MCHNT_ORDER_FREE_CARDS), "Free up the allocated cards first ");
+                    }
+                    orderInDb.setComments(updatedOrder.getComments());
+                    break;
+            }
+
+            String txt = orderInDb.getComments() + updatedOrder.getComments();
+            orderInDb.setComments(txt);
+            orderInDb.setStatus(updatedOrder.getStatus());
+            orderInDb = BackendOps.saveMchntOrder(orderInDb);
+
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return orderInDb;
+
+        } catch (Exception e) {
+            BackendUtils.handleException(e, false, mLogger, mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
     }
 
