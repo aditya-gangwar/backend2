@@ -572,7 +572,8 @@ public class CommonServices implements IBackendlessService {
                             validException = true;
                             // send imageFilename as part of exception - hack as no value can be returned in this case
                             String errMsg = (new MyErrorParams(ErrorCodes.OP_SCHEDULED, -1,
-                                    CommonUtils.roundUpTo(MyGlobalSettings.getCustPasswdResetMins()+GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL,5),
+                                    //CommonUtils.roundUpTo(MyGlobalSettings.getCustPasswdResetMins()+GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL,5),
+                                    MyGlobalSettings.getCustPasswdResetMins(),
                                     customerOp.getImgFilename())).toCsvString();
                             throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), errMsg);
 

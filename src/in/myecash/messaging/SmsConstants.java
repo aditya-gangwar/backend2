@@ -60,7 +60,7 @@ public class SmsConstants {
 
     // Password/PIN messages
     public static String SMS_FIRST_PASSWD = "Dear User - Welcome to MyeCash family !! Your User ID is '%s'. Your Password is '%s'. PLZ DO CHANGE PASSWORD AFTER FIRST LOGIN.";
-    public static String SMS_PASSWD_RESET_SCHEDULED = "Password reset request for MyeCash account '%s' is accepted. New password will be sent on registered mobile number within %s minutes.";
+    public static String SMS_PASSWD_RESET_SCHEDULED = "Password reset request for MyeCash account '%s' is accepted. New password will be sent on registered mobile number after %s minutes.";
     public static String SMS_PASSWD = "Dear User - New password for your MyeCash account %s is '%s'. Please do Change your Password immediately after Login. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PASSWD_CHANGED = "Dear User - Password changed successfully for your MyeCash account %s. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";
 

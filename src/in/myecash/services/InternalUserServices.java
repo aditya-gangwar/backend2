@@ -402,12 +402,13 @@ public class InternalUserServices implements IBackendlessService {
                     if(orderInDb.getAllotedCardCnt()>0) {
                         throw new BackendlessException(String.valueOf(ErrorCodes.MCHNT_ORDER_FREE_CARDS), "Free up the allocated cards first ");
                     }
+                    orderInDb.setInvoiceUrl("");
                     orderInDb.setComments(updatedOrder.getComments());
                     break;
             }
 
-            String txt = orderInDb.getComments() + updatedOrder.getComments();
-            orderInDb.setComments(txt);
+            //String txt = orderInDb.getComments() + updatedOrder.getComments();
+            orderInDb.setComments(updatedOrder.getComments());
             orderInDb.setStatus(updatedOrder.getStatus());
             orderInDb = BackendOps.saveMchntOrder(orderInDb);
 
@@ -432,6 +433,7 @@ public class InternalUserServices implements IBackendlessService {
                 merchant.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getName();
         String merchantId = null;
+        boolean regDone = false;
 
         try {
             //mLogger.debug("In registerMerchant");
@@ -463,11 +465,14 @@ public class InternalUserServices implements IBackendlessService {
             mLogger.debug("Generated merchant id: "+merchantId);
 
             // rename mchnt dp to include 'merchant id'
-            String currFilePath = CommonConstants.MERCHANT_DISPLAY_IMAGES_DIR + merchant.getDisplayImage();
-            String newName = BackendUtils.getMchntDpFilename(merchantId);
-            BackendOps.renameFile(currFilePath, newName);
-            merchant.setDisplayImage(newName);
-            mLogger.debug("File rename done");
+            if(!merchant.getDisplayImage().isEmpty()) {
+                String currFilePath = CommonConstants.MERCHANT_DISPLAY_IMAGES_DIR + merchant.getDisplayImage();
+                String newName = BackendUtils.getMchntDpFilename(merchantId);
+                mLogger.debug(merchant.getDisplayImage() + "," + newName + "," + currFilePath);
+                BackendOps.renameFile(currFilePath, newName);
+                merchant.setDisplayImage(newName);
+                mLogger.debug("File rename done");
+            }
 
             // set or update other fields
             merchant.setAuto_id(merchantId);
@@ -498,6 +503,7 @@ public class InternalUserServices implements IBackendlessService {
             user.setProperty("merchant", merchant);
 
             user = BackendOps.registerUser(user);
+            regDone = true;
             mLogger.debug("Register success");
             // register successful - can write to edr now
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
@@ -549,7 +555,7 @@ public class InternalUserServices implements IBackendlessService {
 
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
-            if(merchantId!=null && !merchantId.isEmpty()) {
+            if(merchantId!=null && !merchantId.isEmpty() && regDone) {
                 rollbackRegister(merchantId);
                 //BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
             }
@@ -891,15 +897,11 @@ public class InternalUserServices implements IBackendlessService {
             Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
             BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
                     mEdr, mLogger);
-
-            /*merchant.setAdmin_status(DbConstants.USER_STATUS_REG_ERROR);
-            merchant.setStatus_reason(DbConstantsBackend.REG_ERROR_REG_FAILED);
-            BackendOps.updateMerchant(merchant);*/
         } catch(Exception ex) {
+            // ignore any exception
             mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
             mLogger.error(BackendUtils.stackTraceStr(ex));
             mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-            throw ex;
         }
     }
 }

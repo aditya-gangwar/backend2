@@ -246,7 +246,8 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 user = BackendOps.updateUser(user);
 
                 // Send SMS to inform
-                Integer mins = MyGlobalSettings.getCustPasswdResetMins() + GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;
+                //Integer mins = MyGlobalSettings.getCustPasswdResetMins() + GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL;
+                Integer mins = MyGlobalSettings.getCustPasswdResetMins();
                 String smsText = String.format(SmsConstants.SMS_PASSWD_RESET_SCHEDULED,
                         CommonUtils.getPartialVisibleStr(op.getMobile_num()), mins);
                 // ignore error
@@ -254,7 +255,8 @@ public class CustomerServicesNoLogin implements IBackendlessService {
 
                 validException = true;
                 String errMsg = (new MyErrorParams(ErrorCodes.OP_SCHEDULED, -1,
-                        CommonUtils.roundUpTo(MyGlobalSettings.getCustPasswdResetMins()+GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL,5),
+                        //CommonUtils.roundUpTo(MyGlobalSettings.getCustPasswdResetMins()+GlobalSettingConstants.CUSTOMER_PASSWORD_RESET_TIMER_INTERVAL,5),
+                        MyGlobalSettings.getCustPasswdResetMins(),
                         "")).toCsvString();
                 throw new BackendlessException(String.valueOf(ErrorCodes.OP_SCHEDULED), errMsg);
             }
