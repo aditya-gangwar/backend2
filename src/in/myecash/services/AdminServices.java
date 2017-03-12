@@ -461,6 +461,30 @@ public class AdminServices implements IBackendlessService {
 
     /*
      * Merchant ID and Card ID Batch create/open methods
+     *
+     * Merchant ID Format below:
+     * 8 digit - Merchant ID
+	 *  : <1-2 digit country code> + <1-2 digit range id> + <2 digit batch id> + <3 digit s.no.>
+	 *   : <1-2 digit country code>
+		 : 1-99 possible values (0 not valid value)
+		 : 1 crore (10 million) merchants per 1 digit country code
+		 : 10 lakh (1 million) merchants per 2 digit country code
+		 : start with '1' for India
+	 *  : <1-2 digit range id>
+		 : 1 lakh merchant ids per range id
+		 : 2 digit (00-99) i.e. 100 ranges per 1 digit country code
+		 : 1 digit (0-9) i.e. 10 ranges per 2 digit country code
+		 : start backwards from 'max value' i.e. 99/9 -> 00/0
+	 *  : <2 digit batch id>
+	     : 00-99 possible values
+	     : Batch id 0(i.e. 00) is reserved for now
+	     : So, 99 batches per range id + 1 reserved one
+	     : So, 99 x 100 = 9,900 batches per 1 digit country code (like India)
+	     : start from 01 -> 99
+	 *  : <3 digit s.no.>
+	     : starts from 000 -> 999
+	     : 1000 merchant ids per batch id
+	     : 1000 x 99 = 99,000 merchant ids per range id (+1000 from reserved batch id 0)
      */
     public void createMerchantIdBatches(String countryCode, String rangeId, int batchCnt, String adminPwd) {
         long startTime = System.currentTimeMillis();
@@ -711,8 +735,8 @@ public class AdminServices implements IBackendlessService {
                 }
 
                 // set barcode number
-                char[] id = new char[CommonConstants.CUSTOMER_CARD_BARCODE_SALT_LEN];
-                for (int k = 0; k < CommonConstants.CUSTOMER_CARD_BARCODE_SALT_LEN; k++) {
+                char[] id = new char[BackendConstants.CUSTOMER_CARD_BARCODE_SALT_LEN];
+                for (int k = 0; k < BackendConstants.CUSTOMER_CARD_BARCODE_SALT_LEN; k++) {
                     id[k] = BackendConstants.onlyNumbers[random.nextInt(BackendConstants.onlyNumbers.length)];
                 }
                 String barcode = CommonConstants.MEMBER_BARCODE_ID_PREFIX + cardNum + new String(id);
@@ -804,6 +828,37 @@ public class AdminServices implements IBackendlessService {
 
                 BackendOps.saveGlobalSetting(setting);
             }
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,false,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendOps.logoutUser();
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+    }
+
+    public void createDummyMerchant(String internalUserId, String adminPwd) {
+        long startTime = System.currentTimeMillis();
+        try {
+            BackendUtils.initAll();
+            mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+            mEdr[BackendConstants.EDR_API_NAME_IDX] = "createDummyMerchant";
+            mEdr[BackendConstants.EDR_API_PARAMS_IDX] = internalUserId;
+            mEdr[BackendConstants.EDR_USER_ID_IDX] = ADMIN_LOGINID;
+            mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
+            mLogger.setProperties(ADMIN_LOGINID, DbConstants.USER_TYPE_ADMIN, true);
+
+            // login using 'admin' user
+            BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
+
+            // Fetch internal user
+            InternalUser user = BackendOps.getInternalUser(internalUserId);
+            Merchants merchant = createDummyMchnt(user.getMobile_num(), user.getDob());
+            BackendUtils.registerMerchant(merchant, user.getId(), mLogger, mEdr);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -916,6 +971,26 @@ public class AdminServices implements IBackendlessService {
             BackendOps.logoutUser();
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
         }
+    }
+
+    private Merchants createDummyMchnt(String mobile, String dob) {
+        // Create merchants object
+        Merchants merchant = new Merchants();
+        merchant.setName(BackendConstants.DUMMY_MCHNT_NAME);
+        merchant.setDisplayImage("");
+        merchant.setMobile_num(mobile);
+        merchant.setEmail("");
+        merchant.setBuss_category("Other");
+        Address address = new Address();
+        address.setCity("DummyCity");
+        address.setState("DummyState");
+        address.setLine_1("1234, Dummy Address");
+        merchant.setAddress(address);
+        merchant.setDob(dob);
+        merchant.setContactPhone(mobile);
+        merchant.setContactName(BackendConstants.DUMMY_MCHNT_NAME);
+        merchant.setRegFormNum("00000");
+        return merchant;
     }
 }
 

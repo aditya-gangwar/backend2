@@ -154,6 +154,19 @@ public class BackendOps {
         }
     }
 
+    public static Merchants getMerchant(String whereClause) {
+        BackendlessDataQuery query = new BackendlessDataQuery();
+        query.setWhereClause(whereClause);
+
+        BackendlessCollection<Merchants> user = Backendless.Data.of( Merchants.class ).find(query);
+        if( user.getTotalObjects() == 0) {
+            String errorMsg = "No Merchant found: "+query.getWhereClause();
+            throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
+        } else {
+            return user.getData().get(0);
+        }
+    }
+
     public static ArrayList<Merchants> fetchMerchants(String whereClause) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         query.setPageSize(CommonConstants.DB_QUERY_PAGE_SIZE);
@@ -1116,7 +1129,7 @@ public class BackendOps {
             String whereClauseEnc = URLEncoder.encode(whereClause, "UTF-8");
 
             // Building URL without URI
-            StringBuilder sb = new StringBuilder(CommonConstants.BULK_API_URL);
+            StringBuilder sb = new StringBuilder(BackendConstants.BULK_API_URL);
             sb.append(txnTableName);
             sb.append("?where=");
             sb.append(whereClauseEnc);
@@ -1129,7 +1142,7 @@ public class BackendOps {
             //for( String key : HeadersManager.getInstance().getHeaders().keySet() )
             //    conn.addRequestProperty( key, HeadersManager.getInstance().getHeaders().get( key ) );
 
-            conn.setRequestProperty("application-id", CommonConstants.APPLICATION_ID);
+            conn.setRequestProperty("application-id", BackendConstants.APPLICATION_ID);
             conn.setRequestProperty("user-token", userToken);
             conn.setRequestProperty("secret-key", BackendConstants.REST_SECRET_KEY);
             conn.setRequestProperty("application-type", "REST");

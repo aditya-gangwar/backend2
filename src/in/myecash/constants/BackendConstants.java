@@ -5,18 +5,26 @@ package in.myecash.constants;
  * and not for the user apps.
  */
 public class BackendConstants {
-    public static final String SECRET_KEY = "79FFB886-6E42-2551-FF4B-6FD656B3BA00";
+
+    /*
+     * Backend server settings
+     */
+    public static final String APPLICATION_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
+    public static final String VERSION = "v1";
+
+    public static final String BACKENDLESS_HOST_IP = "35.154.80.2";
+    public static final String BACKENDLESS_HOST = "http://"+BACKENDLESS_HOST_IP+":8080/api";
+    public static final String BULK_API_URL  = BACKENDLESS_HOST+"/"+VERSION+"/data/bulk/";
     public static final String REST_SECRET_KEY = "022CBF46-15F0-98EA-FFFD-9E9B58617E00";
-    //public static final String SECRET_KEY = "3F344A97-DDA8-A8DF-FF4B-FDAC13130700"; //coderunner key
 
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
+    public static final boolean FORCED_DEBUG_LOGS = true;
     public static final boolean DEBUG_MODE = false;
     public static final boolean TESTING_SKIP_SMS = false;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;
     public static final boolean TESTING_USE_FIXED_OTP = false;
     public static final String TESTING_FIXED_OTP_VALUE = "12345";
-    public static final boolean FORCED_DEBUG_LOGS = true;
 
     // Values used in EoD script
     public static final int RECORDS_DEL_BUFFER_DAYS = 5;
@@ -77,8 +85,8 @@ public class BackendConstants {
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";
     public static final String DUMMY_FILENAME = "dummy.txt";
 
-    public static final int PASSWORD_LEN = 5;
     public static final int LOG_ID_LEN = 8;
+    public static final int CUSTOMER_CARD_BARCODE_SALT_LEN = 5;
 
     // used in generating temporary passwords
     // not using 'o','l','1','0' in pwdChars to avoid confusion
@@ -102,6 +110,9 @@ public class BackendConstants {
     public static final String ROLE_AGENT = "Agent";
     public static final String ROLE_CC = "CustomerCare";
     public static final String ROLE_CCNT = "CardController";
+
+    public static final String DUMMY_MCHNT_NAME = "DUMMY MERCHANT";
+    public static final String DUMMY_MCHNT_COUNTRY_CODE = "99";
 
     public static final int DEVICE_INFO_VALID_SECS = 600;
 

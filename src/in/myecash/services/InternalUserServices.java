@@ -3,6 +3,7 @@ package in.myecash.services;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.FilePermission;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
@@ -432,8 +433,6 @@ public class InternalUserServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getName();
-        String merchantId = null;
-        boolean regDone = false;
 
         try {
             //mLogger.debug("In registerMerchant");
@@ -444,110 +443,7 @@ public class InternalUserServices implements IBackendlessService {
             // Fetch agent
             InternalUser agent = (InternalUser) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_AGENT, mEdr, mLogger, false);
 
-            // Fetch city
-            Cities city = BackendOps.fetchCity(merchant.getAddress().getCity());
-
-            // get open merchant id batch
-            String countryCode = city.getCountryCode();
-            String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
-            String whereClause = "status = '"+DbConstantsBackend.BATCH_STATUS_OPEN +"'";
-            MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
-            if(batch == null) {
-                throw new BackendlessException(String.valueOf(ErrorCodes.MERCHANT_ID_RANGE_ERROR),
-                        "No open merchant id batch available: "+batchTableName+","+whereClause);
-            }
-
-            // get merchant counter value and use the same to generate merchant id
-            Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
-            mLogger.debug("Fetched merchant cnt: "+merchantCnt);
-            // generate merchant id
-            merchantId = BackendUtils.generateMerchantId(batch, countryCode, merchantCnt);
-            mLogger.debug("Generated merchant id: "+merchantId);
-
-            // rename mchnt dp to include 'merchant id'
-            if(!merchant.getDisplayImage().isEmpty()) {
-                String currFilePath = CommonConstants.MERCHANT_DISPLAY_IMAGES_DIR + merchant.getDisplayImage();
-                String newName = BackendUtils.getMchntDpFilename(merchantId);
-                mLogger.debug(merchant.getDisplayImage() + "," + newName + "," + currFilePath);
-                BackendOps.renameFile(currFilePath, newName);
-                merchant.setDisplayImage(newName);
-                mLogger.debug("File rename done");
-            }
-
-            // set or update other fields
-            merchant.setAuto_id(merchantId);
-            merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
-            merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
-            merchant.setStatus_update_time(new Date());
-            merchant.setLastRenewDate(new Date());
-            merchant.setMobile_num(merchant.getMobile_num());
-            merchant.setFirst_login_ok(false);
-            merchant.setAgentId(agent.getId());
-            merchant.setCl_credit_limit_for_pin(-1);
-            merchant.setCl_debit_limit_for_pin(-1);
-            merchant.setCb_debit_limit_for_pin(-1);
-            // set cashback and transaction table names
-            merchant.setCashback_table(DbConstantsBackend.CASHBACK_TABLE_NAME + city.getCbTableCode());
-            BackendOps.describeTable(merchant.getCashback_table()); // just to check that the table exists
-            merchant.setTxn_table(DbConstantsBackend.TRANSACTION_TABLE_NAME + city.getCbTableCode());
-            BackendOps.describeTable(merchant.getTxn_table()); // just to check that the table exists
-
-            // generate and set password
-            String pwd = BackendUtils.generateTempPassword();
-            mLogger.debug("Generated passwd: "+pwd);
-
-            BackendlessUser user = new BackendlessUser();
-            user.setProperty("user_id", merchantId);
-            user.setPassword(pwd);
-            user.setProperty("user_type", DbConstants.USER_TYPE_MERCHANT);
-            user.setProperty("merchant", merchant);
-
-            user = BackendOps.registerUser(user);
-            regDone = true;
-            mLogger.debug("Register success");
-            // register successful - can write to edr now
-            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
-
-            try {
-                BackendOps.assignRole(merchantId, BackendConstants.ROLE_MERCHANT);
-
-            } catch(Exception e) {
-                mLogger.fatal("Failed to assign role to merchant user: "+merchantId+","+e.toString());
-                rollbackRegister(merchantId);
-                throw e;
-            }
-
-            // create directories for 'txnCsv' and 'txnImage' files
-            String fileDir = null;
-            String filePath = null;
-            try {
-                fileDir = CommonUtils.getMerchantTxnDir(merchantId);
-                filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
-                // saving dummy files to create parent directories
-                Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
-                // Give this merchant permissions for this directory
-                //FilePermission.READ.denyForRole( DbConstantsBackend.ROLE_MERCHANT, fileDir);
-                FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
-                //FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
-                //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
-                mLogger.debug("Saved dummy txn csv file: " + filePath);
-
-                /*fileDir = CommonUtils.getTxnImgDir(merchantId);
-                filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
-                Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
-                // Give write access to this merchant to this directory
-                FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
-                mLogger.debug("Saved dummy txn image file: " + filePath);*/
-
-            } catch(Exception e) {
-                mLogger.fatal("Failed to create merchant directories: "+merchantId+","+e.toString());
-                rollbackRegister(merchantId);
-                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), e.toString());
-            }
-
-            // send SMS with user id
-            String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
-            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
+            String merchantId = BackendUtils.registerMerchant(merchant, agent.getId(), mLogger, mEdr);
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
@@ -555,10 +451,6 @@ public class InternalUserServices implements IBackendlessService {
 
         } catch(Exception e) {
             BackendUtils.handleException(e,false,mLogger,mEdr);
-            if(merchantId!=null && !merchantId.isEmpty() && regDone) {
-                rollbackRegister(merchantId);
-                //BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
-            }
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime,mLogger,mEdr);
@@ -863,6 +755,52 @@ public class InternalUserServices implements IBackendlessService {
         }
     }
 
+    public void clearDummyMchntData() {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "clearDummyMchntData";
+        //mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cardId;
+
+        boolean validException = false;
+        try {
+            Object userObj = BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_AGENT, mEdr, mLogger, true);
+            String agentId = mEdr[BackendConstants.EDR_INTERNAL_USER_ID_IDX];
+
+            // Find the dummy merchant first
+            Merchants merchant = BackendOps.getMerchant("agentId = '"+agentId+"' AND auto_id like '"+BackendConstants.DUMMY_MCHNT_COUNTRY_CODE+"%'");
+
+            // Hardcoded table name check - to avoid accidental deletion
+            if(!merchant.getCashback_table().equals("Cashback99") ||
+                    !merchant.getTxn_table().equals("Transaction99")) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
+            }
+
+            BackendUtils.printCtxtInfo(mLogger);
+
+            String userToken = InvocationContext.getUserToken();
+            String whereClause = "merchant_id = '"+merchant.getAuto_id()+"'";
+
+            // delete all cashback records
+            Backendless.Data.mapTableToClass(merchant.getCashback_table(), Cashback.class);
+            int recDel = BackendOps.doBulkRequest(merchant.getCashback_table(), whereClause, "DELETE", null, userToken, mLogger);
+            mLogger.debug("Cashback records deleted: "+recDel+", "+whereClause);
+
+            // delete all txns
+            Backendless.Data.mapTableToClass(merchant.getTxn_table(), Transaction.class);
+            recDel = BackendOps.doBulkRequest(merchant.getTxn_table(), whereClause, "DELETE", null, userToken, mLogger);
+            mLogger.debug("Txn records deleted: "+recDel+", "+whereClause);
+
+            // no exception - means function execution success
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+
+        } catch (Exception e) {
+            BackendUtils.handleException(e, false, mLogger, mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime, mLogger, mEdr);
+        }
+    }
 
 
     /*
@@ -889,20 +827,5 @@ public class InternalUserServices implements IBackendlessService {
     }*/
 
 //    private void rollbackRegister(BackendlessUser user) {
-    private void rollbackRegister(String mchntId) {
-        // TODO: add as 'Major' alarm - user to be removed later manually
-        // rollback to not-usable state
-        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-        try {
-            Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
-            BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
-                    mEdr, mLogger);
-        } catch(Exception ex) {
-            // ignore any exception
-            mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
-            mLogger.error(BackendUtils.stackTraceStr(ex));
-            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
-        }
-    }
 }
 

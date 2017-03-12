@@ -2,8 +2,10 @@ package in.myecash.utilities;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.FilePermission;
 import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
+import com.backendless.logging.Logger;
 import com.backendless.servercode.InvocationContext;
 import com.backendless.servercode.RunnerContext;
 import in.myecash.common.CommonUtils;
@@ -38,8 +40,8 @@ public class BackendUtils {
     public static String generateTempPassword() {
         // random alphanumeric string
         Random random = new Random();
-        char[] id = new char[BackendConstants.PASSWORD_LEN];
-        for (int i = 0; i < BackendConstants.PASSWORD_LEN; i++) {
+        char[] id = new char[CommonConstants.PASSWORD_MIN_LEN];
+        for (int i = 0; i < CommonConstants.PASSWORD_MIN_LEN; i++) {
             id[i] = BackendConstants.pwdChars[random.nextInt(BackendConstants.pwdChars.length)];
         }
         return new String(id);
@@ -721,6 +723,136 @@ public class BackendUtils {
         logger.debug("Roles: "+roles.toString());
     }
 
+    // Register Merchant
+    public static String registerMerchant(Merchants merchant, String agentId, MyLogger mLogger, String[] mEdr) {
+        boolean regDone = false;
+        String merchantId = null;
+
+        try {
+            // Fetch city
+            Cities city = BackendOps.fetchCity(merchant.getAddress().getCity());
+
+            // get open merchant id batch
+            String countryCode = city.getCountryCode();
+            String batchTableName = DbConstantsBackend.MERCHANT_ID_BATCH_TABLE_NAME+countryCode;
+            String whereClause = "status = '"+DbConstantsBackend.BATCH_STATUS_OPEN +"'";
+            MerchantIdBatches batch = BackendOps.fetchMerchantIdBatch(batchTableName,whereClause);
+            if(batch == null) {
+                throw new BackendlessException(String.valueOf(ErrorCodes.MERCHANT_ID_RANGE_ERROR),
+                        "No open merchant id batch available: "+batchTableName+","+whereClause);
+            }
+
+            // get merchant counter value and use the same to generate merchant id
+            Long merchantCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+            mLogger.debug("Fetched merchant cnt: "+merchantCnt);
+            // generate merchant id
+            merchantId = BackendUtils.generateMerchantId(batch, countryCode, merchantCnt);
+            mLogger.debug("Generated merchant id: "+merchantId);
+
+            // rename mchnt dp to include 'merchant id'
+            if(!merchant.getDisplayImage().isEmpty()) {
+                String currFilePath = CommonConstants.MERCHANT_DISPLAY_IMAGES_DIR + merchant.getDisplayImage();
+                String newName = BackendUtils.getMchntDpFilename(merchantId);
+                mLogger.debug(merchant.getDisplayImage() + "," + newName + "," + currFilePath);
+                BackendOps.renameFile(currFilePath, newName);
+                merchant.setDisplayImage(newName);
+                mLogger.debug("File rename done");
+            }
+
+            // set or update other fields
+            merchant.setAuto_id(merchantId);
+            merchant.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
+            merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
+            merchant.setStatus_update_time(new Date());
+            merchant.setLastRenewDate(new Date());
+            merchant.setMobile_num(merchant.getMobile_num());
+            merchant.setFirst_login_ok(false);
+            merchant.setAgentId(agentId);
+            merchant.setCl_credit_limit_for_pin(-1);
+            merchant.setCl_debit_limit_for_pin(-1);
+            merchant.setCb_debit_limit_for_pin(-1);
+            // set cashback and transaction table names
+            merchant.setCashback_table(DbConstantsBackend.CASHBACK_TABLE_NAME + city.getCbTableCode());
+            BackendOps.describeTable(merchant.getCashback_table()); // just to check that the table exists
+            merchant.setTxn_table(DbConstantsBackend.TRANSACTION_TABLE_NAME + city.getCbTableCode());
+            BackendOps.describeTable(merchant.getTxn_table()); // just to check that the table exists
+
+            // generate and set password
+            String pwd = BackendUtils.generateTempPassword();
+            mLogger.debug("Generated passwd: "+pwd);
+
+            BackendlessUser user = new BackendlessUser();
+            user.setProperty("user_id", merchantId);
+            user.setPassword(pwd);
+            user.setProperty("user_type", DbConstants.USER_TYPE_MERCHANT);
+            user.setProperty("merchant", merchant);
+
+            user = BackendOps.registerUser(user);
+            regDone = true;
+            mLogger.debug("Register success");
+            // register successful - can write to edr now
+            mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
+
+            try {
+                BackendOps.assignRole(merchantId, BackendConstants.ROLE_MERCHANT);
+
+            } catch(Exception e) {
+                mLogger.fatal("Failed to assign role to merchant user: "+merchantId+","+e.toString());
+                rollbackRegister(merchantId, mLogger, mEdr);
+                throw e;
+            }
+
+            // create directories for 'txnCsv' and 'txnImage' files
+            String fileDir = null;
+            String filePath = null;
+            try {
+                fileDir = CommonUtils.getMerchantTxnDir(merchantId);
+                filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
+                // saving dummy files to create parent directories
+                Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                // Give this merchant permissions for this directory
+                FilePermission.READ.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
+                //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
+                mLogger.debug("Saved dummy txn csv file: " + filePath);
+
+            } catch(Exception e) {
+                mLogger.fatal("Failed to create merchant directories: "+merchantId+","+e.toString());
+                rollbackRegister(merchantId, mLogger, mEdr);
+                throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), e.toString());
+            }
+
+            // send SMS with user id
+            String smsText = String.format(SmsConstants.SMS_MERCHANT_ID_FIRST, merchantId);
+            SmsHelper.sendSMS(smsText, merchant.getMobile_num(), mEdr, mLogger, true);
+
+            return merchantId;
+
+        } catch(Exception e) {
+            if(merchantId!=null && !merchantId.isEmpty() && regDone) {
+                rollbackRegister(merchantId, mLogger, mEdr);
+                //BackendOps.decrementCounterValue(DbConstantsBackend.MERCHANT_ID_COUNTER);
+            }
+            throw e;
+        }
+    }
+    private static void rollbackRegister(String mchntId, MyLogger mLogger, String[] mEdr) {
+        // TODO: add as 'Major' alarm - user to be removed later manually
+        // rollback to not-usable state
+        mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+        try {
+            Merchants merchant = BackendOps.getMerchant(mchntId, false, false);
+            BackendUtils.setMerchantStatus(merchant, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
+                    mEdr, mLogger);
+        } catch(Exception ex) {
+            // ignore any exception
+            mLogger.fatal("registerMerchant: Merchant Rollback failed: "+ex.toString());
+            mLogger.error(BackendUtils.stackTraceStr(ex));
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
+        }
+    }
+
+
     public static void initAll() {
 
         MyGlobalSettings.initSync(MyGlobalSettings.RunMode.backend);
@@ -742,7 +874,8 @@ public class BackendUtils {
         Backendless.Data.mapTableToClass("Cities", Cities.class);
         Backendless.Data.mapTableToClass("MerchantOrders", MerchantOrders.class);
 
-        Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
+        //Backendless.Data.mapTableToClass("MerchantIdBatches1", MerchantIdBatches.class);
+        //Backendless.Data.mapTableToClass("MerchantIdBatches99", MerchantIdBatches.class);
 
         /*Backendless.Data.mapTableToClass( "Transaction1", Transaction.class );
         Backendless.Data.mapTableToClass( "Cashback1", Cashback.class );

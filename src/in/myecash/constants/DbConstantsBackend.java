@@ -17,6 +17,9 @@ public class DbConstantsBackend {
     public static String WRONG_ATTEMPTS_TABLE_NAME = "WrongAttempts";
     public static String MCHNT_OPS_TABLE_NAME = "MerchantOps";
     public static String CUST_OPS_TABLE_NAME = "CustomerOps";
+
+    public static String DUMMY_MCHNT_COUNTRY_CODE = "9";
+
     // Number of Transaction tables currently in DB
     public static int TRANSACTION_TABLE_CNT = 6;
 

@@ -161,7 +161,7 @@ public class TxnArchiver
 
             // https://api.backendless.com/v1/data/bulk/Transaction0?where=merchant_id+%3D+%27AA0007%27+AND+create_time+%3C+%271467138600000%27+AND+archived%3Dfalse
             // Building URL without URI
-            StringBuilder sb = new StringBuilder(CommonConstants.BULK_API_URL);
+            StringBuilder sb = new StringBuilder(BackendConstants.BULK_API_URL);
             sb.append(txnTableName);
             sb.append("?where=");
             sb.append(whereClause);
@@ -176,7 +176,7 @@ public class TxnArchiver
             //for( String key : HeadersManager.getInstance().getHeaders().keySet() )
             //    conn.addRequestProperty( key, HeadersManager.getInstance().getHeaders().get( key ) );
 
-            conn.setRequestProperty("application-id", CommonConstants.APPLICATION_ID);
+            conn.setRequestProperty("application-id", BackendConstants.APPLICATION_ID);
             conn.setRequestProperty("user-token", mUserToken);
             conn.setRequestProperty("secret-key", BackendConstants.REST_SECRET_KEY);
             mLogger.debug(mUserToken+", "+BackendConstants.REST_SECRET_KEY);

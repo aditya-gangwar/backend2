@@ -160,7 +160,6 @@ public class CommonServices implements IBackendlessService {
 
             // no exception - means function execution success
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
-            BackendOps.logoutUser();
 
         } catch(Exception e) {
             BackendUtils.handleException(e,validException,mLogger,mEdr);
