@@ -55,7 +55,7 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                 // Login is successful
                 // add user token, so as correct roles are assumed
                 if (context.getUserToken() == null) {
-                    mLogger.error("In afterLogin: RunnerContext: " + context.toString());
+                    mLogger.debug("In afterLogin: RunnerContext: " + context.toString());
                     //TODO: user token is coming null - bug with standlone backendless. Open the below check when fixed.
                     //throw new BackendlessException(BackendResponseCodes.NOT_LOGGED_IN, "User not logged in: " + login);
                 } else {

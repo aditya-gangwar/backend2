@@ -49,12 +49,12 @@ public class TxnProcessHelper {
 
 
     //public Transaction handleTxnCommit(String userToken, String userId, Transaction txn, boolean saveAlso, boolean sendSMS) {
-    public Transaction handleTxnCommit(String userId, String txnCsvStr, boolean saveAlso, boolean sendSMS) throws Exception {
+    public Transaction handleTxnCommit(String userId, String txnCsvStr, String argPin, boolean saveAlso, boolean sendSMS) throws Exception {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "handleTxnCommit";
-        //mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txn.getCust_private_id();
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = txnCsvStr;
 
         mValidException = false;
         try {
@@ -65,6 +65,7 @@ public class TxnProcessHelper {
 
             //mTransaction = txn;
             mTransaction = CsvConverter.txnFromCsvStr(txnCsvStr);
+            mTransaction.setCpin(argPin);
 
             // Fetch mMerchant
             mMerchant = (Merchants) BackendUtils.fetchUser(userId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);

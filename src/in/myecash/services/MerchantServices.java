@@ -42,16 +42,16 @@ public class MerchantServices implements IBackendlessService {
         return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
     }
 
-    public Transaction commitTxn(String csvTxnData) throws Exception {
+    public Transaction commitTxn(String csvTxnData, String pin) throws Exception {
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
-        return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, true, true);
+        return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, pin, true, true);
     }
 
-    public Transaction writeTxn(String csvTxnData, String tableName) throws Exception {
+    /*public Transaction writeTxn(String csvTxnData, String tableName) throws Exception {
         Transaction txn = CsvConverter.txnFromCsvStr(csvTxnData);
         Backendless.Data.mapTableToClass(tableName, Transaction.class);
         return Backendless.Persistence.save(txn);
-    }
+    }*/
 
     public Merchants changeMobile(String verifyparam, String newMobile, String otp) {
 
