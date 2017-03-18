@@ -765,7 +765,7 @@ public class BackendUtils {
             merchant.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
             merchant.setStatus_update_time(new Date());
             merchant.setLastRenewDate(new Date());
-            merchant.setMobile_num(merchant.getMobile_num());
+            //merchant.setMobile_num(merchant.getMobile_num());
             merchant.setFirst_login_ok(false);
             merchant.setAgentId(agentId);
             merchant.setCl_credit_limit_for_pin(-1);

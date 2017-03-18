@@ -982,7 +982,7 @@ public class AdminServices implements IBackendlessService {
         merchant.setEmail("");
         merchant.setBuss_category("Other");
         Address address = new Address();
-        address.setCity("DummyCity");
+        address.setCity(CommonConstants.DUMMY_CITY_NAME);
         address.setState("DummyState");
         address.setLine_1("1234, Dummy Address");
         merchant.setAddress(address);

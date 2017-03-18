@@ -9,17 +9,25 @@ public class BackendConstants {
     /*
      * Backend server settings
      */
+    /*
     public static final String APPLICATION_ID = "927292A7-D4D3-7742-FFED-86CED1441100";
     public static final String VERSION = "v1";
-
     public static final String BACKENDLESS_HOST_IP = "35.154.80.2";
-    public static final String BACKENDLESS_HOST = "http://"+BACKENDLESS_HOST_IP+":8080/api";
-    public static final String BULK_API_URL  = BACKENDLESS_HOST+"/"+VERSION+"/data/bulk/";
     public static final String REST_SECRET_KEY = "022CBF46-15F0-98EA-FFFD-9E9B58617E00";
+    public static final String BACKENDLESS_HOST = "http://"+BACKENDLESS_HOST_IP+":8080/api";
+    */
+
+    public static final String APPLICATION_ID = "1E402302-7020-DBCF-FFB3-7220CDC84900";
+    public static final String REST_SECRET_KEY = "8EAA79C5-B199-C27E-FF5C-8EC3540AB500";
+    public static final String VERSION = "v1";
+    public static final String BACKENDLESS_HOST_IP = "tomyecash.in";
+    public static final String BACKENDLESS_HOST = "https://"+BACKENDLESS_HOST_IP+":8443/api";
+
+    public static final String BULK_API_URL  = BACKENDLESS_HOST+"/"+VERSION+"/data/bulk/";
 
     // Constants to identify Testing/Debug scenarios
     //TODO: correct them in final testing and production
-    public static final boolean FORCED_DEBUG_LOGS = false;
+    public static final boolean FORCED_DEBUG_LOGS = true;
     public static final boolean DEBUG_MODE = false;
     public static final boolean TESTING_SKIP_SMS = false;
     public static final boolean TESTING_SKIP_DEVICEID_CHECK = false;

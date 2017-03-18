@@ -430,7 +430,7 @@ public class InternalUserServices implements IBackendlessService {
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "registerMerchant";
-        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getAuto_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = merchant.getRegFormNum()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getMobile_num()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 merchant.getName();
 
