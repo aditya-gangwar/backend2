@@ -21,7 +21,7 @@ public class DbConstantsBackend {
     public static String DUMMY_MCHNT_COUNTRY_CODE = "9";
 
     // Number of Transaction tables currently in DB
-    public static int TRANSACTION_TABLE_CNT = 6;
+    public static int TRANSACTION_TABLE_CNT = 1;
 
     // Account locked and other reasons
     // Disable specific reason defined in string.xml of apps

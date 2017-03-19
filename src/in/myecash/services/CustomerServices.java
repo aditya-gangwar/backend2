@@ -57,7 +57,7 @@ public class CustomerServices implements IBackendlessService {
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // fetch customer
                 try {
-                    customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
+                    customer = BackendOps.getCustomer(custPrivateId, CommonConstants.ID_TYPE_AUTO, false);
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
                         // CC agent may enter wrong customer id by mistake
@@ -162,7 +162,7 @@ public class CustomerServices implements IBackendlessService {
             } else if(userType==DbConstants.USER_TYPE_CC) {
                 // fetch customer
                 try {
-                    customer = BackendOps.getCustomer(custPrivateId, BackendConstants.ID_TYPE_AUTO, false);
+                    customer = BackendOps.getCustomer(custPrivateId, CommonConstants.ID_TYPE_AUTO, false);
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
                         // CC agent may enter wrong customer id by mistake

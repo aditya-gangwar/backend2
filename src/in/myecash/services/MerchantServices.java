@@ -309,7 +309,7 @@ public class MerchantServices implements IBackendlessService {
             }
             mLogger.setProperties(InvocationContext.getUserId(), userType, debugLogs);
 
-            int customerIdType = BackendUtils.getCustomerIdType(customerId);
+            int customerIdType = CommonUtils.getCustomerIdType(customerId);
             //mLogger.debug("In getCashback: " + merchantId + ": " + customerId);
             //mLogger.debug("Before context: "+InvocationContext.asString());
             //mLogger.debug("Before: "+ HeadersManager.getInstance().getHeaders().toString());
@@ -320,11 +320,11 @@ public class MerchantServices implements IBackendlessService {
                 customer = BackendOps.getCustomer(customerId, customerIdType, true);
             } catch(BackendlessException e) {
                 if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER)) &&
-                        customerIdType!=BackendConstants.ID_TYPE_AUTO) {
+                        customerIdType!=CommonConstants.ID_TYPE_AUTO) {
                     // this will happen always in case of 'user registration' etc
 
                     // if card was scanned, check its validity
-                    if(customerIdType==BackendConstants.ID_TYPE_CARD) {
+                    if(customerIdType==CommonConstants.ID_TYPE_CARD) {
                         CustomerCards card = BackendOps.getCustomerCard(customerId, true);
                         BackendUtils.checkCardForAllocation(card, merchantId, mEdr, mLogger);
                     }
@@ -780,7 +780,7 @@ public class MerchantServices implements IBackendlessService {
             // customer should not exist
             Customers customer = null;
             try {
-                customer = BackendOps.getCustomer(customerMobile, BackendConstants.ID_TYPE_MOBILE, false);
+                customer = BackendOps.getCustomer(customerMobile, CommonConstants.ID_TYPE_MOBILE, false);
             } catch (BackendlessException be) {
                 // No such customer exist - we can proceed
                 mLogger.debug("Customer not registered: "+customerMobile);
@@ -983,7 +983,7 @@ public class MerchantServices implements IBackendlessService {
         try {
             BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
 
-            Customers customer = BackendOps.getCustomer(custId, BackendConstants.ID_TYPE_MOBILE, false);
+            Customers customer = BackendOps.getCustomer(custId, CommonConstants.ID_TYPE_MOBILE, false);
             customer.setMembership_card(null);
             BackendUtils.setCustomerStatus(customer, DbConstants.USER_STATUS_REG_ERROR, DbConstantsBackend.REG_ERROR_REG_FAILED,
                     mEdr, mLogger);

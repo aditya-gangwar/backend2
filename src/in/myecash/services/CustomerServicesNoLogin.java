@@ -51,7 +51,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(userId, BackendConstants.ID_TYPE_MOBILE, true);
+            Customers customer = BackendOps.getCustomer(userId, CommonConstants.ID_TYPE_MOBILE, true);
             String cardNumDb = customer.getMembership_card().getCardNum();
             String mobileNum = customer.getMobile_num();
             mLogger.setProperties(customer.getPrivate_id(), DbConstants.USER_TYPE_CUSTOMER, customer.getDebugLogs());

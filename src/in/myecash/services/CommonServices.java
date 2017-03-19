@@ -110,7 +110,7 @@ public class CommonServices implements IBackendlessService {
 
                     if(verifyFailed) {
                         validException = true;
-                        Customers customer = BackendOps.getCustomer(userId, BackendConstants.ID_TYPE_MOBILE, false);
+                        Customers customer = BackendOps.getCustomer(userId, CommonConstants.ID_TYPE_MOBILE, false);
                         int cnt = BackendUtils.handleWrongAttempt(userId, customer, userType,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_CHANGE_PASSWD, mEdr, mLogger);
                         mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
@@ -254,7 +254,7 @@ public class CommonServices implements IBackendlessService {
                 card.setCustId("");
             } else if (userType == DbConstants.USER_TYPE_CC) {
                 try {
-                    customer = BackendOps.getCustomer(custId, BackendUtils.getCustomerIdType(custId), true);
+                    customer = BackendOps.getCustomer(custId, CommonUtils.getCustomerIdType(custId), true);
                     card = customer.getMembership_card();
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
@@ -422,7 +422,7 @@ public class CommonServices implements IBackendlessService {
                     // check that new mobile is not already registered for some other customer
                     Customers newCust = null;
                     try {
-                        newCust = BackendOps.getCustomer(opParam, BackendConstants.ID_TYPE_MOBILE, false);
+                        newCust = BackendOps.getCustomer(opParam, CommonConstants.ID_TYPE_MOBILE, false);
                     } catch (BackendlessException be) {
                         // No such customer exist - we can proceed
                     }

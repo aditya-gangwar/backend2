@@ -350,7 +350,7 @@ public class TxnProcessHelper {
     private void commonTxnProcessing() {
 
         // Fetch Customer
-        mCustomer = BackendOps.getCustomer(mTransaction.getCust_private_id(), BackendConstants.ID_TYPE_AUTO, true);
+        mCustomer = BackendOps.getCustomer(mTransaction.getCust_private_id(), CommonConstants.ID_TYPE_AUTO, true);
         mCustomerId = mCustomer.getMobile_num();
         mEdr[BackendConstants.EDR_CUST_ID_IDX] = mCustomerId;
 

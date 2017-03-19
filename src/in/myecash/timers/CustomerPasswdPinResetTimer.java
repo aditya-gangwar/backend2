@@ -69,7 +69,7 @@ public class CustomerPasswdPinResetTimer extends com.backendless.servercode.exte
 
                 for (CustomerOps op:ops) {
                     // fetch customer
-                    Customers customer = BackendOps.getCustomer(op.getPrivateId(), BackendConstants.ID_TYPE_AUTO, false);
+                    Customers customer = BackendOps.getCustomer(op.getPrivateId(), CommonConstants.ID_TYPE_AUTO, false);
                     // check admin status
                     BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 

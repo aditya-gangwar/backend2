@@ -128,7 +128,7 @@ public class BackendOps {
     public static Merchants getMerchant(String userId, boolean trustedDevicesChild, boolean addressChild) {
         BackendlessDataQuery query = new BackendlessDataQuery();
 
-        if(getMerchantIdType(userId)== BackendConstants.ID_TYPE_AUTO) {
+        if(getMerchantIdType(userId)== CommonConstants.ID_TYPE_AUTO) {
             query.setWhereClause("auto_id = '"+userId+"'");
         } else {
             query.setWhereClause("mobile_num = '"+userId+"'");
@@ -218,13 +218,13 @@ public class BackendOps {
     public static Customers getCustomer(String custId, int idType, boolean fetchCard) {
         BackendlessDataQuery query = new BackendlessDataQuery();
         switch(idType) {
-            case BackendConstants.ID_TYPE_MOBILE:
+            case CommonConstants.ID_TYPE_MOBILE:
                 query.setWhereClause("mobile_num = '"+custId+"'");
                 break;
-            case BackendConstants.ID_TYPE_CARD:
+            case CommonConstants.ID_TYPE_CARD:
                 query.setWhereClause("cardId = '"+custId+"'");
                 break;
-            case BackendConstants.ID_TYPE_AUTO:
+            case CommonConstants.ID_TYPE_AUTO:
                 query.setWhereClause("private_id = '"+custId+"'");
                 break;
         }

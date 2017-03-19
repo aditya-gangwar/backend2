@@ -308,7 +308,7 @@ public class AdminServices implements IBackendlessService {
             BackendOps.loginUser(ADMIN_LOGINID,adminPwd);
 
             // fetch customer object
-            Customers customer = BackendOps.getCustomer(customerId, BackendUtils.getCustomerIdType(customerId), false);
+            Customers customer = BackendOps.getCustomer(customerId, CommonUtils.getCustomerIdType(customerId), false);
             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = customer.getPrivate_id();
 
             int oldStatus = customer.getAdmin_status();

@@ -193,6 +193,7 @@ public class InternalUserServices implements IBackendlessService {
                     }
 
                 } catch(Exception e) {
+                    mLogger.error("execActionForCards: Exception",e);
                     // ignore error - only set action result accordingly
                     if( e instanceof BackendlessException ) {
                         int beCode = Integer.parseInt( ((BackendlessException) e).getCode() );
@@ -212,7 +213,6 @@ public class InternalUserServices implements IBackendlessService {
                                 cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
                         }
                     } else {
-                        mLogger.error("execActionForCards: Exception",e);
                         cardForAction.setActionStatus(MyCardForAction.ACTION_STATUS_ERROR);
                     }
                 }
@@ -561,7 +561,7 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, false);
+            Customers customer = BackendOps.getCustomer(privateId, CommonConstants.ID_TYPE_AUTO, false);
 
             if(customer.getAdmin_status()!=DbConstants.USER_STATUS_ACTIVE) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Customer is not Active.");
@@ -652,7 +652,7 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(privateId, BackendConstants.ID_TYPE_AUTO, true);
+            Customers customer = BackendOps.getCustomer(privateId, CommonConstants.ID_TYPE_AUTO, true);
             CustomerCards card = customer.getMembership_card();
 
             if(!card.getCardNum().equals(cardNum)) {

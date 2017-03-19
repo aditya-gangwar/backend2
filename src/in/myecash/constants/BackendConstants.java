@@ -81,13 +81,14 @@ public class BackendConstants {
     public static final int EDR_RESULT_IDX = 10;
     public static final int EDR_EXP_EXPECTED = 11;
     public static final int EDR_EXP_CODE_IDX = 12;
-    public static final int EDR_EXP_MSG_IDX = 13;
-    public static final int EDR_IGNORED_ERROR_IDX = 14;
-    public static final int EDR_SPECIAL_FLAG_IDX = 15;
-    public static final int EDR_SMS_STATUS_IDX = 16;
-    public static final int EDR_API_PARAMS_IDX = 17;
-    public static final int EDR_SMS_SUBMIT_TIME_IDX = 18;
-    public static final int BACKEND_EDR_MAX_FIELDS = 19;
+    public static final int EDR_EXP_CODE_NAME = 13;
+    public static final int EDR_EXP_MSG_IDX = 14;
+    public static final int EDR_IGNORED_ERROR_IDX = 15;
+    public static final int EDR_SPECIAL_FLAG_IDX = 16;
+    public static final int EDR_SMS_STATUS_IDX = 17;
+    public static final int EDR_API_PARAMS_IDX = 18;
+    public static final int EDR_SMS_SUBMIT_TIME_IDX = 19;
+    public static final int BACKEND_EDR_MAX_FIELDS = 20;
 
     //public static final String TIMEZONE = "Asia/Kolkata";
     public static final String DUMMY_DATA = "This is dummy file. Please ignore.";
@@ -123,11 +124,6 @@ public class BackendConstants {
     public static final String DUMMY_MCHNT_COUNTRY_CODE = "99";
 
     public static final int DEVICE_INFO_VALID_SECS = 600;
-
-    // Customer id type to fetch record
-    public static final int ID_TYPE_MOBILE = 0;
-    public static final int ID_TYPE_CARD = 1;
-    public static final int ID_TYPE_AUTO = 2;
 
     // Merchant id constants
     public static final int MERCHANT_ID_MAX_BATCH_ID_PER_RANGE = 99; // 2 digit batchId

@@ -494,28 +494,12 @@ public class BackendUtils {
     /*
      * Get User ID type - depending upon the length
      */
-    public static int getCustomerIdType(String id) {
-        switch (id.length()) {
-            case CommonConstants.MOBILE_NUM_LENGTH:
-                return BackendConstants.ID_TYPE_MOBILE;
-            case CommonConstants.CUSTOMER_CARDID_LEN:
-                return BackendConstants.ID_TYPE_CARD;
-            case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
-                return BackendConstants.ID_TYPE_AUTO;
-            default:
-                if(id.startsWith(CommonConstants.MEMBER_CARD_ID_PREFIX)) {
-                    return BackendConstants.ID_TYPE_CARD;
-                }
-                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid customer ID: "+id);
-        }
-    }
-
     public static int getMerchantIdType(String id) {
         switch (id.length()) {
             case CommonConstants.MOBILE_NUM_LENGTH:
-                return BackendConstants.ID_TYPE_MOBILE;
+                return CommonConstants.ID_TYPE_MOBILE;
             case CommonConstants.MERCHANT_ID_LEN:
-                return BackendConstants.ID_TYPE_AUTO;
+                return CommonConstants.ID_TYPE_AUTO;
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid Merchant ID: "+id);
         }
@@ -624,8 +608,14 @@ public class BackendUtils {
             //edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage().replaceAll(",", BackendConstants.BACKEND_EDR_SUB_DELIMETER);
             edr[BackendConstants.EDR_EXP_MSG_IDX] = e.getMessage();
             if (e instanceof BackendlessException) {
-                edr[BackendConstants.EDR_EXP_CODE_IDX] = ((BackendlessException) e).getCode();
+                String errCode = ((BackendlessException) e).getCode();
+                edr[BackendConstants.EDR_EXP_CODE_IDX] = errCode;
+                edr[BackendConstants.EDR_EXP_CODE_NAME] = ErrorCodes.appErrorNames.get(errCode);
+            } else {
+                edr[BackendConstants.EDR_EXP_CODE_NAME] = e.getClass().getSimpleName();
+                edr[BackendConstants.EDR_EXP_CODE_IDX] = edr[BackendConstants.EDR_EXP_CODE_NAME];
             }
+
         } catch(Exception ex) {
             logger.fatal("Exception in handleException: " + ex.toString());
             logger.fatal(stackTraceStr(ex));
