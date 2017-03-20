@@ -31,12 +31,14 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
     @Override
     public void execute( String appVersionId ) throws Exception
     {
-        BackendUtils.initAll();
+        //BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "FailedSmsTimer";
         //mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_ADMIN);
 
+        boolean anyError = false;
+        boolean writeEdr = false;
         try {
             //mLogger.debug("In FailedSmsTimer execute");
             //mLogger.debug("Before: " + HeadersManager.getInstance().getHeaders().toString());
@@ -44,6 +46,7 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
             // Fetch all failed SMS
             ArrayList<FailedSms> smses = BackendOps.findRecentFailedSms();
             if (smses != null) {
+                writeEdr = true;
                 mLogger.debug("Fetched failed SMS: " + smses.size());
                 mEdr[BackendConstants.EDR_API_PARAMS_IDX] = String.valueOf(smses.size());
 
@@ -53,6 +56,8 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
                         // update status if success
                         sms.setStatus(DbConstantsBackend.FAILED_SMS_STATUS_SENT);
                         BackendOps.saveFailedSms(sms);
+                    } else {
+                        anyError = true;
                     }
                 }
             }
@@ -61,10 +66,11 @@ public class FailedSmsTimer extends com.backendless.servercode.extension.TimerEx
             mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
 
         } catch(Exception e) {
+            anyError = true;
             BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime, mLogger, (writeEdr||anyError)?mEdr:null);
         }
     }
 }

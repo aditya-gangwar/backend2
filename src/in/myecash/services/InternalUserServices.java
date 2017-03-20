@@ -727,7 +727,6 @@ public class InternalUserServices implements IBackendlessService {
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "getMemberCard";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = cardId;
 
-        boolean validException = false;
         try {
             // Send userType param as null to avoid checking within fetchCurrentUser fx.
             // But check immediatly after
@@ -748,7 +747,7 @@ public class InternalUserServices implements IBackendlessService {
             return memberCard;
 
         } catch (Exception e) {
-            BackendUtils.handleException(e, validException, mLogger, mEdr);
+            BackendUtils.handleException(e, false, mLogger, mEdr);
             throw e;
         } finally {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);

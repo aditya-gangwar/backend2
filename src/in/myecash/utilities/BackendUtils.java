@@ -624,12 +624,14 @@ public class BackendUtils {
 
     public static void finalHandling(long startTime, MyLogger logger, String[] edr) {
         try {
-            long endTime = System.currentTimeMillis();
-            long execTime = endTime - startTime;
-            edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
-            edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
-            //logger.debug(edr[BackendConstants.EDR_USER_TYPE_IDX]);
-            logger.edr(edr);
+            if(edr!=null) {
+                long endTime = System.currentTimeMillis();
+                long execTime = endTime - startTime;
+                edr[BackendConstants.EDR_END_TIME_IDX] = String.valueOf(endTime);
+                edr[BackendConstants.EDR_EXEC_DURATION_IDX] = String.valueOf(execTime);
+                //logger.debug(edr[BackendConstants.EDR_USER_TYPE_IDX]);
+                logger.edr(edr);
+            }
             //logger.flush();
         } catch(Exception e) {
             logger.fatal("Exception in finalHandling: " + e.toString());

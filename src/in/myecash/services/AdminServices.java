@@ -989,7 +989,7 @@ public class AdminServices implements IBackendlessService {
         merchant.setDob(dob);
         merchant.setContactPhone(mobile);
         merchant.setContactName(BackendConstants.DUMMY_MCHNT_NAME);
-        merchant.setRegFormNum("00000");
+        merchant.setRegFormNum(SecurityHelper.generateOTP());
         return merchant;
     }
 }

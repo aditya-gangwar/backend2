@@ -38,12 +38,14 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
     @Override
     public void execute( String appVersionId ) throws Exception
     {
-        BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
+        BackendUtils.initAll();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "MerchantPasswdResetTimer";
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_MERCHANT);
 
+        boolean anyError = false;
+        boolean writeEdr = false;
         try {
             mLogger.debug("In MerchantPasswdResetTimer execute");
             /*
@@ -59,65 +61,42 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
             // Fetch all 'pending' merchant password reset operations
             ArrayList<MerchantOps> ops = BackendOps.fetchMerchantOps(mchntPwdResetWhereClause());
             if (ops != null) {
+                writeEdr = true;
                 mLogger.debug("Fetched password reset ops: " + ops.size());
                 mEdr[BackendConstants.EDR_API_PARAMS_IDX] = ops.size()+BackendConstants.BACKEND_EDR_SUB_DELIMETER;
 
-                // first lock all to be processed objects
-                // this is to avoid any chances of clash with the next run of this timer
-                /*
-                ArrayList<Integer> lockFailedOps = null;
-                for (int i = 0; i < ops.size(); i++) {
-                    ops.get(i).setOp_status(DbConstantsBackend.USER_OP_STATUS_LOCKED);
-                    try {
-                        BackendOps.saveMerchantOp(ops.get(i));
-                        mLogger.debug("Locked passwd reset op for: " + ops.get(i).getMerchant_id());
-                        //lockedOps.add(ops.get(i));
-                    } catch(Exception e) {
-                        // ignore exception
-                        mLogger.error("Exception while locking merchant passwd reset record: "+e.toString(),e);
-                        if(lockFailedOps==null) {
-                            lockFailedOps = new ArrayList<>(ops.size());
-                            mEdr[BackendConstants.EDR_IGNORED_ERROR_IDX] = BackendConstants.BACKEND_ERROR_PWD_RESET_LOCK_FAILED;
-                        }
-                        lockFailedOps.add(i);
-                    }
-                }
-                // remove failed to lock objects from the list
-                if(lockFailedOps!=null && lockFailedOps.size() > 0) {
-                    for (Integer i:lockFailedOps) {
-                        ops.remove(i.intValue());
-                    }
-                }
-
-                // process locked objects
-                mLogger.debug("Locked password reset ops: " + ops.size());*/
                 for (MerchantOps op:ops) {
-                    handlePasswdReset(op);
-                    mLogger.debug("Processed passwd reset op for: " + op.getMerchant_id());
+                    if(handlePasswdReset(op)) {
+                        mLogger.debug("Processed passwd reset op for: " + op.getMerchant_id());
+                    } else {
+                        anyError = true;
+                    }
                 }
             }
 
             // no exception - means function execution success
-            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            if(anyError) {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_NOK;
+            } else {
+                mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            }
 
         } catch(Exception e) {
+            anyError = true;
             BackendUtils.handleException(e,false,mLogger,mEdr);
             throw e;
         } finally {
-            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+            BackendUtils.finalHandling(startTime, mLogger, (writeEdr||anyError)?mEdr:null);
         }
     }
 
-    private void handlePasswdReset(MerchantOps op) {
+    private boolean handlePasswdReset(MerchantOps op) {
         try {
             // fetch user with the given id with related merchant object
             BackendlessUser user = BackendOps.fetchUser(op.getMerchant_id(), DbConstants.USER_TYPE_MERCHANT, false);
             Merchants merchant = (Merchants) user.getProperty("merchant");
             // check admin status
             BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
-
-            // TODO: Open Minor Issue: Check for successful login after password reset request
-            // If yes, it should ignore this request
 
             // generate password
             String passwd = BackendUtils.generateTempPassword();
@@ -152,7 +131,9 @@ public class MerchantPasswdResetTimer extends com.backendless.servercode.extensi
                 mLogger.error("Exception in handlePasswdReset: Rollback Failed: "+e.toString(),ex);
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_MANUAL_CHECK;
             }
+            return false;
         }
+        return true;
     }
 
     private String mchntPwdResetWhereClause() {

@@ -991,6 +991,8 @@ public class BackendOps {
     }
 
     public static ArrayList<FailedSms> fetchFailedSms(String whereClause) {
+        Backendless.Data.mapTableToClass("FailedSms", FailedSms.class);
+        
         // fetch cashback objects from DB
         BackendlessDataQuery dataQuery = new BackendlessDataQuery();
         dataQuery.setWhereClause(whereClause);
