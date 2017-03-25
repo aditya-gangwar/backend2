@@ -29,8 +29,8 @@ import java.util.Date;
 // TODO: Daily EBS backup should be completed before this
 // TODO: No connections from Merchant/Customers should be allowed, when this is running.
 
-// run at 19:00 in GMT = 12:30 in IST
-@BackendlessTimer("{'startDate':1489950300000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'EndOfDay'}")
+// run at 02:00 in GMT = 07:30 in IST
+@BackendlessTimer("{'startDate':1490319900000,'frequency':{'schedule':'daily','repeat':{'every':1}},'timername':'EndOfDay'}")
 public class EndOfDayTimer extends com.backendless.servercode.extension.TimerExtender
 {
     private MyLogger mLogger = new MyLogger("services.EndOfDayTimer");
