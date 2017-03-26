@@ -74,11 +74,14 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
 
                     // check admin status
                     BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
+
+                    // ** REMOVED TRUSTED DEVICE FUNCTIONALITY TO MAKE THINGS SIMPLER ** //
+
                     // Get deviceId - if valid
-                    String deviceId = getDeviceId(merchant.getTempDevId());
+                    //String deviceId = getDeviceId(merchant.getTempDevId());
 
                     // Check if device is in trusted list
-                    List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                    /*List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
                     if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                         // Device not in trusted list
 
@@ -161,7 +164,8 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                     for (MerchantDevice device : devices) {
                         //device.setDevice_id("");
                         device.setNamak("");
-                    }
+                    }*/
+
                     result.getResult().put("merchant", merchant);
 
                 } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {
@@ -243,11 +247,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                             Merchants merchant = BackendOps.getMerchant(login, true, false);
                             mEdr[BackendConstants.EDR_MCHNT_ID_IDX] = merchant.getAuto_id();
 
+                            // ** REMOVED TRUSTED DEVICE FUNCTIONALITY TO MAKE THINGS SIMPLER ** //
                             // Check for trusted device
                             // this, so as someone else cannot get account locked for other merchant account
-                            String deviceId = getDeviceId(merchant.getTempDevId());
-                            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
-                            if (BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
+                            //String deviceId = getDeviceId(merchant.getTempDevId());
+                            //List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+                            //if (BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                                 BackendUtils.checkMerchantStatus(merchant, mEdr, mLogger);
                                 cnt = BackendUtils.handleWrongAttempt(login, merchant, DbConstants.USER_TYPE_MERCHANT,
                                         DbConstantsBackend.WRONG_PARAM_TYPE_PASSWD, DbConstants.OP_LOGIN, mEdr, mLogger);
@@ -257,9 +262,9 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                                     validException = true;
                                     throw new BackendlessException(String.valueOf(ErrorCodes.FIRST_LOGIN_PENDING), "");
                                 }
-                            } else {
-                                throw new BackendlessException(String.valueOf(ErrorCodes.WRNG_PSWD_NOT_TRUSTED_DEV), "");
-                            }
+                            //} else {
+                              //  throw new BackendlessException(String.valueOf(ErrorCodes.WRNG_PSWD_NOT_TRUSTED_DEV), "");
+                            //}
 
                             break;
 
