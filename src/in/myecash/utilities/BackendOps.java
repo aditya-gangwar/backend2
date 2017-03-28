@@ -67,7 +67,7 @@ public class BackendOps {
             switch (userType) {
                 case DbConstants.USER_TYPE_CUSTOMER:
                     queryOptions.addRelated("customer");
-                    queryOptions.addRelated("customer.membership_card");
+                    //queryOptions.addRelated("customer.membership_card");
                     break;
                 case DbConstants.USER_TYPE_MERCHANT:
                     queryOptions.addRelated("merchant");
@@ -242,10 +242,10 @@ public class BackendOps {
             String errorMsg = "No Customer found: "+custId+". whereclause: "+query.getWhereClause();
             throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER), errorMsg);
         } else {
-            if(fetchCard && user.getData().get(0).getMembership_card()==null) {
+            /*if(fetchCard && user.getData().get(0).getMembership_card()==null) {
                 String errorMsg = "No customer card set for user: "+custId;
                 throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
-            }
+            }*/
             return user.getData().get(0);
         }
     }

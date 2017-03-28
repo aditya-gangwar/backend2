@@ -68,11 +68,13 @@ public class TxnProcessHelper {
             mTransaction.setCpin(argPin);
 
             // Fetch mMerchant
-            mMerchant = (Merchants) BackendUtils.fetchUser(userId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            //mMerchant = (Merchants) BackendUtils.fetchUser(userId,DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+            mMerchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
             mMerchantId = mMerchant.getAuto_id();
             mLogger.setProperties(mMerchant.getAuto_id(),DbConstants.USER_TYPE_MERCHANT, mMerchant.getDebugLogs());
 
             // print roles - for debug purpose
+            BackendUtils.printCtxtInfo(mLogger);
             /*List<String> roles = Backendless.UserService.getUserRoles();
             mLogger.debug("Roles: "+roles.toString());*/
 
@@ -133,7 +135,7 @@ public class TxnProcessHelper {
                 // add/update transaction fields
                 mTransaction.setCustomer_id(mCustomer.getMobile_num());
                 // update cardId with cardNum
-                if(mTransaction.getUsedCardId()==null && mTransaction.getUsedCardId().isEmpty()) {
+                if(mTransaction.getUsedCardId()==null || mTransaction.getUsedCardId().isEmpty()) {
                     mTransaction.setUsedCardId("");
                 } else {
                     mTransaction.setUsedCardId(mCustomer.getMembership_card().getCardNum());
@@ -174,7 +176,7 @@ public class TxnProcessHelper {
             } else {
                 // In app - we fetch cashback before txn commit
                 mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
-                throw new BackendlessException(String.valueOf(ErrorCodes.CUST_NOT_REG_WITH_MCNT), "Customer not registered with this Merchant: "+ mMerchantId +","+ mCustomerId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.CUST_NOT_REG_WITH_MCNT), "Customer not registered with this Merchant: "+ whereClause+","+ mMerchant.getCashback_table()+","+mMerchantId +","+ mCustomerId);
             }
 
             // no exception - means function execution success
@@ -366,9 +368,49 @@ public class TxnProcessHelper {
             throw new BackendlessException(String.valueOf(ErrorCodes.LIMITED_ACCESS_CREDIT_TXN_ONLY), "");
         }
 
+        // Any one of customer card or PIN is required
+        if( (mTransaction.getUsedCardId()==null || mTransaction.getUsedCardId().isEmpty()) &&
+                (mTransaction.getCpin()==null || mTransaction.getCpin().isEmpty()) &&
+                CommonUtils.txnVerifyReq(mMerchant, mTransaction) ) {
+            // both card and PIN are not provided
+            mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+            throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), "PIN Missing: " + mCustomerId);
+        }
+
+        // If here - means atleast one of card or pin is provided or is not required
+
+        // verify card if provided
+        if(mTransaction.getUsedCardId()!=null && !mTransaction.getUsedCardId().isEmpty()) {
+            if(mCustomer.getMembership_card()==null) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
+            }
+
+            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = mCustomer.getMembership_card().getCardNum();
+            if(!mTransaction.getUsedCardId().equals(mCustomer.getMembership_card().getCard_id())) {
+                mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
+            }
+            BackendUtils.checkCardForUse(mCustomer.getMembership_card());
+        }
+
+        // verify PIN if provided
+        if (mTransaction.getCpin() != null && !mTransaction.getCpin().isEmpty()) {
+            if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
+                int cnt = BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
+                mValidException = true; // to avoid logging of this exception
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
+            } else {
+                mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
+            }
+        } else {
+            mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
+        }
+
         // check if card required and provided and matches
-        if(BackendUtils.customerCardRequired(mTransaction)) {
-            if(mTransaction.getUsedCardId()!=null) {
+        /*if(BackendUtils.customerCardRequired(mTransaction)) {
+            if(mTransaction.getUsedCardId()!=null && !mTransaction.getUsedCardId().isEmpty()) {
                 if(!mTransaction.getUsedCardId().equals(mCustomer.getMembership_card().getCard_id())) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_CARD), "Card Mismatch: " + mCustomerId);
@@ -403,7 +445,7 @@ public class TxnProcessHelper {
             }
         } else {
             mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
-        }
+        }*/
     }
 
     /*private Customers updateTxnTables(Customers customer, String mchntTable) {

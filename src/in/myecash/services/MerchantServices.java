@@ -317,7 +317,7 @@ public class MerchantServices implements IBackendlessService {
             // Fetch customer
             Customers customer = null;
             try {
-                customer = BackendOps.getCustomer(customerId, customerIdType, true);
+                customer = BackendOps.getCustomer(customerId, customerIdType, false);
             } catch(BackendlessException e) {
                 if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER)) &&
                         customerIdType!=CommonConstants.ID_TYPE_AUTO) {
@@ -758,7 +758,7 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Customer operations by merchant
      */
-    public Cashback registerCustomer(String customerMobile, String cardId, String otp, String firstName, String lastName) {
+    public Cashback registerCustomer(String customerMobile, String dob, int sex, String cardId, String otp, String firstName, String lastName) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
@@ -793,9 +793,12 @@ public class MerchantServices implements IBackendlessService {
             }
 
             // fetch customer card object
-            CustomerCards card = BackendOps.getCustomerCard(cardId, true);
-            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = card.getCardNum();
-            BackendUtils.checkCardForAllocation(card, merchant.getAuto_id(), mEdr, mLogger);
+            CustomerCards card = null;
+            if(cardId!=null && !cardId.isEmpty()) {
+                card = BackendOps.getCustomerCard(cardId, true);
+                mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = card.getCardNum();
+                BackendUtils.checkCardForAllocation(card, merchant.getAuto_id(), mEdr, mLogger);
+            }
 
             if (otp == null || otp.isEmpty()) {
                 // Generate OTP and send SMS
@@ -828,12 +831,18 @@ public class MerchantServices implements IBackendlessService {
                 customer.setMobile_num(customerMobile);
                 customer.setFirstName(firstName);
                 customer.setLastName(lastName);
-                customer.setCardId(card.getCard_id());
-                // set membership card
-                card.setCustId(customer.getPrivate_id());
-                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
-                card.setStatus_update_time(new Date());
-                customer.setMembership_card(card);
+                customer.setDob(dob);
+                customer.setSex(sex);
+                if(card!=null) {
+                    customer.setCardId(card.getCard_id());
+                    // set membership card
+                    card.setCustId(customer.getPrivate_id());
+                    card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
+                    card.setStatus_update_time(new Date());
+                    customer.setMembership_card(card);
+                } else {
+                    customer.setCardId("");
+                }
 
                 // Create customer user
                 BackendlessUser customerUser = new BackendlessUser();
@@ -871,7 +880,7 @@ public class MerchantServices implements IBackendlessService {
 
                 // Send welcome sms to the customer
                 String name = customer.getFirstName()+" "+customer.getLastName();
-                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, name, customerMobile);
+                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, name, CommonConstants.CUSTOMER_CARE_NUMBER);
                 SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
 
                 // Send SMS containing PIN

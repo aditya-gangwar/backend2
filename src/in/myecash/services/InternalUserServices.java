@@ -654,6 +654,10 @@ public class InternalUserServices implements IBackendlessService {
             // Fetch customer
             Customers customer = BackendOps.getCustomer(privateId, CommonConstants.ID_TYPE_AUTO, true);
             CustomerCards card = customer.getMembership_card();
+            if(card==null) {
+                String errorMsg = "No customer card set for user: "+customer.getMobile_num();
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_CARD), errorMsg);
+            }
 
             if(!card.getCardNum().equals(cardNum)) {
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Wrong Card Number");

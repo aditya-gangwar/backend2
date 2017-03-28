@@ -66,7 +66,8 @@ public class SmsConstants {
 
     // OTP messages
     //public static String SMS_OTP = "You have initiated '%s' for user %s. OTP is '%s' and valid for %d mins only. PLS CALL CUSTOMER IF NOT DONE BY YOU.";
-    public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device.";
+    //public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device.";
+    public static String SMS_REG_CUST_OTP = "Please use OTP %s to register to MyeCash Rewards Program. You can check more program details and terms at http://www.myecash.in.";
     public static String SMS_LOGIN_OTP = "Login attempt detected from Unknown Device. Use OTP '%s' to add it as 'Trusted Device' for your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new Membership Card for account %s. Valid for next %d minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
@@ -79,7 +80,8 @@ public class SmsConstants {
     // Registration / User ID messages
     public static String SMS_MERCHANT_ID = "Your MyeCash Merchant ID is %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_MERCHANT_ID_FIRST = "Dear Merchant - Welcome to MyeCash family. Your Merchant ID for login is %s. Happy Customers to you.";
-    public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. Your registered Mobile number is '%s'. To manage your account, download MyeCash Customer App from Android store.";
+    //public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. Your registered Mobile number is '%s'. To manage your account, download MyeCash Customer App from Android store.";
+    public static String SMS_CUSTOMER_REGISTER = "Dear %s - Welcome to MyeCash family. To manage your account, download MyeCash Customer App from Android store. To opt out of program, contact our customer care at %s.";
     public static String SMS_REG_INTERNAL_USER = "Dear User - Welcome to MyeCash family!! Your User ID is %s, and your password is your DOB in DDMMYYYY format. PLS CHANGE YOUR PASSWORD IMMEDIATELY AFTER LOGIN.";
 
     // Mobile/Card change messages

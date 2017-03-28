@@ -248,14 +248,16 @@ public class CommonServices implements IBackendlessService {
                 }
 
                 // Mask info not valid for customer user
-                card.setCcntId("");
-                card.setAgentId("");
-                card.setMchntId("");
-                card.setCustId("");
+                if(card!=null) {
+                    card.setCcntId("");
+                    card.setAgentId("");
+                    card.setMchntId("");
+                    card.setCustId("");
+                }
             } else if (userType == DbConstants.USER_TYPE_CC) {
                 try {
                     customer = BackendOps.getCustomer(custId, CommonUtils.getCustomerIdType(custId), true);
-                    card = customer.getMembership_card();
+                    //card = customer.getMembership_card();
                 } catch(BackendlessException e) {
                     if(e.getCode().equals(String.valueOf(ErrorCodes.NO_SUCH_USER))) {
                         // CC agent may enter wrong customer id by mistake
@@ -287,8 +289,10 @@ public class CommonServices implements IBackendlessService {
 
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
-     * OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number - only from customer app
-     * OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
+     * //OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number - only from customer app
+     * OP_CHANGE_MOBILE - Need Mobile, PIN and OTP on new number - only from customer app
+     * //OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
+     * OP_RESET_PIN - Need Customer Name (comes in argCardId variable) - only from customer app
      * OP_CHANGE_PIN - Need PIN(existing) - only from customer app
      */
     public String execCustomerOp(String opCode, String mobileNum, String argCardId, String otp, String argPin, String opParam) {
@@ -308,8 +312,8 @@ public class CommonServices implements IBackendlessService {
 
         try {
             // Both merchant and customer users are allowed
-            mLogger.debug("Context: "+InvocationContext.asString());
-            mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
+            //mLogger.debug("Context: "+InvocationContext.asString());
+            //mLogger.debug("Headers: "+ HeadersManager.getInstance().getHeaders().toString());
 
             /*if(!InvocationContext.getUserToken().equals(HeadersManager.getInstance().getHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY))) {
                 mLogger.debug("User token not in sync case: "+InvocationContext.getUserToken()+", "+HeadersManager.getInstance().getHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY));
@@ -329,12 +333,13 @@ public class CommonServices implements IBackendlessService {
             Customers customer = null;
             BackendlessUser custUser = null;
             CustomerOps customerOp = null;
-            String cardIdDb = null;
+            //String cardIdDb = null;
             CustomerCards newCard = null;
             switch (userType) {
                 case DbConstants.USER_TYPE_MERCHANT:
                     // OP_CHANGE_PIN not allowed to merchant
-                    if( opCode.equals(DbConstants.OP_CHANGE_PIN) || opCode.equals(DbConstants.OP_CHANGE_MOBILE) ) {
+                    //if( opCode.equals(DbConstants.OP_CHANGE_PIN) || opCode.equals(DbConstants.OP_CHANGE_MOBILE) || opCode.equals(DbConstants.OP_RESET_PIN)) {
+                    if( !opCode.equals(DbConstants.OP_NEW_CARD) ) {
                         mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                         throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "");
                     }
@@ -349,9 +354,9 @@ public class CommonServices implements IBackendlessService {
                     // Fetch Customer user
                     custUser = BackendOps.fetchUser(mobileNum, DbConstants.USER_TYPE_CUSTOMER, false);
                     customer = (Customers) custUser.getProperty("customer");
-                    if(customer.getMembership_card()!=null) {
+                    /*if(customer.getMembership_card()!=null) {
                         cardIdDb = customer.getMembership_card().getCard_id();
-                    }
+                    }*/
                     break;
 
                 case DbConstants.USER_TYPE_CUSTOMER:
@@ -368,9 +373,9 @@ public class CommonServices implements IBackendlessService {
                     }
 
                     // as customer enters card number and dont scan the card
-                    if(customer.getMembership_card()!=null) {
+                    /*if(customer.getMembership_card()!=null) {
                         cardIdDb = customer.getMembership_card().getCardNum();
-                    }
+                    }*/
                     mLogger.setProperties(mEdr[BackendConstants.EDR_USER_ID_IDX], userType, customer.getDebugLogs());
                     break;
 
@@ -405,7 +410,9 @@ public class CommonServices implements IBackendlessService {
                     newCard = BackendOps.getCustomerCard(argCardId, true);
                     BackendUtils.checkCardForAllocation(newCard, merchantId, mEdr, mLogger);
 
-                } else {
+                }
+                // Commented out - as card number is removed from customer ops - as card is now optional
+                /*else {
                     // Card Id should be correct and card in correct state
                     if(cardIdDb.equals(argCardId)) {
                         BackendUtils.checkCardForUse(customer.getMembership_card());
@@ -415,7 +422,7 @@ public class CommonServices implements IBackendlessService {
                                 DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
                         throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
                     }
-                }
+                }*/
 
                 // verify against provided mobile number
                 if (opCode.equals(DbConstants.OP_CHANGE_MOBILE)) {
@@ -469,7 +476,8 @@ public class CommonServices implements IBackendlessService {
                 // For above mentioned 2 First run scenarios - these will be required
 
                 // Don't verify QR card# for 'new card' operation
-                if (!opCode.equals(DbConstants.OP_NEW_CARD)) {
+                // Commented out - as card number is removed from customer ops - as card is now optional
+                /*if (!opCode.equals(DbConstants.OP_NEW_CARD)) {
                     if(cardIdDb.equals(argCardId)) {
                         BackendUtils.checkCardForUse(customer.getMembership_card());
                     } else {
@@ -478,7 +486,19 @@ public class CommonServices implements IBackendlessService {
                                 DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, opCode, mEdr, mLogger);
                         throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
                     }
+                }*/
+
+                if(opCode.equals(DbConstants.OP_RESET_PIN)) {
+                    // match customer name for verification
+                    // app sends name in place of card id
+                    if(!argCardId.equalsIgnoreCase(customer.getFirstName())) {
+                        validException = true;
+                        int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
+                                DbConstantsBackend.WRONG_PARAM_TYPE_NAME, opCode, mEdr, mLogger);
+                        throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_NAME), String.valueOf(cnt));
+                    }
                 }
+
                 // Don't verify PIN for 'reset PIN' operation
                 if (!opCode.equals(DbConstants.OP_RESET_PIN) &&
                         !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {

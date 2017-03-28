@@ -552,9 +552,10 @@ public class BackendUtils {
     }*/
 
     public static boolean customerCardRequired(Transaction txn) {
-        return ( (txn.getCl_debit()>0 && MyGlobalSettings.getCardReqAccDebit()) ||
-                (txn.getCb_debit()>0 && MyGlobalSettings.getCardReqCbRedeem()) ||
-        txn.getCancelTime()!=null );
+        return ( (txn.getCl_debit()>0 && MyGlobalSettings.getCardReqAccDebit())
+                || (txn.getCb_debit()>0 && MyGlobalSettings.getCardReqCbRedeem())
+                //|| txn.getCancelTime()!=null
+        );
     }
 
     /*

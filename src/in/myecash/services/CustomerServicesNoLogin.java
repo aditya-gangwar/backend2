@@ -32,14 +32,13 @@ public class CustomerServicesNoLogin implements IBackendlessService {
     /*
      * Public methods: Backend REST APIs
      */
-    public void enableCustAccount(String userId, String passwd, String rcvdOtp, String cardNum, String argPin) {
+    public void enableCustAccount(String userId, String passwd, String rcvdOtp, String argPin) {
 
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "enableCustAccount";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = userId+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                cardNum+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 rcvdOtp;
         mEdr[BackendConstants.EDR_USER_ID_IDX] = userId;
         mEdr[BackendConstants.EDR_USER_TYPE_IDX] = String.valueOf(DbConstants.USER_TYPE_CUSTOMER);
@@ -51,8 +50,9 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             //mLogger.debug("Before: "+HeadersManager.getInstance().getHeaders().toString());
 
             // Fetch customer
-            Customers customer = BackendOps.getCustomer(userId, CommonConstants.ID_TYPE_MOBILE, true);
-            String cardNumDb = customer.getMembership_card().getCardNum();
+            //Customers customer = BackendOps.getCustomer(userId, CommonConstants.ID_TYPE_MOBILE, true);
+            Customers customer = BackendOps.getCustomer(userId, CommonConstants.ID_TYPE_MOBILE, false);
+            //String cardNumDb = customer.getMembership_card().getCardNum();
             String mobileNum = customer.getMobile_num();
             mLogger.setProperties(customer.getPrivate_id(), DbConstants.USER_TYPE_CUSTOMER, customer.getDebugLogs());
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
@@ -66,14 +66,13 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 // first call - verify and generate OTP
 
                 // Atleast one of 'cardNum' or 'PIN' is required
-                if( (cardNum==null || cardNum.isEmpty()) && (argPin==null || argPin.isEmpty()) ) {
+                if( argPin==null || argPin.isEmpty() ) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Either of Card Number or PIN is required");
                 }
 
                 // Verify PIN - if provided
-                if ( argPin!=null && !argPin.isEmpty() &&
-                        !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
+                if ( !argPin.isEmpty() && !SecurityHelper.verifyCustPin(customer, argPin, mLogger)) {
 
                     validException = true;
                     int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
@@ -82,14 +81,14 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 }
 
                 // verify PIN - if provided
-                if ( cardNum!=null && !cardNum.isEmpty() &&
+                /*if ( cardNum!=null && !cardNum.isEmpty() &&
                         !cardNumDb.equals(cardNum)) {
 
                     validException = true;
                     int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                             DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_ENABLE_ACC, mEdr, mLogger);
                     throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
-                }
+                }*/
 
                 // Verification successful - Generate OTP
                 AllOtp newOtp = new AllOtp();
@@ -214,12 +213,20 @@ public class CustomerServicesNoLogin implements IBackendlessService {
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
 
             // check for 'extra verification'
-            String cardNumDb = customer.getMembership_card().getCardNum();
+            // Not checking as card is optional now
+            /*String cardNumDb = customer.getMembership_card().getCardNum();
             if (cardNumDb == null || !cardNumDb.equalsIgnoreCase(secret)) {
                 int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_CARDID, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
+            }*/
+
+            if (!customer.getFirstName().equalsIgnoreCase(secret)) {
+                int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
+                        DbConstantsBackend.WRONG_PARAM_TYPE_NAME, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
+                validException = true;
+                throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_NAME), String.valueOf(cnt));
             }
 
             // For new registered customer - send the password immediately
