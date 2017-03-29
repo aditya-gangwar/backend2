@@ -95,7 +95,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 newOtp.setUser_id(mobileNum);
                 newOtp.setMobile_num(mobileNum);
                 newOtp.setOpcode(DbConstants.OP_ENABLE_ACC);
-                BackendOps.generateOtp(newOtp,mEdr,mLogger);
+                BackendOps.generateOtp(newOtp,"",mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
                 validException = true;
@@ -222,7 +222,7 @@ public class CustomerServicesNoLogin implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.VERIFICATION_FAILED_CARDID), String.valueOf(cnt));
             }*/
 
-            if (!customer.getFirstName().equalsIgnoreCase(secret)) {
+            if (!customer.getDob().equalsIgnoreCase(secret)) {
                 int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, userType,
                         DbConstantsBackend.WRONG_PARAM_TYPE_NAME, DbConstants.OP_RESET_PASSWD, mEdr, mLogger);
                 validException = true;

@@ -1,10 +1,6 @@
 package in.myecash.events.persistence_service;
 
-import com.backendless.Backendless;
-import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
-import com.backendless.servercode.ExecutionResult;
-import com.backendless.servercode.RunnerContext;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.CsvConverter;
 import in.myecash.common.MyGlobalSettings;
@@ -49,7 +45,7 @@ public class TxnProcessHelper {
 
 
     //public Transaction handleTxnCommit(String userToken, String userId, Transaction txn, boolean saveAlso, boolean sendSMS) {
-    public Transaction handleTxnCommit(String userId, String txnCsvStr, String argPin, boolean saveAlso, boolean sendSMS) throws Exception {
+    public Transaction handleTxnCommit(String userId, String txnCsvStr, String argPin, boolean isOtp, boolean saveAlso, boolean sendSMS) throws Exception {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -58,7 +54,7 @@ public class TxnProcessHelper {
 
         mValidException = false;
         try {
-            mLogger.debug("In Transaction handleTxnCommit");
+            mLogger.debug("In Transaction handleTxnCommit: "+isOtp);
             /*if(userToken!=null) {
                 HeadersManager.getInstance().addHeader(HeadersManager.HeadersEnum.USER_TOKEN_KEY, userToken);
             }*/
@@ -90,7 +86,8 @@ public class TxnProcessHelper {
             }
 
             // Common processing for Transaction Commit and Cancel
-            commonTxnProcessing();
+            mTransaction.setMerchant_id(mMerchantId);
+            commonTxnProcessing(isOtp);
 
             // update mCustomer for txn table
             //updateTxnTables(mCustomer, mMerchant.getTxn_table());
@@ -133,8 +130,9 @@ public class TxnProcessHelper {
                 cashback.setCb_billed(cashback.getCb_billed() + mTransaction.getCb_billed());
 
                 // add/update transaction fields
-                mTransaction.setCustomer_id(mCustomer.getMobile_num());
+                mTransaction.setCust_mobile(mCustomer.getMobile_num());
                 // update cardId with cardNum
+                // mCustomer.getMembership_card() wont be null - as this would have been already verified in commonTxnProcessing()
                 if(mTransaction.getUsedCardId()==null || mTransaction.getUsedCardId().isEmpty()) {
                     mTransaction.setUsedCardId("");
                 } else {
@@ -207,7 +205,7 @@ public class TxnProcessHelper {
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
         mEdr[BackendConstants.EDR_API_NAME_IDX] = "txn-afterCreate";
         mEdr[BackendConstants.EDR_API_PARAMS_IDX] = mTransaction.getMerchant_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
-                mTransaction.getCustomer_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
+                mTransaction.getCust_mobile()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 mTransaction.getCust_private_id()+BackendConstants.BACKEND_EDR_SUB_DELIMETER+
                 mTransaction.getTrans_id();
 
@@ -231,7 +229,7 @@ public class TxnProcessHelper {
         }
     }*/
 
-    public Transaction cancelTxn(String ctxtUserId, String txnId, String cardId, String pin) {
+    public Transaction cancelTxn(String ctxtUserId, String txnId, String cardId, String pin, boolean isOtp) {
         BackendUtils.initAll();
         long startTime = System.currentTimeMillis();
         mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
@@ -270,7 +268,7 @@ public class TxnProcessHelper {
             mTransaction.setCpin(pin);
 
             // do common processing
-            commonTxnProcessing();
+            commonTxnProcessing(isOtp);
             // restore values
             mTransaction.setUsedCardId(oldCardId);
             mTransaction.setCpin(oldPin);
@@ -322,7 +320,7 @@ public class TxnProcessHelper {
                 String smsText = String.format(SmsConstants.SMS_TXN_CANCEL,merchantName,txnTime,cl_balance,cb_balance);
                 if(smsText!=null) {
                     // Send SMS through HTTP
-                    SmsHelper.sendSMS(smsText,mTransaction.getCustomer_id(), mEdr, mLogger, true);
+                    SmsHelper.sendSMS(smsText,mTransaction.getCust_mobile(), mEdr, mLogger, true);
                 }
 
             } else {
@@ -349,7 +347,7 @@ public class TxnProcessHelper {
     /*
      * Private helper methods
      */
-    private void commonTxnProcessing() {
+    private void commonTxnProcessing(boolean isOtp) {
 
         // Fetch Customer
         mCustomer = BackendOps.getCustomer(mTransaction.getCust_private_id(), CommonConstants.ID_TYPE_AUTO, true);
@@ -396,14 +394,33 @@ public class TxnProcessHelper {
 
         // verify PIN if provided
         if (mTransaction.getCpin() != null && !mTransaction.getCpin().isEmpty()) {
-            if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
+
+            BackendUtils.printCtxtInfo(mLogger);
+            if(isOtp) {
+                if(!BackendOps.validateOtp(mTransaction.getMerchant_id(), DbConstants.OP_TXN_COMMIT, mTransaction.getCpin(), mEdr, mLogger)) {
+                    mLogger.debug("Wrong OTP: "+mTransaction.getCpin());
+                    mValidException = true;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_OTP), "");
+                }
+                mTransaction.setCpin(DbConstants.TXN_CUSTOMER_OTP_USED);
+
+            } else {
+                if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
+                    int cnt = BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
+                            DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
+                    mValidException = true;
+                    throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
+                }
+                mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
+            }
+            /*if (!SecurityHelper.verifyCustPin(mCustomer, mTransaction.getCpin(), mLogger)) {
                 int cnt = BackendUtils.handleWrongAttempt(mCustomerId, mCustomer, DbConstants.USER_TYPE_CUSTOMER,
                         DbConstantsBackend.WRONG_PARAM_TYPE_PIN, DbConstants.OP_TXN_COMMIT, mEdr, mLogger);
                 mValidException = true; // to avoid logging of this exception
                 throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_PIN), String.valueOf(cnt));
             } else {
                 mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_USED);
-            }
+            }*/
         } else {
             mTransaction.setCpin(DbConstants.TXN_CUSTOMER_PIN_NOT_USED);
         }
@@ -463,7 +480,7 @@ public class TxnProcessHelper {
 
     private void buildAndSendTxnSMS()
     {
-        String custMobile = mTransaction.getCustomer_id();
+        String custMobile = mTransaction.getCust_mobile();
         //String txnId = mTransaction.getTrans_id();
         //mLogger.debug("Transaction update was successful: "+custMobile+", "+txnId);
 

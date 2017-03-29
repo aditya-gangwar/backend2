@@ -67,7 +67,7 @@ public class BackendOps {
             switch (userType) {
                 case DbConstants.USER_TYPE_CUSTOMER:
                     queryOptions.addRelated("customer");
-                    //queryOptions.addRelated("customer.membership_card");
+                    queryOptions.addRelated("customer.membership_card");
                     break;
                 case DbConstants.USER_TYPE_MERCHANT:
                     queryOptions.addRelated("merchant");
@@ -372,7 +372,7 @@ public class BackendOps {
     /*
      * OTP operations
      */
-    public static void generateOtp(AllOtp otp, String[] edr, MyLogger logger) {
+    public static void generateOtp(AllOtp otp, String mchntName, String[] edr, MyLogger logger) {
         // check if any OTP object already available for this user_id
         // If yes, first delete the same.
         // Create new OTP object
@@ -395,7 +395,7 @@ public class BackendOps {
             newOtp = Backendless.Persistence.save(otp);
 
             // Send SMS through HTTP
-            String smsText = SmsHelper.buildOtpSMS(newOtp.getUser_id(), otpStr, newOtp.getOpcode());
+            String smsText = SmsHelper.buildOtpSMS(newOtp.getUser_id(), otpStr, newOtp.getOpcode(), mchntName);
             // dont retry and raise exception immediately
             if (!SmsHelper.sendSMS(smsText, newOtp.getMobile_num(), edr, logger, false)){
                 throw new BackendlessException(String.valueOf(ErrorCodes.SEND_SMS_FAILED), "Failed to send OTP SMS");
@@ -422,7 +422,7 @@ public class BackendOps {
         }
 
         if(otp==null) {
-            logger.debug("OTP object is null");
+            logger.debug("OTP object is null: "+userId+","+opcode);
             return false;
         }
 

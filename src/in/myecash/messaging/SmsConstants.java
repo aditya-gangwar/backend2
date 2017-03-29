@@ -69,9 +69,10 @@ public class SmsConstants {
     //public static String SMS_REG_CUST_OTP = "Use OTP %s to register as MyeCash Customer. Valid for next %d minutes. Always enter OTP yourself in Merchant device.";
     public static String SMS_REG_CUST_OTP = "Please use OTP %s to register to MyeCash Rewards Program. You can check more program details and terms at http://www.myecash.in.";
     public static String SMS_LOGIN_OTP = "Login attempt detected from Unknown Device. Use OTP '%s' to add it as 'Trusted Device' for your account '%s'. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. Valid for next %d minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new Membership Card for account %s. Valid for next %d minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
-    public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. Valid for next %d minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_CHANGE_MOB_OTP = "Use OTP %s to verify this Mobile number. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_NEW_CARD_OTP = "Use OTP %s to authenticate new Membership Card for account %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String SMS_PIN_RESET_OTP = "Use OTP %s to authenticate PIN Reset for customer account %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
+    public static String TXN_COMMIT_OTP = "Use OTP %s to authenticate your transaction at %s. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
 
     public static String SMS_PIN_INIT = "Dear User - %s have initiated 'PIN Reset' for your MyeCash account '%s'. New PIN will be sent to your registered mobile number after %s minutes. PLS CALL CUSTOMER CARE IF NOT REQUESTED BY YOU.";
     public static String SMS_PIN = "Dear User - MyeCash PIN for your account '%s' is '%s'. ALWAYS KEEP YOUR PIN SECRET. PLS CALL CUSTOMER CARE IF NOT DONE BY YOU.";

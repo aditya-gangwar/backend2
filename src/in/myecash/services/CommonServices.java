@@ -1,11 +1,8 @@
 package in.myecash.services;
 
-import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
-import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
-import com.backendless.servercode.InvocationContext;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.MyErrorParams;
 import in.myecash.common.MyGlobalSettings;
@@ -23,7 +20,6 @@ import in.myecash.common.database.*;
 import in.myecash.common.constants.*;
 import in.myecash.utilities.SecurityHelper;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -292,7 +288,7 @@ public class CommonServices implements IBackendlessService {
      * //OP_CHANGE_MOBILE - Need Mobile, CardId, PIN and OTP on new number - only from customer app
      * OP_CHANGE_MOBILE - Need Mobile, PIN and OTP on new number - only from customer app
      * //OP_RESET_PIN - Need CardId and OTP on registered number (OTP not required if done by customer himself from app)
-     * OP_RESET_PIN - Need Customer Name (comes in argCardId variable) - only from customer app
+     * OP_RESET_PIN - Need Customer DoB (comes in argCardId variable) - only from customer app
      * OP_CHANGE_PIN - Need PIN(existing) - only from customer app
      */
     public String execCustomerOp(String opCode, String mobileNum, String argCardId, String otp, String argPin, String opParam) {
@@ -385,7 +381,9 @@ public class CommonServices implements IBackendlessService {
             }
 
             mEdr[BackendConstants.EDR_CUST_ID_IDX] = customer.getPrivate_id();
-            mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = customer.getMembership_card().getCardNum();
+            if(customer.getMembership_card()!=null) {
+                mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = customer.getMembership_card().getCardNum();
+            }
 
             // check if customer is enabled
             BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
@@ -459,7 +457,7 @@ public class CommonServices implements IBackendlessService {
                     newOtp.setMobile_num(customer.getMobile_num());
                 }
                 newOtp.setOpcode(opCode);
-                BackendOps.generateOtp(newOtp,mEdr,mLogger);
+                BackendOps.generateOtp(newOtp,"",mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
                 validException = true;
@@ -491,7 +489,7 @@ public class CommonServices implements IBackendlessService {
                 if(opCode.equals(DbConstants.OP_RESET_PIN)) {
                     // match customer name for verification
                     // app sends name in place of card id
-                    if(!argCardId.equalsIgnoreCase(customer.getFirstName())) {
+                    if(!argCardId.equalsIgnoreCase(customer.getDob())) {
                         validException = true;
                         int cnt = BackendUtils.handleWrongAttempt(mobileNum, customer, DbConstants.USER_TYPE_CUSTOMER,
                                 DbConstantsBackend.WRONG_PARAM_TYPE_NAME, opCode, mEdr, mLogger);
@@ -561,7 +559,9 @@ public class CommonServices implements IBackendlessService {
                 // set extra params in presentable format
                 if(opCode.equals(DbConstants.OP_NEW_CARD)) {
                     newCard = BackendOps.getCustomerCard(argCardId, true);
-                    String extraParams = "Old Card: "+customer.getMembership_card().getCardNum()+", New Card: "+newCard.getCardNum();
+                    String extraParams = "Old Card: "+
+                            ((customer.getMembership_card()==null)?"NA":customer.getMembership_card().getCardNum())+
+                            ", New Card: "+newCard.getCardNum();
                     customerOp.setExtra_op_params(extraParams);
                     customerOp.setReason(opParam);
 
@@ -720,7 +720,6 @@ public class CommonServices implements IBackendlessService {
         BackendUtils.checkCardForAllocation(newCard, merchantId, mEdr, mLogger);
 
         CustomerCards oldCard = customer.getMembership_card();
-        mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = oldCard.getCardNum();
 
         // update 'customer' and 'CustomerCard' objects for new card
         newCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_ACTIVE);
@@ -734,10 +733,14 @@ public class CommonServices implements IBackendlessService {
 
         // update old card status
         try {
-            oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_DISABLED);
-            oldCard.setStatus_reason(reason);
-            oldCard.setStatus_update_time(new Date());
-            BackendOps.saveCustomerCard(oldCard);
+            if(oldCard!=null) {
+                mEdr[BackendConstants.EDR_CUST_CARD_NUM_IDX] = oldCard.getCardNum();
+
+                oldCard.setStatus(DbConstants.CUSTOMER_CARD_STATUS_DISABLED);
+                oldCard.setStatus_reason(reason);
+                oldCard.setStatus_update_time(new Date());
+                BackendOps.saveCustomerCard(oldCard);
+            }
 
         } catch (BackendlessException e) {
             // ignore as not considered as failure for whole 'changeCustomerCard' operation

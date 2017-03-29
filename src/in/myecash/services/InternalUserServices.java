@@ -1,9 +1,6 @@
 package in.myecash.services;
 
 import com.backendless.Backendless;
-import com.backendless.BackendlessUser;
-import com.backendless.FilePermission;
-import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
 import com.backendless.servercode.InvocationContext;
@@ -709,7 +706,7 @@ public class InternalUserServices implements IBackendlessService {
             }
 
             // send SMS
-            String smsText = String.format(SmsConstants.SMS_DISABLE_CARD, customer.getFirstName(),
+            String smsText = String.format(SmsConstants.SMS_DISABLE_CARD, customer.getName(),
                     CommonUtils.getPartialVisibleStr(card.getCardNum()));
             SmsHelper.sendSMS(smsText, customer.getMobile_num(), mEdr, mLogger, true);
 

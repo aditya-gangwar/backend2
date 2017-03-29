@@ -125,23 +125,26 @@ public class SmsHelper {
         return String.format(SmsConstants.SMS_PIN_CHANGED, CommonUtils.getPartialVisibleStr(userId));
     }
 
-    public static String buildOtpSMS(String userId, String otp, String opCode) {
+    public static String buildOtpSMS(String userId, String otp, String opCode, String mchntName) {
         switch(opCode) {
             case DbConstants.OP_REG_CUSTOMER:
-                return String.format(SmsConstants.SMS_REG_CUST_OTP, otp, MyGlobalSettings.getOtpValidMins());
+                return String.format(SmsConstants.SMS_REG_CUST_OTP, otp);
 
             case DbConstants.OP_LOGIN:
                 // OTP to add trusted device
-                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
+                return String.format(SmsConstants.SMS_LOGIN_OTP, otp, CommonUtils.getPartialVisibleStr(userId));
 
             case DbConstants.OP_CHANGE_MOBILE:
-                return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp, MyGlobalSettings.getOtpValidMins());
+                return String.format(SmsConstants.SMS_CHANGE_MOB_OTP, otp);
 
             case DbConstants.OP_NEW_CARD:
-                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
+                return String.format(SmsConstants.SMS_NEW_CARD_OTP, otp, CommonUtils.getPartialVisibleStr(userId));
 
             case DbConstants.OP_RESET_PIN:
-                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, CommonUtils.getPartialVisibleStr(userId), MyGlobalSettings.getOtpValidMins());
+                return String.format(SmsConstants.SMS_PIN_RESET_OTP, otp, CommonUtils.getPartialVisibleStr(userId));
+
+            case DbConstants.OP_TXN_COMMIT:
+                return String.format(SmsConstants.TXN_COMMIT_OTP, otp, mchntName);
 
             default:
                 throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), "Invalid OTP request: "+opCode);

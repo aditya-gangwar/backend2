@@ -36,15 +36,61 @@ public class MerchantServices implements IBackendlessService {
      * Public methods: Backend REST APIs
      * Merchant operations
      */
-    public Transaction cancelTxn(String txnId, String cardId, String pin) {
-
+    public Transaction cancelTxn(String txnId, String cardId, String pin, boolean isOtp) {
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
-        return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin);
+        return txnEventHelper.cancelTxn(InvocationContext.getUserId(), txnId, cardId, pin, isOtp);
     }
 
-    public Transaction commitTxn(String csvTxnData, String pin) throws Exception {
+    public Transaction commitTxn(String csvTxnData, String pin, boolean isOtp) throws Exception {
         TxnProcessHelper txnEventHelper = new TxnProcessHelper();
-        return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, pin, true, true);
+        return txnEventHelper.handleTxnCommit(InvocationContext.getUserId(), csvTxnData, pin, isOtp, true, true);
+    }
+
+    public void generateTxnOtp(String custMobileOrId) {
+        BackendUtils.initAll();
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "generateTxnOtp";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = custMobileOrId;
+
+        boolean validException = false;
+        try {
+            mLogger.debug("In generateTxnOtp: " + custMobileOrId);
+
+            // Fetch merchant with all child - as the same instance is to be returned too
+            Merchants merchant = (Merchants) BackendUtils.fetchCurrentUser(DbConstants.USER_TYPE_MERCHANT, mEdr, mLogger, false);
+
+            String custMobile = null;
+            int idType = BackendUtils.getCustomerIdType(custMobileOrId);
+            if(idType!=CommonConstants.ID_TYPE_MOBILE) {
+                // fetch customer with given id
+                Customers customer = BackendOps.getCustomer(custMobileOrId, idType, false);
+                custMobile = customer.getMobile_num();
+                // check if mCustomer is enabled
+                BackendUtils.checkCustomerStatus(customer, mEdr, mLogger);
+            } else {
+                custMobile = custMobileOrId;
+            }
+            mEdr[BackendConstants.EDR_CUST_ID_IDX] = custMobileOrId;
+
+            // Generate OTP to verify new mobile number
+            AllOtp newOtp = new AllOtp();
+            newOtp.setUser_id(merchant.getAuto_id());
+            newOtp.setMobile_num(custMobile);
+            newOtp.setOpcode(DbConstants.OP_TXN_COMMIT);
+            BackendOps.generateOtp(newOtp,merchant.getName(),mEdr,mLogger);
+
+            // OTP generated successfully - return exception to indicate so
+            validException = true;
+            throw new BackendlessException(String.valueOf(ErrorCodes.OTP_GENERATED), "");
+
+        } catch(Exception e) {
+            BackendUtils.handleException(e,validException,mLogger,mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime,mLogger,mEdr);
+        }
+
     }
 
     /*public Transaction writeTxn(String csvTxnData, String tableName) throws Exception {
@@ -102,7 +148,7 @@ public class MerchantServices implements IBackendlessService {
                 newOtp.setUser_id(merchant.getAuto_id());
                 newOtp.setMobile_num(newMobile);
                 newOtp.setOpcode(DbConstants.OP_CHANGE_MOBILE);
-                BackendOps.generateOtp(newOtp,mEdr,mLogger);
+                BackendOps.generateOtp(newOtp,"",mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
                 validException = true;
@@ -806,7 +852,7 @@ public class MerchantServices implements IBackendlessService {
                 newOtp.setUser_id(customerMobile);
                 newOtp.setMobile_num(customerMobile);
                 newOtp.setOpcode(DbConstants.OP_REG_CUSTOMER);
-                BackendOps.generateOtp(newOtp,mEdr,mLogger);
+                BackendOps.generateOtp(newOtp,"",mEdr,mLogger);
 
                 // OTP generated successfully - return exception to indicate so
                 validException = true;
@@ -829,10 +875,11 @@ public class MerchantServices implements IBackendlessService {
                 customer.setCashback_table(merchant.getCashback_table());
                 customer.setTxn_tables(merchant.getTxn_table());
                 customer.setMobile_num(customerMobile);
-                customer.setFirstName(firstName);
-                customer.setLastName(lastName);
+                customer.setName(firstName);
                 customer.setDob(dob);
                 customer.setSex(sex);
+                customer.setRegDate(new Date());
+                customer.setRegMchntId(merchant.getAuto_id());
                 if(card!=null) {
                     customer.setCardId(card.getCard_id());
                     // set membership card
@@ -879,8 +926,7 @@ public class MerchantServices implements IBackendlessService {
                 stripCashback(cashback);
 
                 // Send welcome sms to the customer
-                String name = customer.getFirstName()+" "+customer.getLastName();
-                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, name, CommonConstants.CUSTOMER_CARE_NUMBER);
+                String smsText = String.format(SmsConstants.SMS_CUSTOMER_REGISTER, customer.getName(), CommonConstants.CUSTOMER_CARE_NUMBER);
                 SmsHelper.sendSMS(smsText, customerMobile, mEdr, mLogger, true);
 
                 // Send SMS containing PIN
@@ -909,7 +955,7 @@ public class MerchantServices implements IBackendlessService {
         customer.setAdmin_status(DbConstants.USER_STATUS_ACTIVE);
         customer.setStatus_reason(DbConstantsBackend.ENABLED_ACTIVE);
         customer.setStatus_update_time(new Date());
-        customer.setLastRenewDate(new Date());
+        //customer.setLastRenewDate(new Date());
 
         // get customer counter value and encode the same to get customer private id
         Long customerCnt =  BackendOps.fetchCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);

@@ -505,6 +505,19 @@ public class BackendUtils {
         }
     }
 
+    public static int getCustomerIdType(String id) {
+        switch (id.length()) {
+            case CommonConstants.MOBILE_NUM_LENGTH:
+                return CommonConstants.ID_TYPE_MOBILE;
+            case CommonConstants.CUSTOMER_INTERNAL_ID_LEN:
+                return CommonConstants.ID_TYPE_AUTO;
+            case CommonConstants.CUSTOMER_CARDID_LEN:
+                return CommonConstants.ID_TYPE_CARD;
+            default:
+                throw new BackendlessException(String.valueOf(ErrorCodes.WRONG_INPUT_DATA), "Invalid Customer ID: "+id);
+        }
+    }
+
     public static boolean isCardNum(String id) {
         return (id.length()==CommonConstants.CUSTOMER_CARDID_LEN);
     }
