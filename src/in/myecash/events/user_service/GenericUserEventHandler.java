@@ -166,6 +166,12 @@ public class GenericUserEventHandler extends com.backendless.servercode.extensio
                         device.setNamak("");
                     }*/
 
+                    if (!merchant.getFirst_login_ok()) {
+                        merchant.setFirst_login_ok(true);
+                        //merchant.setAdmin_remarks("Last state was new registered");
+                        merchant = BackendOps.updateMerchant(merchant);
+                    }
+
                     result.getResult().put("merchant", merchant);
 
                 } else if (userType == DbConstants.USER_TYPE_CUSTOMER) {

@@ -213,13 +213,13 @@ public class MerchantServicesNoLogin implements IBackendlessService {
 
             // Check if from trusted device
             // don't check for first time after merchant is registered
-            List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
+            /*List<MerchantDevice> trustedDevices = merchant.getTrusted_devices();
             if (merchant.getFirst_login_ok()) {
                 if (!BackendUtils.isTrustedDevice(deviceId, trustedDevices)) {
                     mEdr[BackendConstants.EDR_SPECIAL_FLAG_IDX] = BackendConstants.BACKEND_EDR_SECURITY_BREACH;
                     throw new BackendlessException(String.valueOf(ErrorCodes.NOT_TRUSTED_DEVICE), "");
                 }
-            }
+            }*/
 
             // check for 'extra verification'
             String mobile = merchant.getMobile_num();

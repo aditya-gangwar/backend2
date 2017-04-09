@@ -916,6 +916,26 @@ public class MerchantServices implements IBackendlessService {
                     throw e;
                 }
 
+                // create directory for 'txnCsv' files
+                String fileDir = null;
+                String filePath = null;
+                try {
+                    fileDir = CommonUtils.getCustomerTxnDir(customer.getPrivate_id());
+                    filePath = fileDir + CommonConstants.FILE_PATH_SEPERATOR+BackendConstants.DUMMY_FILENAME;
+                    // saving dummy files to create parent directories
+                    Backendless.Files.saveFile(filePath, BackendConstants.DUMMY_DATA.getBytes("UTF-8"), true);
+                    // Give this customer permissions for this directory
+                    FilePermission.READ.grantForUser( customerUser.getObjectId(), fileDir);
+                    //FilePermission.DELETE.grantForUser( user.getObjectId(), fileDir);
+                    //FilePermission.WRITE.grantForUser( user.getObjectId(), fileDir);
+                    mLogger.debug("Saved dummy txn csv file: " + filePath);
+
+                } catch(Exception e) {
+                    mLogger.fatal("Failed to create customer directory: "+customerMobile+","+e.toString());
+                    rollbackRegister(customerMobile,card);
+                    throw new BackendlessException(String.valueOf(ErrorCodes.GENERAL_ERROR), e.toString());
+                }
+
                 // create cashback also - to avoid another call to 'getCashback' from merchant
                 cashback = createCbObject(merchant, customer);
 
@@ -1036,7 +1056,7 @@ public class MerchantServices implements IBackendlessService {
 
         // rollback to not-usable state
         try {
-            BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
+            //BackendOps.decrementCounterValue(DbConstantsBackend.CUSTOMER_ID_COUNTER);
 
             Customers customer = BackendOps.getCustomer(custId, CommonConstants.ID_TYPE_MOBILE, false);
             customer.setMembership_card(null);
@@ -1047,9 +1067,11 @@ public class MerchantServices implements IBackendlessService {
             BackendOps.updateCustomer(customer);*/
 
             // free up the card for next allocation
-            card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
-            // TODO: set any other fields required
-            BackendOps.saveCustomerCard(card);
+            if(card!=null) {
+                card.setStatus(DbConstants.CUSTOMER_CARD_STATUS_NEW);
+                // TODO: set any other fields required
+                BackendOps.saveCustomerCard(card);
+            }
 
         } catch(Exception ex) {
             mLogger.error("registerCustomer: Customer register Rollback failed: "+ex.toString(), ex);

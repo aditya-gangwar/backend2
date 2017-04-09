@@ -543,7 +543,7 @@ public class BackendUtils {
             case CommonConstants.MOBILE_NUM_LENGTH:
                 return DbConstants.USER_TYPE_CUSTOMER;
             default:
-                throw new BackendlessException(String.valueOf(ErrorCodes.USER_WRONG_ID_PASSWD),"Invalid user type for id: "+userdId);
+                throw new BackendlessException(String.valueOf(ErrorCodes.NO_SUCH_USER),"Invalid user type for id: "+userdId);
         }
     }
 
@@ -808,7 +808,7 @@ public class BackendUtils {
                 throw e;
             }
 
-            // create directories for 'txnCsv' and 'txnImage' files
+            // create directory for 'txnCsv' files
             String fileDir = null;
             String filePath = null;
             try {

@@ -216,6 +216,8 @@ public class BackendOps {
     }
 
     public static Customers getCustomer(String custId, int idType, boolean fetchCard) {
+        Backendless.Data.mapTableToClass("Customers", Customers.class);
+
         BackendlessDataQuery query = new BackendlessDataQuery();
         switch(idType) {
             case CommonConstants.ID_TYPE_MOBILE:

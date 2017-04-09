@@ -1,8 +1,10 @@
 package in.myecash.services;
 
 import com.backendless.BackendlessUser;
+import com.backendless.HeadersManager;
 import com.backendless.exceptions.BackendlessException;
 import com.backendless.servercode.IBackendlessService;
+import com.backendless.servercode.InvocationContext;
 import in.myecash.common.CommonUtils;
 import in.myecash.common.MyErrorParams;
 import in.myecash.common.MyGlobalSettings;
@@ -268,7 +270,7 @@ public class CommonServices implements IBackendlessService {
                 throw new BackendlessException(String.valueOf(ErrorCodes.OPERATION_NOT_ALLOWED), "Operation not allowed to this user");
             }
 
-            // remove common senstive info from the object
+            // remove common sensitive info from the object
             customer.setTxn_pin("");
             customer.setNamak("");
 
@@ -282,6 +284,27 @@ public class CommonServices implements IBackendlessService {
             BackendUtils.finalHandling(startTime, mLogger, mEdr);
         }
     }
+
+    public String getCustomerId(String custMobile) {
+        long startTime = System.currentTimeMillis();
+        mEdr[BackendConstants.EDR_START_TIME_IDX] = String.valueOf(startTime);
+        mEdr[BackendConstants.EDR_API_NAME_IDX] = "getCustomerId";
+        mEdr[BackendConstants.EDR_API_PARAMS_IDX] = custMobile;
+
+        try {
+            HeadersManager.getInstance().addHeader( HeadersManager.HeadersEnum.USER_TOKEN_KEY, InvocationContext.getUserToken() );
+            // fetch record from customer table
+            Customers customer = BackendOps.getCustomer(custMobile, CommonConstants.ID_TYPE_MOBILE, false);
+            mEdr[BackendConstants.EDR_RESULT_IDX] = BackendConstants.BACKEND_EDR_RESULT_OK;
+            return customer.getPrivate_id();
+        } catch (Exception e) {
+            BackendUtils.handleException(e, false, mLogger, mEdr);
+            throw e;
+        } finally {
+            BackendUtils.finalHandling(startTime, mLogger, mEdr);
+        }
+    }
+
 
     /*
      * OP_NEW_CARD - Need Mobile, PIN and OTP on registered number
