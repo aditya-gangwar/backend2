@@ -29,10 +29,11 @@ public class SmsHelper {
 
         long sTime = System.currentTimeMillis();
 
-        logger.debug("SMS: " + message);
         if(BackendConstants.TESTING_SKIP_SMS) {
+            logger.info("SMS: " + message);
             return true;
         }
+        logger.debug("SMS: " + message);
 
         HttpURLConnection uc = null;
         try {

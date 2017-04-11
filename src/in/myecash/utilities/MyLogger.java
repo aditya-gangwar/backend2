@@ -56,6 +56,16 @@ public class MyLogger {
         }
     }
 
+    public void info(String msg) {
+        msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
+        mLogger.error(msg);
+        if(BackendConstants.DEBUG_MODE) {
+            msg = "Info | "+msg;
+            //System.out.println(msg);
+            mSb.append(CommonConstants.NEWLINE_SEP).append(msg);
+        }
+    }
+
     public void error(String msg) {
         msg = mLogId +" | "+ mUserId +" | "+ mUserType +" | "+msg;
         mLogger.error(msg);
